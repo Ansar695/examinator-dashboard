@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Board {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String   @unique
+  description String?
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  classes     Class[]
+  subjects    Subject[]
+  
+  @@map("boards")
+}
+
+model Class {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  slug      String    @unique
+  type      ClassType
+  boardId   String    @db.ObjectId
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // Relations
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  subjects  Subject[]
+  chapters  Chapter[]
+  
+  @@map("classes")
+}
+
+model Subject {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String   @unique
+  description String?
+  imageUrl    String?
+  boardId     String   @db.ObjectId
+  classId     String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  chapters    Chapter[]
+  
+  @@map("subjects")
+}
+
+model Chapter {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  slug      String   @unique
+  pdfUrl    String
+  classId   String   @db.ObjectId
+  subjectId String   @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  
+  @@map("chapters")
+}
+
+enum ClassType {
+  PRIMARY
+  SECONDARY
+  HIGHER_SECONDARY
+  UNDERGRADUATE
+  POSTGRADUATE
+}
