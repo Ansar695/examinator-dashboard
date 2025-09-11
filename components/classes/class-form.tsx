@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
   Dialog,
   DialogContent,
@@ -11,46 +11,69 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useCreateClassMutation, useUpdateClassMutation, useGetBoardsQuery } from "@/lib/api/educationApi"
-import { generateSlug } from "@/lib/utils/slugify"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  useCreateClassMutation,
+  useUpdateClassMutation,
+  useGetBoardsQuery,
+} from "@/lib/api/educationApi";
+import { generateSlug } from "@/lib/utils/slugify";
 
 const classSchema = z.object({
-  name: z.string().min(1, "Class name is required").max(100, "Class name must be less than 100 characters"),
-  type: z.enum(["PRIMARY", "SECONDARY", "HIGHER_SECONDARY", "UNDERGRADUATE", "POSTGRADUATE"], {
-    required_error: "Please select a class type",
-  }),
+  name: z
+    .string()
+    .min(1, "Class name is required")
+    .max(100, "Class name must be less than 100 characters"),
+  type: z.enum(
+    [
+      "PRIMARY",
+      "SECONDARY",
+      "HIGHER_SECONDARY",
+      "INTERMEDIATE",
+    ],
+    {
+      required_error: "Please select a class type",
+    }
+  ),
   boardId: z.string().min(1, "Please select a board"),
-  slug: z.string().min(1, "Slug is required").max(100, "Slug must be less than 100 characters"),
-})
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(100, "Slug must be less than 100 characters"),
+});
 
-type ClassFormData = z.infer<typeof classSchema>
+type ClassFormData = z.infer<typeof classSchema>;
 
 interface ClassFormProps {
-  classData?: any
-  open: boolean
-  onClose: () => void
+  classData?: any;
+  open: boolean;
+  onClose: () => void;
 }
 
 const classTypes = [
   { value: "PRIMARY", label: "Primary" },
   { value: "SECONDARY", label: "Secondary" },
   { value: "HIGHER_SECONDARY", label: "Higher Secondary" },
-  { value: "UNDERGRADUATE", label: "Undergraduate" },
-  { value: "POSTGRADUATE", label: "Postgraduate" },
-]
+  { value: "INTERMEDIATE", label: "Intermediate" },
+];
 
 export function ClassForm({ classData, open, onClose }: ClassFormProps) {
-  const [createClass, { isLoading: isCreating }] = useCreateClassMutation()
-  const [updateClass, { isLoading: isUpdating }] = useUpdateClassMutation()
-  const { data: boards = [], isLoading: boardsLoading } = useGetBoardsQuery()
+  const [createClass, { isLoading: isCreating }] = useCreateClassMutation();
+  const [updateClass, { isLoading: isUpdating }] = useUpdateClassMutation();
+  const { data: boards = [], isLoading: boardsLoading } = useGetBoardsQuery();
 
-  const isEditing = !!classData
-  const isLoading = isCreating || isUpdating
+  const isEditing = !!classData;
+  const isLoading = isCreating || isUpdating;
 
   const {
     register,
@@ -68,17 +91,17 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
       boardId: "",
       slug: "",
     },
-  })
+  });
 
-  const watchedName = watch("name")
+  const watchedName = watch("name");
 
   // Auto-generate slug from name
   useEffect(() => {
     if (watchedName && !isEditing) {
-      const slug = generateSlug(watchedName)
-      setValue("slug", slug)
+      const slug = generateSlug(watchedName);
+      setValue("slug", slug);
     }
-  }, [watchedName, setValue, isEditing])
+  }, [watchedName, setValue, isEditing]);
 
   // Reset form when classData changes
   useEffect(() => {
@@ -88,37 +111,41 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
         type: classData.type || undefined,
         boardId: classData.boardId || "",
         slug: classData.slug || "",
-      })
+      });
     } else {
       reset({
         name: "",
         type: undefined,
         boardId: "",
         slug: "",
-      })
+      });
     }
-  }, [classData, reset])
+  }, [classData, reset]);
 
   const onSubmit = async (data: ClassFormData) => {
     try {
       if (isEditing) {
-        await updateClass({ id: classData.id, class: data }).unwrap()
+        await updateClass({ id: classData.id, class: data }).unwrap();
       } else {
-        await createClass(data).unwrap()
+        await createClass(data).unwrap();
       }
-      onClose()
+      onClose();
     } catch (error) {
-      console.error("Failed to save class:", error)
+      console.error("Failed to save class:", error);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Class" : "Create New Class"}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Edit Class" : "Create New Class"}
+          </DialogTitle>
           <DialogDescription>
-            {isEditing ? "Update the class information below." : "Add a new class to your educational system."}
+            {isEditing
+              ? "Update the class information below."
+              : "Add a new class to your educational system."}
           </DialogDescription>
         </DialogHeader>
 
@@ -126,7 +153,10 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
           {/* Board Selection */}
           <div className="space-y-2">
             <Label htmlFor="boardId">Board *</Label>
-            <Select value={watch("boardId")} onValueChange={(value) => setValue("boardId", value)}>
+            <Select
+              value={watch("boardId")}
+              onValueChange={(value) => setValue("boardId", value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select a board" />
               </SelectTrigger>
@@ -148,7 +178,9 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
                 )}
               </SelectContent>
             </Select>
-            {errors.boardId && <p className="text-sm text-red-600">{errors.boardId.message}</p>}
+            {errors.boardId && (
+              <p className="text-sm text-red-600">{errors.boardId.message}</p>
+            )}
           </div>
 
           {/* Class Name */}
@@ -158,15 +190,21 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
               id="name"
               placeholder="e.g., Class 10, Grade 12, Bachelor of Science"
               {...register("name")}
+              onChange={(e) => setValue("name", e.target.value)}
               error={errors.name?.message}
             />
-            {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-sm text-red-600">{errors.name.message}</p>
+            )}
           </div>
 
           {/* Class Type */}
           <div className="space-y-2">
             <Label htmlFor="type">Class Type *</Label>
-            <Select value={watch("type")} onValueChange={(value) => setValue("type", value as any)}>
+            <Select
+              value={watch("type")}
+              onValueChange={(value) => setValue("type", value as any)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select class type" />
               </SelectTrigger>
@@ -178,16 +216,27 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
                 ))}
               </SelectContent>
             </Select>
-            {errors.type && <p className="text-sm text-red-600">{errors.type.message}</p>}
+            {errors.type && (
+              <p className="text-sm text-red-600">{errors.type.message}</p>
+            )}
           </div>
 
           {/* Slug */}
           <div className="space-y-2">
             <Label htmlFor="slug">Slug *</Label>
-            <Input id="slug" placeholder="class-url-slug" {...register("slug")} error={errors.slug?.message} />
-            {errors.slug && <p className="text-sm text-red-600">{errors.slug.message}</p>}
+            <Input
+              id="slug"
+              placeholder="class-url-slug"
+              {...register("slug")}
+              onChange={(e) => setValue("slug", generateSlug(e.target.value))}
+              error={errors.slug?.message}
+            />
+            {errors.slug && (
+              <p className="text-sm text-red-600">{errors.slug.message}</p>
+            )}
             <p className="text-xs text-slate-500">
-              This will be used in URLs. Auto-generated from name but customizable.
+              This will be used in URLs. Auto-generated from name but
+              customizable.
             </p>
           </div>
 
@@ -211,5 +260,5 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

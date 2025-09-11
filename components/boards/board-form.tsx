@@ -21,9 +21,9 @@ import { generateSlug } from "@/lib/utils/slugify"
 import { CloudinaryUpload } from "@/components/ui/cloudinary-upload"
 
 const boardSchema = z.object({
-  name: z.string().min(1, "Board name is required").max(100, "Board name must be less than 100 characters"),
+  name: z.string(),
   description: z.string().optional(),
-  slug: z.string().min(1, "Slug is required").max(100, "Slug must be less than 100 characters"),
+  slug: z.string(),
   logoUrl: z.string().optional(),
 })
 
@@ -139,6 +139,7 @@ export function BoardForm({ board, open, onClose }: BoardFormProps) {
               id="name"
               placeholder="e.g., CBSE, ICSE, State Board"
               {...register("name")}
+              onChange={(e) => setValue("name", e.target.value)}
               className={errors.name ? "border-destructive focus:ring-destructive" : ""}
             />
             {errors.name && <p className="text-sm text-destructive font-medium">{errors.name.message}</p>}
@@ -152,6 +153,7 @@ export function BoardForm({ board, open, onClose }: BoardFormProps) {
               id="slug"
               placeholder="board-url-slug"
               {...register("slug")}
+              onChange={(e) => setValue("slug", generateSlug(e.target.value))}
               className={errors.slug ? "border-destructive focus:ring-destructive" : ""}
             />
             {errors.slug && <p className="text-sm text-destructive font-medium">{errors.slug.message}</p>}
