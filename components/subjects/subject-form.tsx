@@ -33,6 +33,8 @@ import {
 } from "@/lib/api/educationApi";
 import { generateSlug } from "@/lib/utils/slugify";
 import { CloudinaryUpload } from "../ui/cloudinary-upload";
+import SelectBoard from "../common/SelectBoard";
+import SelectClass from "../common/SelectClass";
 
 const subjectSchema = z.object({
   name: z
@@ -215,7 +217,7 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
   const handleLogoRemove = () => {
     setValue("imageUrl", "");
   };
-  console.log("boards => ", boards);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -249,28 +251,12 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
           </div>
 
           {/* Board Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="boardId">Board *</Label>
-            <Select
-              value={watch("boardId")}
-              onValueChange={(value) => setValue("boardId", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a board" />
-              </SelectTrigger>
-              <SelectContent>
-                {allBoards.length > 0 &&
-                  allBoards?.map((board) => (
-                    <SelectItem key={board?.id} value={board?.id}>
-                      {board?.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-            {errors.boardId && (
-              <p className="text-sm text-red-600">{errors.boardId.message}</p>
-            )}
-          </div>
+          <SelectBoard 
+            allBoards={allBoards}
+            watch={watch}
+            setValue={setValue}
+            errors={errors}
+          />
 
           {/* Class Selection */}
           <div className="space-y-2">
@@ -301,6 +287,12 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
               <p className="text-sm text-red-600">{errors.classId.message}</p>
             )}
           </div>
+          <SelectClass 
+            classes={classes}
+            watch={watch}
+            setValue={setValue}
+            errors={errors}
+          />
 
           {/* Subject Name */}
           <div className="space-y-2">
@@ -310,7 +302,6 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
               placeholder="e.g., Mathematics, Physics, English Literature"
               {...register("name")}
               onChange={(e) => setValue("name", e.target.value)}
-              error={errors.name?.message}
             />
             {errors.name && (
               <p className="text-sm text-red-600">{errors.name.message}</p>
@@ -325,7 +316,6 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
               placeholder="subject-url-slug"
               {...register("slug")}
               onChange={(e) => setValue("slug", e.target.value)}
-              error={errors.slug?.message}
             />
             {errors.slug && (
               <p className="text-sm text-red-600">{errors.slug.message}</p>

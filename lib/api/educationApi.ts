@@ -42,6 +42,7 @@ export interface Chapter {
   pdfUrl: string
   classId: string
   subjectId: string
+  chapterNumber: number
   class?: Class
   subject?: Subject
   createdAt: string

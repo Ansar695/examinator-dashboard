@@ -19,7 +19,7 @@ interface CloudinaryUploadProps {
   required?: boolean
   error?: string
   className?: string
-  variant?: "avatar" | "dropzone" | "button"
+  variant?: "avatar" | "dropzone" | "button";
 }
 
 export function CloudinaryUpload({

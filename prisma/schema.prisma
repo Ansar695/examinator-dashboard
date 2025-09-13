@@ -64,6 +64,7 @@ model Chapter {
   name      String
   slug      String   @unique
   pdfUrl    String
+  chapterNumber    Int
   classId   String   @db.ObjectId
   subjectId String   @db.ObjectId
   createdAt DateTime @default(now())

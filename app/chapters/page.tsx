@@ -143,8 +143,8 @@ export default function ChaptersPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-100">
-                        <FileText className="h-6 w-6 text-red-600" />
+                      <div className="flex h-16 w-16 min-w-16 items-center justify-center rounded-lg bg-red-100 font-bold">
+                        Ch:{chapter.chapterNumber}
                       </div>
                       <div>
                         <CardTitle className="text-lg">{chapter.name}</CardTitle>

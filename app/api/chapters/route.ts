@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, pdfUrl, classId, subjectId, slug: customSlug } = body
+    const { name, pdfUrl, classId, subjectId, slug: customSlug, chapterNumber } = body
 
     const slug = customSlug || generateSlug(name)
 
@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
         name,
         slug,
         pdfUrl,
+        chapterNumber,
         classId,
         subjectId,
       },

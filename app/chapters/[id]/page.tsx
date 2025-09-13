@@ -2,18 +2,44 @@
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Edit, Download, Eye, Calendar, GraduationCap, Library, FileText } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  ArrowLeft,
+  Edit,
+  Download,
+  Eye,
+  Calendar,
+  GraduationCap,
+  Library,
+  FileText,
+  Sparkles,
+  MoreVertical,
+} from "lucide-react"
 import Link from "next/link"
 import { useGetChaptersQuery } from "@/lib/api/educationApi"
 import { useState } from "react"
 import { ChapterForm } from "@/components/chapters/chapter-form"
+import { SavedQuestionsList } from "@/components/chapters/saved-questions-list"
+import { QuestionGenerationModal } from "@/components/chapters/questions-generation-modal"
+
+interface Question {
+  id: number
+  question: string
+  type: string
+  marks: number
+  options?: string[]
+  correctAnswer?: string
+  expectedAnswer?: string
+}
 
 export default function ChapterDetailPage({ params }: { params: { id: string } }) {
   const [showEditForm, setShowEditForm] = useState(false)
-  const { data: chapters = [], isLoading, error } = useGetChaptersQuery()
+  const [showQuestionModal, setShowQuestionModal] = useState(false)
+  const [savedQuestions, setSavedQuestions] = useState<Question[]>([])
 
+  const { data: chapters = [], isLoading, error } = useGetChaptersQuery()
   const chapterData = chapters.find((c) => c.id === params.id)
 
   const handleDownload = (pdfUrl: string, chapterName: string) => {
@@ -24,6 +50,24 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  const handleSaveQuestions = (questions: Question[]) => {
+    setSavedQuestions((prev) => [...prev, ...questions])
+    // TODO: Here you would call your MongoDB API to save questions
+    console.log("[v0] Saving questions to MongoDB:", questions)
+  }
+
+  const handleUpdateQuestion = (id: number, updatedQuestion: Question) => {
+    setSavedQuestions((prev) => prev.map((q) => (q.id === id ? updatedQuestion : q)))
+    // TODO: Here you would call your MongoDB API to update question
+    console.log("[v0] Updating question in MongoDB:", updatedQuestion)
+  }
+
+  const handleDeleteQuestion = (id: number) => {
+    setSavedQuestions((prev) => prev.filter((q) => q.id !== id))
+    // TODO: Here you would call your MongoDB API to delete question
+    console.log("[v0] Deleting question from MongoDB:", id)
   }
 
   if (isLoading) {
@@ -67,21 +111,7 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
           </Link>
           <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">{chapterData.name}</h1>
-            <p className="text-slate-600">Chapter details and PDF management</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => window.open(chapterData.pdfUrl, "_blank")}>
-              <Eye className="mr-2 h-4 w-4" />
-              View PDF
-            </Button>
-            <Button variant="outline" onClick={() => handleDownload(chapterData.pdfUrl, chapterData.name)}>
-              <Download className="mr-2 h-4 w-4" />
-              Download
-            </Button>
-            <Button onClick={() => setShowEditForm(true)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Chapter
-            </Button>
+            <p className="text-slate-600">Chapter details and AI question generation</p>
           </div>
         </div>
 
@@ -93,13 +123,49 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
                 <FileText className="h-10 w-10 text-red-600" />
               </div>
               <div className="flex-1">
-                <CardTitle className="text-2xl">{chapterData.name}</CardTitle>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="secondary">{chapterData.slug}</Badge>
-                  <Badge variant="outline" className="text-xs">
-                    <Calendar className="mr-1 h-3 w-3" />
-                    Created {new Date(chapterData.createdAt).toLocaleDateString()}
-                  </Badge>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-2xl">{chapterData.name}</CardTitle>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="secondary">{chapterData.slug}</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        <Calendar className="mr-1 h-3 w-3" />
+                        Created {new Date(chapterData.createdAt).toLocaleDateString()}
+                      </Badge>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:bg-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                        <span className="sr-only">Open menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        onClick={() => window.open(chapterData.pdfUrl, "_blank")}
+                        className="cursor-pointer"
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        View PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDownload(chapterData.pdfUrl, chapterData.name)}
+                        className="cursor-pointer"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowEditForm(true)} className="cursor-pointer">
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Details
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center gap-2">
@@ -120,50 +186,36 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
           </CardHeader>
         </Card>
 
-        {/* PDF Preview */}
+        {/* AI Question Generation Section */}
         <Card>
           <CardHeader>
-            <CardTitle>PDF Preview</CardTitle>
-            <CardDescription>View the chapter content directly in your browser</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="aspect-[4/3] w-full bg-slate-100 rounded-lg flex items-center justify-center">
-              <iframe src={chapterData.pdfUrl} className="w-full h-full rounded-lg" title={`${chapterData.name} PDF`} />
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-blue-600" />
+                  AI Question Generation
+                </CardTitle>
+                <CardDescription>Generate intelligent questions from chapter content</CardDescription>
+              </div>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setShowQuestionModal(true)}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Generate Questions
+              </Button>
             </div>
-          </CardContent>
+          </CardHeader>
         </Card>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Manage this chapter</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-3">
-              <Button
-                variant="outline"
-                onClick={() => window.open(chapterData.pdfUrl, "_blank")}
-                className="bg-transparent"
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                View in New Tab
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleDownload(chapterData.pdfUrl, chapterData.name)}
-                className="bg-transparent"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Download PDF
-              </Button>
-              <Button variant="outline" onClick={() => setShowEditForm(true)} className="bg-transparent">
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Details
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <SavedQuestionsList
+          questions={savedQuestions}
+          onUpdateQuestion={handleUpdateQuestion}
+          onDeleteQuestion={handleDeleteQuestion}
+        />
+
+        <QuestionGenerationModal
+          open={showQuestionModal}
+          onClose={() => setShowQuestionModal(false)}
+          onSaveQuestions={handleSaveQuestions}
+        />
 
         {/* Edit Form Modal */}
         <ChapterForm chapterData={chapterData} open={showEditForm} onClose={() => setShowEditForm(false)} />
