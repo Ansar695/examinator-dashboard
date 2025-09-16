@@ -18,14 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Upload, FileText, X } from "lucide-react";
-import {
   useCreateChapterMutation,
   useUpdateChapterMutation,
   useGetClassesQuery,
@@ -35,14 +27,16 @@ import { generateSlug } from "@/lib/utils/slugify";
 import SelectClass from "../common/SelectClass";
 import SelectSubject from "../common/SelectSubject";
 import { CloudinaryUpload } from "../ui/cloudinary-upload";
+import { EMBEDDINGS_BASE_URL } from "@/config";
+import { toast } from "../ui/use-toast";
+import { useToast } from "../common/CustomToast";
 
 const chapterSchema = z.object({
   name: z
     .string()
     .min(1, "Chapter name is required")
     .max(100, "Chapter name must be less than 100 characters"),
-  chapterNumber: z
-    .number(),
+  chapterNumber: z.number(),
   slug: z
     .string()
     .min(1, "Slug is required")
@@ -61,9 +55,11 @@ interface ChapterFormProps {
 }
 
 export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
+  const { showSuccess, showError, ToastComponent } = useToast();
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>("");
+  const[embeddingsLoader, setEmbeddingLoader] = useState(false)
 
   const [createChapter, { isLoading: isCreating }] = useCreateChapterMutation();
   const [updateChapter, { isLoading: isUpdating }] = useUpdateChapterMutation();
@@ -191,6 +187,42 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
     }
   };
 
+  const uploadChapterForEmbeddings = async (
+    data: any,
+    chapterFormData: any
+  ) => {
+    try {
+      const selectedClass = classes?.find((c) => c.id === data.classId);
+      const formData = new FormData();
+      formData.append("subject", data?.name);
+      formData.append("book", selectedClass?.name as string);
+      formData.append("chapter", data?.name);
+      formData.append("pdf_url", data?.pdfUrl);
+      setEmbeddingLoader(true)
+      const embeddingsResponse = await fetch(
+        `${EMBEDDINGS_BASE_URL}/admin/upload_chapter`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+setEmbeddingLoader(false)
+      const parsedResp = await embeddingsResponse.json();
+      if (!embeddingsResponse?.ok) {
+        showError(parsedResp?.details ?? "Failed to create embeddings.");
+      } else {
+        if (parsedResp.success) {
+          showSuccess("Embeddings created successfully, uploading embeddings");
+        }
+        await createChapter(chapterFormData).unwrap();
+      }
+    } catch (error) {
+      console.log("error");
+      setEmbeddingLoader(false)
+      return error;
+    }
+  };
+
   const onSubmit = async (data: ChapterFormData) => {
     try {
       let pdfUrl = data.pdfUrl;
@@ -211,7 +243,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
           chapter: chapterFormData,
         }).unwrap();
       } else {
-        await createChapter(chapterFormData).unwrap();
+        await uploadChapterForEmbeddings(data, chapterFormData);
       }
 
       onClose();
@@ -243,7 +275,6 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
           <div className="space-y-2">
             <div className="flex items-center gap-4">
               <CloudinaryUpload
@@ -254,7 +285,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
                 onUpload={handleLogoUpload}
                 onRemove={handleLogoRemove}
                 error={errors.pdfUrl?.message}
-                maxSize={5}
+                maxSize={20}
               />
             </div>
           </div>
@@ -284,12 +315,18 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
               placeholder="e.g., Introduction to Algebra, Laws of Motion"
               {...register("chapterNumber")}
               type="number"
-              onChange={(e) => setValue("chapterNumber", parseInt(e.target.value))}
+              onChange={(e) =>
+                setValue("chapterNumber", parseInt(e.target.value))
+              }
               className="border border-gray-300"
             />
             {errors.name && (
-              <p className="text-sm t
-              ext-red-600">{errors.name.message}</p>
+              <p
+                className="text-sm t
+              ext-red-600"
+              >
+                {errors.name.message}
+              </p>
             )}
           </div>
 
@@ -332,7 +369,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading || isUploading}>
-              {isLoading || isUploading ? (
+              {isLoading || isUploading || embeddingsLoader ? (
                 <>
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   {isUploading
@@ -350,6 +387,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
           </DialogFooter>
         </form>
       </DialogContent>
+      {ToastComponent}
     </Dialog>
   );
 }

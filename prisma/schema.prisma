@@ -75,6 +75,70 @@ model Chapter {
   subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   
   @@map("chapters")
+  MCQQuestions MCQQuestion[]
+  ShortQuestions ShortQuestion[]
+  LongQuestions LongQuestion[]
+}
+
+model MCQQuestion {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  question      String
+  options       String[]     // Array of 4 options
+  correctAnswer Int          // Index of correct option (0-3)
+  difficulty    Difficulty   @default(MEDIUM)
+  
+  // Hierarchical reference
+  chapterId     String       @db.ObjectId
+  
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  chapter       Chapter      @relation(fields: [chapterId], references: [id])
+  
+  @@index([chapterId])
+  @@map("mcq_questions")
+}
+
+model ShortQuestion {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  question      String
+  answer        String?
+  difficulty    Difficulty   @default(MEDIUM)
+  
+  // Hierarchical reference
+  chapterId     String       @db.ObjectId
+  
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  // Relation
+  chapter       Chapter      @relation(fields: [chapterId], references: [id])
+  
+  @@index([chapterId])
+  @@map("short_questions")
+}
+
+model LongQuestion {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  questionType  QuestionType @default(DEFAULT)
+  question      String
+  answer        String?
+  difficulty    Difficulty   @default(MEDIUM)
+  
+  // Hierarchical reference
+  chapterId     String       @db.ObjectId
+  
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  // Relation
+  chapter       Chapter      @relation(fields: [chapterId], references: [id])
+  
+  @@index([chapterId])
+  @@map("long_questions")
 }
 
 enum ClassType {
@@ -82,4 +146,17 @@ enum ClassType {
   SECONDARY
   HIGHER_SECONDARY
   INTERMEDIATE
+}
+
+// Enums
+enum QuestionType {
+  DEFAULT
+  ESSAY
+  OTHER
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
 }

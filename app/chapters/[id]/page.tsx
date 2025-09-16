@@ -23,6 +23,7 @@ import { useState } from "react"
 import { ChapterForm } from "@/components/chapters/chapter-form"
 import { SavedQuestionsList } from "@/components/chapters/saved-questions-list"
 import { QuestionGenerationModal } from "@/components/chapters/questions-generation-modal"
+import CustomDropdownMenu from "@/components/common/CustomDropdownMenu"
 
 interface Question {
   id: number
@@ -134,38 +135,11 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
                       </Badge>
                     </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem
-                        onClick={() => window.open(chapterData.pdfUrl, "_blank")}
-                        className="cursor-pointer"
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        View PDF
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleDownload(chapterData.pdfUrl, chapterData.name)}
-                        className="cursor-pointer"
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download PDF
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setShowEditForm(true)} className="cursor-pointer">
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit Details
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <CustomDropdownMenu 
+                    chapterData={{ pdfUrl: chapterData?.pdfUrl, name: chapterData?.name }}
+                    handleDownload={handleDownload}
+                    setShowEditForm={setShowEditForm}
+                  />
                 </div>
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center gap-2">
