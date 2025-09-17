@@ -189,6 +189,8 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
           open={showQuestionModal}
           onClose={() => setShowQuestionModal(false)}
           onSaveQuestions={handleSaveQuestions}
+          classNumber={chapterData.class?.name ?? null}
+          chapterName={chapterData.name}
         />
 
         {/* Edit Form Modal */}

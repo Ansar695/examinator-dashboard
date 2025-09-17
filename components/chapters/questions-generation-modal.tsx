@@ -16,6 +16,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sparkles, Loader2 } from "lucide-react"
 import { QuestionEditor } from "./question-editor"
+import { EMBEDDINGS_BASE_URL } from "@/config"
+import { useToast } from "../common/CustomToast"
 
 interface Question {
   id: number
@@ -31,6 +33,8 @@ interface QuestionGenerationModalProps {
   open: boolean
   onClose: () => void
   onSaveQuestions: (questions: Question[]) => void
+  classNumber: string | null
+  chapterName: string
 }
 
 // Static question templates for demonstration
@@ -95,40 +99,139 @@ const staticQuestionTemplates = {
   ],
 }
 
-export function QuestionGenerationModal({ open, onClose, onSaveQuestions }: QuestionGenerationModalProps) {
+export function QuestionGenerationModal({ classNumber, chapterName, open, onClose, onSaveQuestions }: QuestionGenerationModalProps) {
   const [questionType, setQuestionType] = useState("")
   const [totalQuestions, setTotalQuestions] = useState("")
   const [marksPerQuestion, setMarksPerQuestion] = useState("")
   const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [showGenerated, setShowGenerated] = useState(false)
+  
+  const { showSuccess, showError, ToastComponent } = useToast();
+
+   const genrateAIQuestions = async (
+      questionType: string,
+      totalQuestions: any
+    ) => {
+      try {
+        if(!classNumber) showSuccess("Please enter class number (e.g. 11, 12).")
+        if(!chapterName) showSuccess("Please enter chapter name.")
+
+        let urlType = `${EMBEDDINGS_BASE_URL}/generate_mcqs`
+        if(questionType === "short"){
+          urlType = `${EMBEDDINGS_BASE_URL}/generate_short_questions`
+        } else if (questionType === "long") {
+          urlType = `${EMBEDDINGS_BASE_URL}/generate_long_questions`
+        }
+
+        if(!urlType) showSuccess("Unable to access this feature, please check network connection.")
+
+        const formData = new FormData();
+        formData.append("subject", chapterName);
+        formData.append("book", classNumber as string);
+        formData.append("chapter", chapterName);
+        formData.append("n", totalQuestions);
+        setIsGenerating(true);
+
+        const genResponse = await fetch(
+          urlType,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+        setIsGenerating(false);
+        const parsedResp = await genResponse.json();
+        console.log("genResponse ", genResponse)
+        console.log("genResponse parsedResp", parsedResp)
+        if (!genResponse?.ok) {
+          showError(parsedResp?.details ?? "Failed to create embeddings.");
+        } else {
+          if (parsedResp.success) {
+            showSuccess("Questions generated successfully");
+          }
+        }
+      } catch (error) {
+        console.log("error", error);
+        setIsGenerating(false);
+        return error;
+      }
+    };
 
   const handleGenerateQuestions = async () => {
     if (!questionType || !totalQuestions || !marksPerQuestion) return
 
     setIsGenerating(true)
+    
+    try {
+        if(!classNumber) showSuccess("Please enter class number (e.g. 11, 12).")
+        if(!chapterName) showSuccess("Please enter chapter name.")
+
+        let urlType = `${EMBEDDINGS_BASE_URL}/generate_mcqs`
+        if(questionType === "short"){
+          urlType = `${EMBEDDINGS_BASE_URL}/generate_short_questions`
+        } else if (questionType === "long") {
+          urlType = `${EMBEDDINGS_BASE_URL}/generate_long_questions`
+        }
+
+        if(!urlType) showSuccess("Unable to access this feature, please check network connection.")
+
+        const formData = new FormData();
+        formData.append("subject", 'Periodic Table and Periodic Properties');
+        formData.append("book", classNumber as string);
+        formData.append("chapter", 'Periodic Table and Periodic Properties');
+        formData.append("n", totalQuestions);
+        setIsGenerating(true);
+
+        const genResponse = await fetch(
+          urlType,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+        setIsGenerating(false);
+        const parsedResp = await genResponse.json();
+        console.log("genResponse ", genResponse)
+        console.log("genResponse parsedResp", parsedResp)
+        if (!genResponse?.ok) {
+          showError(parsedResp?.details ?? "Failed to create embeddings.");
+        } else {
+          if (parsedResp.success) {
+            setGeneratedQuestions(parsedResp?.questions ?? [])
+            showSuccess("Questions generated successfully");
+          }else{
+            showError(parsedResp?.details ?? "Something went wrong, please try again lator")
+          }
+        }
+      } catch (error) {
+        console.log("error", error);
+        setIsGenerating(false);
+        showError("Something went wrong, please try again lator")
+        return error;
+      }
 
     // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    // await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    const questionsToGenerate = Number.parseInt(totalQuestions)
-    const marks = Number.parseInt(marksPerQuestion)
-    const templates = staticQuestionTemplates[questionType as keyof typeof staticQuestionTemplates] || []
+    // const questionsToGenerate = Number.parseInt(totalQuestions)
+    // const marks = Number.parseInt(marksPerQuestion)
+    // const templates = staticQuestionTemplates[questionType as keyof typeof staticQuestionTemplates] || []
 
-    const newQuestions: Question[] = Array.from({ length: questionsToGenerate }, (_, index) => {
-      const template = templates[index % templates.length]
-      return {
-        id: Date.now() + index,
-        question: template.question,
-        type: questionType,
-        marks: marks,
-        options: template?.options,
-        correctAnswer: template?.correctAnswer,
-        expectedAnswer: template?.expectedAnswer,
-      }
-    })
+    // const newQuestions: Question[] = Array.from({ length: questionsToGenerate }, (_, index) => {
+    //   const template = templates[index % templates.length]
+    //   return {
+    //     id: Date.now() + index,
+    //     question: template.question,
+    //     type: questionType,
+    //     marks: marks,
+    //     options: template?.options,
+    //     correctAnswer: template?.correctAnswer,
+    //     expectedAnswer: template?.expectedAnswer,
+    //   }
+    // })
 
-    setGeneratedQuestions(newQuestions)
+    // setGeneratedQuestions(newQuestions)
     setIsGenerating(false)
     setShowGenerated(true)
   }
@@ -222,8 +325,8 @@ export function QuestionGenerationModal({ open, onClose, onSaveQuestions }: Ques
           <div className="flex-1 min-h-0">
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-slate-600">
-                Generated {generatedQuestions.length} questions • Total marks:{" "}
-                {generatedQuestions.reduce((sum, q) => sum + q.marks, 0)}
+                Generated {generatedQuestions?.length} questions • Total marks:{" "}
+                {generatedQuestions?.reduce((sum, q) => sum + q.marks, 0)}
               </p>
               <Button variant="outline" size="sm" onClick={() => setShowGenerated(false)}>
                 Back to Settings
@@ -232,7 +335,7 @@ export function QuestionGenerationModal({ open, onClose, onSaveQuestions }: Ques
 
             <ScrollArea className="h-[85%] pr-4">
               <div className="space-y-4">
-                {generatedQuestions.map((question, index) => (
+                {generatedQuestions?.map((question, index) => (
                   <QuestionEditor
                     key={question.id}
                     question={question}
@@ -279,6 +382,7 @@ export function QuestionGenerationModal({ open, onClose, onSaveQuestions }: Ques
           )}
         </DialogFooter>
       </DialogContent>
+      {ToastComponent}
     </Dialog>
   )
 }

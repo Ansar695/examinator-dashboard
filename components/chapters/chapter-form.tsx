@@ -59,7 +59,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>("");
-  const[embeddingsLoader, setEmbeddingLoader] = useState(false)
+  const [embeddingsLoader, setEmbeddingLoader] = useState(false);
 
   const [createChapter, { isLoading: isCreating }] = useCreateChapterMutation();
   const [updateChapter, { isLoading: isUpdating }] = useUpdateChapterMutation();
@@ -198,7 +198,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
       formData.append("book", selectedClass?.name as string);
       formData.append("chapter", data?.name);
       formData.append("pdf_url", data?.pdfUrl);
-      setEmbeddingLoader(true)
+      setEmbeddingLoader(true);
       const embeddingsResponse = await fetch(
         `${EMBEDDINGS_BASE_URL}/admin/upload_chapter`,
         {
@@ -206,7 +206,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
           body: formData,
         }
       );
-setEmbeddingLoader(false)
+      setEmbeddingLoader(false);
       const parsedResp = await embeddingsResponse.json();
       if (!embeddingsResponse?.ok) {
         showError(parsedResp?.details ?? "Failed to create embeddings.");
@@ -218,7 +218,7 @@ setEmbeddingLoader(false)
       }
     } catch (error) {
       console.log("error");
-      setEmbeddingLoader(false)
+      setEmbeddingLoader(false);
       return error;
     }
   };

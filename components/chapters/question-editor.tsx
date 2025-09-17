@@ -17,6 +17,7 @@ interface Question {
   options?: string[]
   correctAnswer?: string
   expectedAnswer?: string
+  questionType: string
 }
 
 interface QuestionEditorProps {
@@ -53,27 +54,27 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="capitalize">
-              {question.type}
+              {question?.questionType}
             </Badge>
             <span className="text-sm text-slate-500">Q{index + 1}</span>
           </div>
           <div className="flex items-center gap-2">
             {isEditing ? (
               <div className="flex items-center gap-1">
-                <Label htmlFor={`marks-${question.id}`} className="text-xs text-slate-500">
+                <Label htmlFor={`marks-${index}`} className="text-xs text-slate-500">
                   Marks:
                 </Label>
                 <Input
-                  id={`marks-${question.id}`}
+                  id={`marks-${index}`}
                   type="number"
-                  value={editedQuestion.marks}
+                  // value={editedQuestion.marks}
                   onChange={(e) => setEditedQuestion({ ...editedQuestion, marks: Number(e.target.value) })}
                   className="w-16 h-7 text-xs"
                   min="1"
                 />
               </div>
             ) : (
-              <Badge variant="secondary">{question.marks} marks</Badge>
+              <Badge variant="secondary">{5} marks</Badge>
             )}
             {showActions && (
               <div className="flex gap-1">
@@ -94,7 +95,7 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => onDelete(question.id)}
+                      onClick={() => onDelete(index)}
                       className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -121,9 +122,9 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
         </div>
 
         {/* MCQ Options */}
-        {question.type === "mcqs" && question.options && (
+        {question?.questionType === "mcqs" && question?.options && (
           <div className="space-y-2">
-            {question.options.map((option, optIndex) => (
+            {question?.options?.map((option, optIndex) => (
               <div key={optIndex} className="flex items-center gap-2">
                 <span className="text-sm font-medium text-slate-500 w-6">{String.fromCharCode(65 + optIndex)}.</span>
                 {isEditing ? (
@@ -174,7 +175,7 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
             <Label className="text-xs text-slate-500 mb-1 block">Expected Answer:</Label>
             {isEditing ? (
               <Textarea
-                value={editedQuestion.expectedAnswer}
+                // value={editedQuestion.expectedAnswer}
                 onChange={(e) => setEditedQuestion({ ...editedQuestion, expectedAnswer: e.target.value })}
                 className="min-h-[80px] resize-none text-sm"
                 placeholder="Enter expected answer..."
