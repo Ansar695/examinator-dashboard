@@ -7,30 +7,22 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Search, Filter } from "lucide-react"
 import { QuestionEditor } from "./question-editor"
-
-interface Question {
-  id: number
-  question: string
-  type: string
-  marks: number
-  options?: string[]
-  correctAnswer?: string
-  expectedAnswer?: string
-}
+import { Question } from "./questions-generation-modal"
 
 interface SavedQuestionsListProps {
   questions: Question[]
-  onUpdateQuestion: (id: number, updatedQuestion: Question) => void
-  onDeleteQuestion: (id: number) => void
+  onUpdateQuestion: (id: string, updatedQuestion: Question) => void
+  onDeleteQuestion: (id: string) => void
+  qType: string
 }
 
-export function SavedQuestionsList({ questions, onUpdateQuestion, onDeleteQuestion }: SavedQuestionsListProps) {
+export function SavedQuestionsList({ questions, onUpdateQuestion, onDeleteQuestion, qType }: SavedQuestionsListProps) {
   const [selectedQuestionType, setSelectedQuestionType] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
 
   const filteredQuestions = questions.filter((q) => {
-    const matchesType = selectedQuestionType === "all" || q.type === selectedQuestionType
+    const matchesType = selectedQuestionType === "all" || q.questionType === selectedQuestionType
     const matchesSearch = q.question.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesType && matchesSearch
   })
@@ -62,9 +54,9 @@ export function SavedQuestionsList({ questions, onUpdateQuestion, onDeleteQuesti
     <Card>
       <CardHeader>
         <CardTitle>Saved Questions ({questions.length})</CardTitle>
-        <CardDescription>
+        {/* <CardDescription>
           Manage and edit your saved questions • Total marks: {questions.reduce((sum, q) => sum + q.marks, 0)}
-        </CardDescription>
+        </CardDescription> */}
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters and Search */}
@@ -106,6 +98,7 @@ export function SavedQuestionsList({ questions, onUpdateQuestion, onDeleteQuesti
               index={(currentPage - 1) * questionsPerPage + index}
               onUpdate={onUpdateQuestion}
               onDelete={onDeleteQuestion}
+              qType={qType}
             />
           ))}
         </div>

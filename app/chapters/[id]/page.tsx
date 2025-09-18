@@ -22,23 +22,14 @@ import { useGetChaptersQuery } from "@/lib/api/educationApi"
 import { useState } from "react"
 import { ChapterForm } from "@/components/chapters/chapter-form"
 import { SavedQuestionsList } from "@/components/chapters/saved-questions-list"
-import { QuestionGenerationModal } from "@/components/chapters/questions-generation-modal"
+import { Question, QuestionGenerationModal } from "@/components/chapters/questions-generation-modal"
 import CustomDropdownMenu from "@/components/common/CustomDropdownMenu"
-
-interface Question {
-  id: number
-  question: string
-  type: string
-  marks: number
-  options?: string[]
-  correctAnswer?: string
-  expectedAnswer?: string
-}
 
 export default function ChapterDetailPage({ params }: { params: { id: string } }) {
   const [showEditForm, setShowEditForm] = useState(false)
   const [showQuestionModal, setShowQuestionModal] = useState(false)
   const [savedQuestions, setSavedQuestions] = useState<Question[]>([])
+  const [qType, setQType] = useState<string>("mcqs")
 
   const { data: chapters = [], isLoading, error } = useGetChaptersQuery()
   const chapterData = chapters.find((c) => c.id === params.id)
@@ -53,19 +44,19 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
     document.body.removeChild(link)
   }
 
-  const handleSaveQuestions = (questions: Question[]) => {
+  const handleSaveQuestions = (questions: Question[], qType: string) => {
     setSavedQuestions((prev) => [...prev, ...questions])
     // TODO: Here you would call your MongoDB API to save questions
     console.log("[v0] Saving questions to MongoDB:", questions)
   }
 
-  const handleUpdateQuestion = (id: number, updatedQuestion: Question) => {
+  const handleUpdateQuestion = (id: string, updatedQuestion: Question) => {
     setSavedQuestions((prev) => prev.map((q) => (q.id === id ? updatedQuestion : q)))
     // TODO: Here you would call your MongoDB API to update question
     console.log("[v0] Updating question in MongoDB:", updatedQuestion)
   }
 
-  const handleDeleteQuestion = (id: number) => {
+  const handleDeleteQuestion = (id: string) => {
     setSavedQuestions((prev) => prev.filter((q) => q.id !== id))
     // TODO: Here you would call your MongoDB API to delete question
     console.log("[v0] Deleting question from MongoDB:", id)
@@ -181,6 +172,7 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
 
         <SavedQuestionsList
           questions={savedQuestions}
+          qType={qType}
           onUpdateQuestion={handleUpdateQuestion}
           onDeleteQuestion={handleDeleteQuestion}
         />

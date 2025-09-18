@@ -10,25 +10,24 @@ import { Badge } from "@/components/ui/badge"
 import { Edit2, Trash2, Save, X } from "lucide-react"
 
 interface Question {
-  id: number
+  id: string
   question: string
-  type: string
-  marks: number
+  difficulty: string
   options?: string[]
-  correctAnswer?: string
-  expectedAnswer?: string
+  answer_index?: string
   questionType: string
 }
 
 interface QuestionEditorProps {
   question: Question
   index: number
-  onUpdate: (id: number, updatedQuestion: Question) => void
-  onDelete: (id: number) => void
-  showActions?: boolean
+  onUpdate: (id: string, updatedQuestion: Question) => void
+  onDelete: (id: string) => void
+  showActions?: boolean;
+  qType: string
 }
 
-export function QuestionEditor({ question, index, onUpdate, onDelete, showActions = true }: QuestionEditorProps) {
+export function QuestionEditor({ question, index, onUpdate, onDelete, showActions = true, qType }: QuestionEditorProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedQuestion, setEditedQuestion] = useState(question)
 
@@ -54,12 +53,12 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="capitalize">
-              {question?.questionType}
+              {qType}
             </Badge>
             <span className="text-sm text-slate-500">Q{index + 1}</span>
           </div>
           <div className="flex items-center gap-2">
-            {isEditing ? (
+            {/* {isEditing ? (
               <div className="flex items-center gap-1">
                 <Label htmlFor={`marks-${index}`} className="text-xs text-slate-500">
                   Marks:
@@ -75,7 +74,7 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
               </div>
             ) : (
               <Badge variant="secondary">{5} marks</Badge>
-            )}
+            )} */}
             {showActions && (
               <div className="flex gap-1">
                 {isEditing ? (
@@ -95,7 +94,7 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => onDelete(index)}
+                      onClick={() => onDelete(question?.id)}
                       className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -122,7 +121,7 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
         </div>
 
         {/* MCQ Options */}
-        {question?.questionType === "mcqs" && question?.options && (
+        {qType === "mcqs" && question?.options && (
           <div className="space-y-2">
             {question?.options?.map((option, optIndex) => (
               <div key={optIndex} className="flex items-center gap-2">
@@ -137,15 +136,15 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
                 ) : (
                   <div
                     className={`flex-1 text-sm p-2 rounded border ${
-                      option === question.correctAnswer ? "bg-green-50 border-green-200" : "bg-slate-50"
+                      option === question.options?.[index] ? "bg-green-50 border-green-200" : "bg-slate-50"
                     }`}
                   >
                     {option}
-                    {option === question.correctAnswer && (
+                    {/* {option === question.correctAnswer && (
                       <Badge variant="outline" className="ml-2 text-xs bg-green-100 text-green-700">
                         Correct
                       </Badge>
-                    )}
+                    )} */}
                   </div>
                 )}
               </div>
@@ -154,8 +153,8 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
               <div className="mt-2">
                 <Label className="text-xs text-slate-500">Correct Answer:</Label>
                 <select
-                  value={editedQuestion.correctAnswer}
-                  onChange={(e) => setEditedQuestion({ ...editedQuestion, correctAnswer: e.target.value })}
+                  // value={editedQuestion.correctAnswer}
+                  // onChange={(e) => setEditedQuestion({ ...editedQuestion, correctAnswer: e.target.value })}
                   className="ml-2 text-xs border rounded px-2 py-1"
                 >
                   {editedQuestion.options?.map((option, idx) => (
@@ -170,7 +169,7 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
         )}
 
         {/* Expected Answer for non-MCQ questions */}
-        {question.type !== "mcqs" && question.expectedAnswer && (
+        {/* {question.type !== "mcqs" && question.expectedAnswer && (
           <div className="mt-3 p-3 bg-slate-50 rounded border">
             <Label className="text-xs text-slate-500 mb-1 block">Expected Answer:</Label>
             {isEditing ? (
@@ -184,7 +183,7 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
               <p className="text-sm text-slate-700">{question.expectedAnswer}</p>
             )}
           </div>
-        )}
+        )} */}
       </CardContent>
     </Card>
   )
