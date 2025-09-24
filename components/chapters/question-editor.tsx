@@ -8,16 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Edit2, Trash2, Save, X } from "lucide-react"
-
-interface Question {
-  id: string
-  question: string
-  difficulty: string
-  options?: string[]
-  answer_index?: string
-  questionType: string
-  answer?: string;
-}
+import { Question } from "./questions-generation-modal"
 
 interface QuestionEditorProps {
   question: Question
@@ -25,7 +16,7 @@ interface QuestionEditorProps {
   onUpdate: (id: string, updatedQuestion: Question) => void
   onDelete: (id: string) => void
   showActions?: boolean;
-  qType: string
+  qType?: string
 }
 
 export function QuestionEditor({ question, index, onUpdate, onDelete, showActions = true, qType }: QuestionEditorProps) {
@@ -137,15 +128,15 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
                 ) : (
                   <div
                     className={`flex-1 text-sm p-2 rounded border ${
-                      option === question.options?.[index] ? "bg-green-50 border-green-200" : "bg-slate-50"
+                      optIndex === parseInt(question.answer_index || '-1') ? "bg-green-50 border-green-200" : "bg-slate-50"
                     }`}
                   >
                     {option}
-                    {/* {option === question.correctAnswer && (
+                    {optIndex === parseInt(question.answer_index || '-1') && (
                       <Badge variant="outline" className="ml-2 text-xs bg-green-100 text-green-700">
                         Correct
                       </Badge>
-                    )} */}
+                    )}
                   </div>
                 )}
               </div>
@@ -154,12 +145,12 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
               <div className="mt-2">
                 <Label className="text-xs text-slate-500">Correct Answer:</Label>
                 <select
-                  // value={editedQuestion.correctAnswer}
-                  // onChange={(e) => setEditedQuestion({ ...editedQuestion, correctAnswer: e.target.value })}
+                  value={editedQuestion.answer_index || '0'}
+                  onChange={(e) => setEditedQuestion({ ...editedQuestion, answer_index: e.target.value })}
                   className="ml-2 text-xs border rounded px-2 py-1"
                 >
                   {editedQuestion.options?.map((option, idx) => (
-                    <option key={idx} value={option}>
+                    <option key={idx} value={idx.toString()}>
                       {String.fromCharCode(65 + idx)}. {option}
                     </option>
                   ))}
@@ -169,20 +160,37 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
           </div>
         )}
 
-        {/* Expected Answer for non-MCQ questions */}
-        {qType === "short" && (
+        {/* Expected Answer for Short and Long questions */}
+        {(qType === "short" || qType === "long") && (
           <div className="mt-3 p-3 bg-slate-50 rounded border">
             <Label className="text-xs text-slate-500 mb-1 block">Answer:</Label>
             {isEditing ? (
               <Textarea
-                // value={editedQuestion.expectedAnswer}
+                value={editedQuestion.answer || ''}
                 onChange={(e) => setEditedQuestion({ ...editedQuestion, answer: e.target.value })}
-                className="min-h-[80px] resize-none text-sm"
+                className={`resize-none text-sm ${qType === "long" ? "min-h-[120px]" : "min-h-[80px]"}`}
                 placeholder="Enter expected answer..."
               />
             ) : (
-              <p className="text-sm text-slate-700">{question.answer}</p>
+              <p className="text-sm text-slate-700 whitespace-pre-wrap">{question.answer}</p>
             )}
+          </div>
+        )}
+
+        {/* Difficulty Badge */}
+        {question.difficulty && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-xs text-slate-500">Difficulty:</span>
+            <Badge
+              variant={
+                question.difficulty.toLowerCase() === 'easy' ? 'secondary' :
+                question.difficulty.toLowerCase() === 'medium' ? 'outline' :
+                'destructive'
+              }
+              className="text-xs"
+            >
+              {question.difficulty}
+            </Badge>
           </div>
         )}
       </CardContent>

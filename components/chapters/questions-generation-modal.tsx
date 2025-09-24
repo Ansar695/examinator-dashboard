@@ -22,9 +22,11 @@ import { useToast } from "../common/CustomToast"
 export interface Question {
   id: string
   question: string
-  questionType: string
-  options?: string[]
   difficulty: string
+  options?: string[]
+  answer_index?: string
+  questionType: string
+  answer?: string;
 }
 
 interface QuestionGenerationModalProps {
@@ -115,14 +117,18 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
   const handleSaveAllQuestions = () => {
     onSaveQuestions(generatedQuestions, qType)
     setGeneratedQuestions([])
+    setShowGenerated(false)
+    setTotalQuestions("")
+    setMarksPerQuestion("")
+    setQuestionType("")
   }
 
   const handleClose = () => {
     setQuestionType("")
     setTotalQuestions("")
     setMarksPerQuestion("")
-    setGeneratedQuestions([])
     setShowGenerated(false)
+    setGeneratedQuestions([])
     setIsGenerating(false)
     onClose()
   }

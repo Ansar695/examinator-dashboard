@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch paginated results
     const [questions, total] = await Promise.all([
-      prisma.mCQQuestion.findMany({
+      prisma.longQuestion.findMany({
         where,
         include: {
           chapter: true,
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
       }),
-      prisma.mCQQuestion.count({ where }),
+      prisma.longQuestion.count({ where }),
     ]);
 
     return NextResponse.json({
