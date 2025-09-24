@@ -33,71 +33,10 @@ interface QuestionGenerationModalProps {
   onSaveQuestions: (questions: Question[], qType: string) => void
   classNumber: string | null
   chapterName: string
+  isSaving: boolean;
 }
 
-// Static question templates for demonstration
-const staticQuestionTemplates = {
-  mcqs: [
-    {
-      question: "What is the primary function of mitochondria in a cell?",
-      options: ["Protein synthesis", "Energy production", "DNA storage", "Waste removal"],
-      correctAnswer: "Energy production",
-    },
-    {
-      question: "Which of the following is NOT a renewable energy source?",
-      options: ["Solar power", "Wind power", "Coal", "Hydroelectric power"],
-      correctAnswer: "Coal",
-    },
-    {
-      question: "What is the chemical formula for water?",
-      options: ["H2O", "CO2", "NaCl", "CH4"],
-      correctAnswer: "H2O",
-    },
-  ],
-  short: [
-    {
-      question: "Explain the process of photosynthesis in plants.",
-      expectedAnswer:
-        "Photosynthesis is the process by which plants convert light energy into chemical energy using chlorophyll, carbon dioxide, and water to produce glucose and oxygen.",
-    },
-    {
-      question: "What are the main components of the water cycle?",
-      expectedAnswer:
-        "The water cycle consists of evaporation, condensation, precipitation, and collection, forming a continuous cycle of water movement.",
-    },
-    {
-      question: "Define Newton's first law of motion.",
-      expectedAnswer:
-        "Newton's first law states that an object at rest stays at rest and an object in motion stays in motion unless acted upon by an external force.",
-    },
-  ],
-  long: [
-    {
-      question: "Discuss the impact of climate change on global ecosystems and propose potential solutions.",
-      expectedAnswer:
-        "Climate change significantly affects global ecosystems through rising temperatures, changing precipitation patterns, and extreme weather events. Solutions include renewable energy adoption, reforestation, and sustainable practices.",
-    },
-    {
-      question: "Analyze the causes and effects of the Industrial Revolution on society.",
-      expectedAnswer:
-        "The Industrial Revolution was caused by technological innovations, population growth, and capital accumulation, leading to urbanization, social changes, and economic transformation.",
-    },
-  ],
-  essay: [
-    {
-      question: "Analyze the role of technology in modern education and its future implications.",
-      expectedAnswer:
-        "Technology has revolutionized modern education by providing new tools, methods, and accessibility. Future implications include personalized learning, AI tutors, and global classroom connectivity.",
-    },
-    {
-      question: "Evaluate the impact of globalization on developing countries.",
-      expectedAnswer:
-        "Globalization has brought both opportunities and challenges to developing countries, including economic growth, cultural exchange, but also inequality and dependency issues.",
-    },
-  ],
-}
-
-export function QuestionGenerationModal({ classNumber, chapterName, open, onClose, onSaveQuestions }: QuestionGenerationModalProps) {
+export function QuestionGenerationModal({ classNumber, chapterName, open, onClose, onSaveQuestions, isSaving }: QuestionGenerationModalProps) {
   const [questionType, setQuestionType] = useState("")
   const [totalQuestions, setTotalQuestions] = useState("")
   const [marksPerQuestion, setMarksPerQuestion] = useState("")
@@ -142,8 +81,6 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
         );
         setIsGenerating(false);
         const parsedResp = await genResponse.json();
-        console.log("genResponse ", genResponse)
-        console.log("genResponse parsedResp", parsedResp)
         if (!genResponse?.ok) {
           showError(parsedResp?.details ?? "Failed to create embeddings.");
         } else {
@@ -162,26 +99,6 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
         return error;
       }
 
-    // Simulate API call delay
-    // await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    // const questionsToGenerate = Number.parseInt(totalQuestions)
-    // const marks = Number.parseInt(marksPerQuestion)
-    // const templates = staticQuestionTemplates[questionType as keyof typeof staticQuestionTemplates] || []
-
-    // const newQuestions: Question[] = Array.from({ length: questionsToGenerate }, (_, index) => {
-    //   const template = templates[index % templates.length]
-    //   return {
-    //     id: Date.now() + index,
-    //     question: template.question,
-    //     type: questionType,
-    //     marks: marks,
-    //     options: template?.options,
-    //     correctAnswer: template?.correctAnswer,
-    //     expectedAnswer: template?.expectedAnswer,
-    //   }
-    // })
-
     // setGeneratedQuestions(newQuestions)
     setIsGenerating(false)
     setShowGenerated(true)
@@ -197,7 +114,7 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
 
   const handleSaveAllQuestions = () => {
     onSaveQuestions(generatedQuestions, qType)
-    handleClose()
+    setGeneratedQuestions([])
   }
 
   const handleClose = () => {
@@ -326,10 +243,10 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
           ) : (
             <Button
               onClick={handleSaveAllQuestions}
-              disabled={generatedQuestions.length === 0}
+              disabled={generatedQuestions.length === 0 || isSaving}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              Save {generatedQuestions.length} Questions
+              {isSaving ? 'Saving...' : `Save ${generatedQuestions.length} Questions`}
             </Button>
           )}
         </DialogFooter>

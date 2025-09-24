@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { generateSlug } from "@/lib/utils/slugify";
 
 export async function GET(request: NextRequest) {
   try {
@@ -75,12 +74,11 @@ export async function POST(request: NextRequest) {
 
     // Handle multiple questions (array) or single question (object)
     const questionsArray = Array.isArray(body) ? body : [body];
-
+    console.log("questionsArray ", questionsArray)
     // Validate
     for (const q of questionsArray) {
       if (
         !q.question ||
-        !q.correctAnswer ||
         !q.options ||
         q.options?.length === 0
       ) {
@@ -96,26 +94,30 @@ export async function POST(request: NextRequest) {
       question: q.question,
       options: q.options,
       correctAnswer: q.correctAnswer,
-      difficulty: q.difficulty || "medium",
+      difficulty: (q.difficulty || "medium").toUpperCase(), // Convert to uppercase to match Prisma enum
       chapterId: q.chapterId,
       isActive: q.isActive ?? true,
     }));
 
+    console.log("data ", data)
     // Check for existing questions to avoid duplicates based on question string
-    const existingQuestions = await prisma.mCQQuestion.findMany({
-      where: {
-        question: { in: data.map(d => d.question) },
-      },
-      select: { question: true },
-    });
+    // const existingQuestions = await prisma.mCQQuestion.findMany({
+    //   where: {
+    //     question: { in: data.map(d => d.question) },
+    //   },
+    //   select: { question: true },
+    // });
 
-    const existingSet = new Set(existingQuestions.map(e => e.question));
-    const filteredData = data.filter(d => !existingSet.has(d.question));
+    // console.log("existingQuestions ", existingQuestions)
+
+    // const existingSet = new Set(existingQuestions.map(e => e.question));
+    // const filteredData = data.filter(d => !existingSet.has(d.question));
 
     // Insert only non-duplicates
     const created = await prisma.mCQQuestion.createMany({
-      data: filteredData,
+      data: data,
     });
+    console.log("created ", created)
 
     return NextResponse.json(
       { success: true, insertedCount: created.count },
