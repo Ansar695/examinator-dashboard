@@ -77,14 +77,10 @@ export async function POST(request: NextRequest) {
 
     // Validate input
     for (const q of questionsArray) {
-      if (
-        !q.question ||
-        !q.options ||
-        q.options?.length === 0
-      ) {
+      if ( !q.question || !q.chapterId ) {
         return NextResponse.json(
           {
-            error: "Each question must include 'question', 'options', 'correctAnswer', and 'chapterId'."
+            error: "Each question must include 'question' and 'chapterId'."
           },
           { status: 422 }
         );
@@ -95,7 +91,7 @@ export async function POST(request: NextRequest) {
     const questionsToCheck = questionsArray.map((q: any) => q.question);
 
     // Check for existing questions in database
-    const existingQuestions = await prisma.mCQQuestion.findMany({
+    const existingQuestions = await prisma.longQuestion.findMany({
       where: {
         question: {
           in: questionsToCheck
@@ -130,19 +126,16 @@ export async function POST(request: NextRequest) {
     // Prepare data for bulk insert
     const data = newQuestions.map((q: any) => ({
       question: q.question,
-      options: q.options,
-      correctAnswer: q.correctAnswer,
+      answer: q.answer,
       difficulty: (q.difficulty || "medium").toUpperCase(),
       chapterId: q.chapterId,
       isActive: q.isActive ?? true,
     }));
 
     // Insert only non-duplicates
-    const created = await prisma.mCQQuestion.createMany({
+    const created = await prisma.longQuestion.createMany({
       data: data,
     });
-
-    console.log("created ", created);
 
     return NextResponse.json(
       {
@@ -157,7 +150,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error("Error creating MCQs:", error);
+    console.error("Error creating Short Questions:", error);
     
     // Handle unique constraint violation if using database-level constraint
     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
@@ -168,7 +161,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: "Failed to create MCQs" },
+      { error: "Failed to create Short Questions" },
       { status: 500 }
     );
   }

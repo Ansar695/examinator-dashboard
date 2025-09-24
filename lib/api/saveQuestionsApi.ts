@@ -10,6 +10,25 @@ export interface MCQs {
   isActive: boolean;
 }
 
+export interface ShortQuestion {
+  id: string;
+  question: string;
+  answer: string;
+  difficulty: string;
+  chapterId: string;
+  isActive: boolean;
+}
+
+export interface LongQuestion {
+  id: string;
+  questionType: 'DEFAULT' | 'ESSAY' | 'OTHER';
+  question: string;
+  answer: string;
+  difficulty: string;
+  chapterId: string;
+  isActive: boolean;
+}
+
 export const questionsApi = createApi({
   reducerPath: "questionsApi",
   baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
@@ -23,7 +42,25 @@ export const questionsApi = createApi({
       }),
       invalidatesTags: ["MCQs"],
     }),
+
+    saveShortQuestion: builder.mutation<{ success: boolean; insertedCount: number }, Partial<ShortQuestion>[]>({
+      query: (payload) => ({
+        url: "/save-short-questions",
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["Short"],
+    }),
+
+    saveLongQuestion: builder.mutation<{ success: boolean; insertedCount: number }, Partial<LongQuestion>[]>({
+      query: (payload) => ({
+        url: "/save-long-questions",
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["Long"],
+    }),
   }),
 });
 
-export const { useSaveMCQsMutation } = questionsApi;
+export const { useSaveMCQsMutation, useSaveShortQuestionMutation, useSaveLongQuestionMutation } = questionsApi;

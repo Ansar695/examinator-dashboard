@@ -19,7 +19,7 @@ import { ChapterForm } from "@/components/chapters/chapter-form"
 import { SavedQuestionsList } from "@/components/chapters/saved-questions-list"
 import { Question, QuestionGenerationModal } from "@/components/chapters/questions-generation-modal"
 import CustomDropdownMenu from "@/components/common/CustomDropdownMenu"
-import { useSaveMCQsMutation } from "@/lib/api/saveQuestionsApi"
+import { LongQuestion, MCQs, ShortQuestion, useSaveLongQuestionMutation, useSaveMCQsMutation, useSaveShortQuestionMutation } from "@/lib/api/saveQuestionsApi"
 import { useToast } from "@/components/common/CustomToast"
 
 const dummyQuestionsMCQs = [
@@ -37,7 +37,7 @@ const dummyQuestionsMCQs = [
     },
     {
         "id": "b2c3d4e5-f6a7-8901-2345-67890abcdef0",
-        "question": "The group number of an element in the periodic table provides information about which of its atomic properties?",
+        "question": "Yes,The group number of an element in the periodic table provides information about which of its atomic properties?",
         "options": [
             "Its atomic mass.",
             "Its melting point.",
@@ -92,7 +92,9 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
   const [qType, setQType] = useState<string>("mcqs")
   const { showSuccess, showError, ToastComponent } = useToast();
 
-  const [saveMCQs, { data: saveResponse, isLoading: isSaving }] = useSaveMCQsMutation()
+  const [saveMCQs, { data: saveResponseMCQs, isLoading: isSaving }] = useSaveMCQsMutation()
+  const [saveShortQuestion, { data: saveResponseShort, isLoading: isSavingShort }] = useSaveShortQuestionMutation()
+  const [saveLongQuestion, { data: saveResponseLong, isLoading: isSavingLong }] = useSaveLongQuestionMutation()
   const { data: chapters = [], isLoading, error } = useGetChaptersQuery()
   const chapterData = chapters.find((c) => c.id === params.id)
 
@@ -106,16 +108,10 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
     document.body.removeChild(link)
   }
 
-  const handleSaveQuestions = async(questions: Question[], qType: string) => {
-    if(!params?.id) {
-      showError("Chapter ID not found")
-      return
-    }
-    
-    try {
-      // TODO: Replace dummyQuestionsMCQs with actual questions parameter
-      // For now, using dummy data as per the current implementation
-      const payload = questions?.map((q: any) => ({
+  const payloadFormat = (questions: Question[], qType: string) => {
+    let payload: any = []
+    if(qType === "mcqs") {
+      payload  = questions?.map((q: any) => ({
         id: q.id,
         question: q.question,
         options: q.options,
@@ -124,8 +120,50 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
         chapterId: params.id,
         isActive: q.isActive ?? true,
       }));
-      
-      const response = await saveMCQs(payload).unwrap()
+    }
+    if(qType === "short") {
+      payload = questions?.map((q: any) => ({
+        id: q.id,
+        question: q.question,
+        answer: q.answer,
+        difficulty: (q.difficulty || "medium").toUpperCase(),
+        chapterId: params.id,
+        isActive: q.isActive ?? true,
+      }));
+    }
+    if(qType === "long") {
+      payload = questions?.map((q: any) => ({
+        id: q.id,
+        questionType: q?.questionType || "DEFAULT",
+        question: q.question,
+        answer: q.answer,
+        difficulty: (q.difficulty || "medium").toUpperCase(),
+        chapterId: params.id,
+        isActive: q.isActive ?? true,
+      }));
+    }
+    return payload
+  }
+
+  const handleSaveQuestions = async(questions: Question[], qType: string) => {
+    if(!params?.id) {
+      showError("Chapter ID not found")
+      return
+    }
+    setQType(qType)
+    
+    try {
+      const payload = payloadFormat(questions, qType)
+      let response;
+      if(qType === "mcqs") {
+        response = await saveMCQs(payload as Partial<MCQs>[]).unwrap()
+      }
+      if (qType === "short") {
+        response = await saveShortQuestion(payload as Partial<ShortQuestion>[]).unwrap()
+      }
+      if (qType === "long") {
+        response = await saveLongQuestion(payload as Partial<LongQuestion>[]).unwrap()
+      }
       
       // Show success message
       const insertedCount = response?.insertedCount || payload.length
@@ -137,7 +175,7 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
       console.error("Error saving questions:", error)
       
       // Show appropriate error message
-      const errorMessage = error?.data?.error || error?.message || "Failed to save questions. Please try again."
+      const errorMessage = error?.data?.message || error?.message || "Failed to save questions. Please try again."
       showError(errorMessage)
     }
   }

@@ -16,6 +16,7 @@ interface Question {
   options?: string[]
   answer_index?: string
   questionType: string
+  answer?: string;
 }
 
 interface QuestionEditorProps {
@@ -169,21 +170,21 @@ export function QuestionEditor({ question, index, onUpdate, onDelete, showAction
         )}
 
         {/* Expected Answer for non-MCQ questions */}
-        {/* {question.type !== "mcqs" && question.expectedAnswer && (
+        {qType === "short" && (
           <div className="mt-3 p-3 bg-slate-50 rounded border">
-            <Label className="text-xs text-slate-500 mb-1 block">Expected Answer:</Label>
+            <Label className="text-xs text-slate-500 mb-1 block">Answer:</Label>
             {isEditing ? (
               <Textarea
                 // value={editedQuestion.expectedAnswer}
-                onChange={(e) => setEditedQuestion({ ...editedQuestion, expectedAnswer: e.target.value })}
+                onChange={(e) => setEditedQuestion({ ...editedQuestion, answer: e.target.value })}
                 className="min-h-[80px] resize-none text-sm"
                 placeholder="Enter expected answer..."
               />
             ) : (
-              <p className="text-sm text-slate-700">{question.expectedAnswer}</p>
+              <p className="text-sm text-slate-700">{question.answer}</p>
             )}
           </div>
-        )} */}
+        )}
       </CardContent>
     </Card>
   )

@@ -82,7 +82,7 @@ model Chapter {
 
 model MCQQuestion {
   id            String       @id @default(auto()) @map("_id") @db.ObjectId
-  question      String
+  question      String  @unique
   options       String[]     // Array of 4 options
   correctAnswer Int          // Index of correct option (0-3)
   difficulty    Difficulty   @default(MEDIUM)
@@ -102,7 +102,7 @@ model MCQQuestion {
 
 model ShortQuestion {
   id            String       @id @default(auto()) @map("_id") @db.ObjectId
-  question      String
+  question      String  @unique
   answer        String?
   difficulty    Difficulty   @default(MEDIUM)
   
@@ -123,7 +123,7 @@ model ShortQuestion {
 model LongQuestion {
   id            String       @id @default(auto()) @map("_id") @db.ObjectId
   questionType  QuestionType @default(DEFAULT)
-  question      String
+  question      String  @unique
   answer        String?
   difficulty    Difficulty   @default(MEDIUM)
   
