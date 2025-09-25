@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "next-themes"
 import { ReduxProvider } from "@/components/providers/redux-provider"
+import { AuthSessionProvider } from "@/components/providers/session-provider"
 import { Suspense } from "react"
 import "./globals.css"
 
@@ -12,8 +13,8 @@ const geistSans = GeistSans.variable
 const geistMono = GeistMono.variable
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
+  title: "EduDash - Educational Dashboard",
+  description: "Educational Content Management System",
   generator: "v0.app",
 }
 
@@ -25,12 +26,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans} ${geistMono} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <Suspense fallback={null}>
-            <ReduxProvider>{children}</ReduxProvider>
-          </Suspense>
-        </ThemeProvider>
-        <Analytics />
+        <AuthSessionProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <Suspense fallback={null}>
+              <ReduxProvider>{children}</ReduxProvider>
+            </Suspense>
+          </ThemeProvider>
+          <Analytics />
+        </AuthSessionProvider>
       </body>
     </html>
   )
