@@ -21,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import SubjectDropdownMenu from "@/components/common/SubjectDropdownMenu"
 
 const classTypeColors = {
   PRIMARY: "bg-green-100 text-green-700",
@@ -145,26 +146,10 @@ export default function ClassesPage() {
                         </div>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingClass(classItem)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setDeletingClass(classItem)}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <SubjectDropdownMenu 
+                      onEdit={() => setEditingClass(classItem)}
+                      onDelete={() => setDeletingClass(classItem)}
+                    />
                   </div>
                 </CardHeader>
                 <CardContent>

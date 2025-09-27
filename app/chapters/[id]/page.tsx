@@ -26,7 +26,6 @@ import { payloadFormat } from "@/utils/saveQuestionsPayloadFormat"
 export default function ChapterDetailPage({ params }: { params: { id: string } }) {
   const [showEditForm, setShowEditForm] = useState(false)
   const [showQuestionModal, setShowQuestionModal] = useState(false)
-  const [savedQuestions, setSavedQuestions] = useState<Question[]>([])
   const [qType, setQType] = useState<string>("mcqs")
   const [selectedQuestionType, setSelectedQuestionType] = useState<string>("mcqs")
   const [currentPage, setCurrentPage] = useState(1)

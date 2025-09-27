@@ -28,23 +28,16 @@ import {
   useGetBoardsQuery,
 } from "@/lib/api/educationApi";
 import { generateSlug } from "@/lib/utils/slugify";
+import SelectBoard from "../common/SelectBoard";
 
 const classSchema = z.object({
   name: z
     .string()
     .min(1, "Class name is required")
     .max(100, "Class name must be less than 100 characters"),
-  type: z.enum(
-    [
-      "PRIMARY",
-      "SECONDARY",
-      "HIGHER_SECONDARY",
-      "INTERMEDIATE",
-    ],
-    {
-      required_error: "Please select a class type",
-    }
-  ),
+  type: z.enum(["PRIMARY", "SECONDARY", "HIGHER_SECONDARY", "INTERMEDIATE"], {
+    required_error: "Please select a class type",
+  }),
   boardId: z.string().min(1, "Please select a board"),
   slug: z
     .string()
@@ -125,9 +118,9 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
   const onSubmit = async (data: ClassFormData) => {
     try {
       if (isEditing) {
-        await updateClass({ id: classData.id, class: data }).unwrap();
+        await updateClass({ id: classData.id, class: data as any }).unwrap();
       } else {
-        await createClass(data).unwrap();
+        await createClass(data as any).unwrap();
       }
       onClose();
     } catch (error) {
@@ -150,38 +143,14 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+
           {/* Board Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="boardId">Board *</Label>
-            <Select
-              value={watch("boardId")}
-              onValueChange={(value) => setValue("boardId", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a board" />
-              </SelectTrigger>
-              <SelectContent>
-                {boardsLoading ? (
-                  <SelectItem value="" disabled>
-                    Loading boards...
-                  </SelectItem>
-                ) : boards.length === 0 ? (
-                  <SelectItem value="" disabled>
-                    No boards available
-                  </SelectItem>
-                ) : (
-                  boards.map((board) => (
-                    <SelectItem key={board.id} value={board.id}>
-                      {board.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            {errors.boardId && (
-              <p className="text-sm text-red-600">{errors.boardId.message}</p>
-            )}
-          </div>
+          <SelectBoard
+            allBoards={boards}
+            watch={watch}
+            setValue={setValue}
+            errors={errors}
+          />
 
           {/* Class Name */}
           <div className="space-y-2">
@@ -190,8 +159,9 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
               id="name"
               placeholder="e.g., Class 10, Grade 12, Bachelor of Science"
               {...register("name")}
+              value={watch("name")}
+              className="w-full border border-gray-300"
               onChange={(e) => setValue("name", e.target.value)}
-              error={errors.name?.message}
             />
             {errors.name && (
               <p className="text-sm text-red-600">{errors.name.message}</p>
@@ -205,7 +175,7 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
               value={watch("type")}
               onValueChange={(value) => setValue("type", value as any)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full border border-gray-300">
                 <SelectValue placeholder="Select class type" />
               </SelectTrigger>
               <SelectContent>
@@ -228,8 +198,9 @@ export function ClassForm({ classData, open, onClose }: ClassFormProps) {
               id="slug"
               placeholder="class-url-slug"
               {...register("slug")}
+              value={watch("slug")}
+              className="border border-gray-300"
               onChange={(e) => setValue("slug", generateSlug(e.target.value))}
-              error={errors.slug?.message}
             />
             {errors.slug && (
               <p className="text-sm text-red-600">{errors.slug.message}</p>

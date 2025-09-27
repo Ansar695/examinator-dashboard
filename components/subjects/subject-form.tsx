@@ -19,13 +19,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   useCreateSubjectMutation,
   useUpdateSubjectMutation,
   useGetBoardsQuery,
@@ -72,7 +65,7 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
     useGetClassesByBoardQuery(selectedBoardId, {
       skip: !selectedBoardId,
     });
-  console.log("boards", boards);
+ 
   const isEditing = !!subjectData;
   const isLoading = isCreating || isUpdating;
   const [allBoards, setAllBoards] = useState<any>([]);
@@ -150,24 +143,6 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
     }
     setImageFile(null);
   }, [subjectData, reset]);
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview("");
-    setValue("imageUrl", "");
-  };
 
   const uploadImage = async (file: File): Promise<string> => {
     // Simulate file upload - replace with actual upload logic
@@ -259,34 +234,6 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
           />
 
           {/* Class Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="classId">Class *</Label>
-            <Select
-              value={watch("classId")}
-              onValueChange={(value) => setValue("classId", value)}
-              disabled={!selectedBoardId}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    selectedBoardId ? "Select a class" : "Select a board first"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {classes?.length > 0 &&
-                  classes?.map((classItem) => (
-                    <SelectItem key={classItem?.id} value={classItem?.id}>
-                      {classItem?.name}{" "}
-                      {/* ({classItem.type.replace("_", " ")}) */}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-            {errors.classId && (
-              <p className="text-sm text-red-600">{errors.classId.message}</p>
-            )}
-          </div>
           <SelectClass 
             classes={classes}
             watch={watch}
@@ -301,6 +248,8 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
               id="name"
               placeholder="e.g., Mathematics, Physics, English Literature"
               {...register("name")}
+              value={watch("name")}
+              className="border border-gray-300"
               onChange={(e) => setValue("name", e.target.value)}
             />
             {errors.name && (
@@ -315,6 +264,8 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
               id="slug"
               placeholder="subject-url-slug"
               {...register("slug")}
+              value={watch("slug")}
+              className="border border-gray-300"
               onChange={(e) => setValue("slug", e.target.value)}
             />
             {errors.slug && (
@@ -333,7 +284,10 @@ export function SubjectForm({ subjectData, open, onClose }: SubjectFormProps) {
               id="description"
               placeholder="Brief description of the subject..."
               rows={3}
+              className="border border-gray-300"
               {...register("description")}
+              onChange={(e) => setValue("description", e.target.value)}
+              value={watch("description")}
             />
             {errors.description && (
               <p className="text-sm text-red-600">

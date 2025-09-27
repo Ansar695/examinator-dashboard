@@ -140,7 +140,7 @@ export function BoardForm({ board, open, onClose }: BoardFormProps) {
               placeholder="e.g., CBSE, ICSE, State Board"
               {...register("name")}
               onChange={(e) => setValue("name", e.target.value)}
-              className={errors.name ? "border-destructive focus:ring-destructive" : ""}
+              className={errors.name ? "border-destructive focus:ring-destructive " : "border border-gray-300"}
             />
             {errors.name && <p className="text-sm text-destructive font-medium">{errors.name.message}</p>}
           </div>
@@ -153,8 +153,9 @@ export function BoardForm({ board, open, onClose }: BoardFormProps) {
               id="slug"
               placeholder="board-url-slug"
               {...register("slug")}
+              value={watch("slug")}
               onChange={(e) => setValue("slug", generateSlug(e.target.value))}
-              className={errors.slug ? "border-destructive focus:ring-destructive" : ""}
+              className={errors.slug ? "border-destructive focus:ring-destructive" : "border border-gray-300"}
             />
             {errors.slug && <p className="text-sm text-destructive font-medium">{errors.slug.message}</p>}
             <p className="text-xs text-muted-foreground">
@@ -171,7 +172,9 @@ export function BoardForm({ board, open, onClose }: BoardFormProps) {
               placeholder="Brief description of the educational board..."
               rows={3}
               {...register("description")}
-              className="resize-none"
+              value={watch("description")}
+              onChange={(e) => setValue("description", e.target.value)}
+              className="resize-none border border-gray-300"
             />
             {errors.description && <p className="text-sm text-destructive font-medium">{errors.description.message}</p>}
           </div>

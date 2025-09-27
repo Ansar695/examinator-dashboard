@@ -6,16 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import CustomDropdownMenu from "@/components/common/CustomDropdownMenu"
 import {
   Plus,
   Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
   FileText,
-  Download,
-  Eye,
   GraduationCap,
   Library,
 } from "lucide-react"
@@ -38,6 +33,7 @@ export default function ChaptersPage() {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingChapter, setEditingChapter] = useState<any>(null)
   const [deletingChapter, setDeletingChapter] = useState<any>(null)
+  const [showEditForm, setShowEditForm] = useState(false)
 
   const { data: chapters = [], isLoading, error } = useGetChaptersQuery()
   const [deleteChapter] = useDeleteChapterMutation()
@@ -153,34 +149,12 @@ export default function ChaptersPage() {
                         </Badge>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleDownload(chapter.pdfUrl, chapter.name)}>
-                          <Download className="mr-2 h-4 w-4" />
-                          Download PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => window.open(chapter.pdfUrl, "_blank")}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setEditingChapter(chapter)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setDeletingChapter(chapter)}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <CustomDropdownMenu
+                      chapterData={{ pdfUrl: chapter.pdfUrl, name: chapter.name }}
+                      handleDownload={handleDownload}
+                      setShowEditForm={() => setEditingChapter(chapter)}
+                      onDelete={() => setDeletingChapter(chapter)}
+                    />
                   </div>
                 </CardHeader>
                 <CardContent>

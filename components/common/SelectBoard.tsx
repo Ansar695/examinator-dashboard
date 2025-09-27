@@ -24,7 +24,7 @@ const SelectBoard = (props: SelectBoardProps) => {
         value={watch("boardId")}
         onValueChange={(value) => setValue("boardId", value)}
       >
-        <SelectTrigger>
+        <SelectTrigger className="w-full border border-gray-300">
           <SelectValue placeholder="Select a board" />
         </SelectTrigger>
         <SelectContent>

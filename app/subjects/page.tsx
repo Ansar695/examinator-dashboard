@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Library, BookOpen, GraduationCap } from "lucide-react"
+import SubjectDropdownMenu from "@/components/common/SubjectDropdownMenu"
+import { Plus, Search, Library, BookOpen, GraduationCap } from "lucide-react"
 import Link from "next/link"
 import { useGetSubjectsQuery, useDeleteSubjectMutation } from "@/lib/api/educationApi"
 import { SubjectForm } from "@/components/subjects/subject-form"
@@ -94,7 +94,7 @@ export default function SubjectsPage() {
             placeholder="Search subjects..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 border border-gray-300 h-10"
           />
         </div>
 
@@ -135,26 +135,10 @@ export default function SubjectsPage() {
                         </Badge>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingSubject(subject)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setDeletingSubject(subject)}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <SubjectDropdownMenu
+                      onEdit={() => setEditingSubject(subject)}
+                      onDelete={() => setDeletingSubject(subject)}
+                    />
                   </div>
                 </CardHeader>
                 <CardContent>

@@ -6,24 +6,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Download, Edit, Eye, MoreVertical, Trash2 } from "lucide-react";
+import { Edit, MoreVertical, Trash2 } from "lucide-react";
 import {
-  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@radix-ui/react-dropdown-menu";
 
-interface CustomDropdownMenuProps {
-  chapterData: {
-    pdfUrl: string;
-    name: string;
-  };
-  handleDownload: (pdfUrl: string, chapterName: string) => void;
-  setShowEditForm: (value: boolean) => void;
-  onDelete?: () => void;
+interface SubjectDropdownMenuProps {
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
-const CustomDropdownMenu = (props: CustomDropdownMenuProps) => {
-  const { chapterData, handleDownload, setShowEditForm, onDelete } = props;
+const SubjectDropdownMenu = (props: SubjectDropdownMenuProps) => {
+  const { onEdit, onDelete } = props;
   return (
     <DropdownMenu>
       <DropdownMenu>
@@ -39,28 +33,13 @@ const CustomDropdownMenu = (props: CustomDropdownMenuProps) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem
-            onClick={() => window.open(chapterData.pdfUrl, "_blank")}
-            className="cursor-pointer"
-          >
-            <Eye className="mr-1 h-4 w-4" />
-            View PDF
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => handleDownload(chapterData.pdfUrl, chapterData.name)}
-            className="cursor-pointer"
-          >
-            <Download className="mr-1 h-4 w-4" />
-            Download PDF
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => setShowEditForm(true)}
+            onClick={onEdit}
             className="cursor-pointer"
           >
             <Edit className="mr-1 h-4 w-4" />
-            Edit Details
+            Edit
           </DropdownMenuItem>
-          {onDelete && (
-            <>
+          
               <DropdownMenuSeparator className="my-1" />
               <DropdownMenuItem
                 onClick={onDelete}
@@ -69,12 +48,10 @@ const CustomDropdownMenu = (props: CustomDropdownMenuProps) => {
                 <Trash2 className="mr-1 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
-            </>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </DropdownMenu>
   );
 };
 
-export default CustomDropdownMenu;
+export default SubjectDropdownMenu;

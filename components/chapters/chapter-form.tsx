@@ -60,7 +60,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [embeddingsLoader, setEmbeddingLoader] = useState(false);
-
+  console.log("chapterData =>>> ", chapterData)
   const [createChapter, { isLoading: isCreating }] = useCreateChapterMutation();
   const [updateChapter, { isLoading: isUpdating }] = useUpdateChapterMutation();
   const { data: classes, isLoading: classesLoading } = useGetClassesQuery();
@@ -119,6 +119,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
     if (chapterData) {
       reset({
         name: chapterData.name || "",
+        chapterNumber: chapterData?.chapterNumber,
         slug: chapterData.slug || "",
         classId: chapterData.classId || "",
         subjectId: chapterData.subjectId || "",
@@ -315,6 +316,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
               placeholder="e.g., Introduction to Algebra, Laws of Motion"
               {...register("chapterNumber")}
               type="number"
+              value={watch("chapterNumber")}
               onChange={(e) =>
                 setValue("chapterNumber", parseInt(e.target.value))
               }
@@ -337,6 +339,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
               id="name"
               placeholder="e.g., Introduction to Algebra, Laws of Motion"
               {...register("name")}
+              value={watch("name")}
               onChange={(e) => setValue("name", e.target.value)}
               className="border border-gray-300"
             />
@@ -352,6 +355,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
               id="slug"
               placeholder="chapter-url-slug"
               {...register("slug")}
+              value={watch("slug")}
               onChange={(e) => setValue("slug", e.target.value)}
               className="border border-gray-300"
             />
