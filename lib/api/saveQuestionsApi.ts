@@ -44,7 +44,8 @@ export interface PaginatedResponse<T> {
 }
 
 export interface QueryParams {
-  chapterId: string;
+  chapterId?: string;
+  chapterIds?: string[];
   page?: number;
   limit?: number;
 }
@@ -113,6 +114,14 @@ export const questionsApi = createApi({
       }),
       providesTags: ["Long"],
     }),
+
+    getPaperMCQs: builder.query<PaginatedResponse<LongQuestion>, QueryParams>({
+      query: ({ chapterIds, page = 1, limit = 10 }) => ({
+        url: `/paper-generation/short-questions`,
+        params: { chapterIds, page, limit }
+      }),
+      providesTags: ["Long"],
+    }),
   }),
 });
 
@@ -123,4 +132,5 @@ export const {
   useGetMCQsQuestionQuery,
   useGetShortQuestionQuery,
   useGetLongQuestionQuery,
+  useGetPaperMCQsQuery,
 } = questionsApi;

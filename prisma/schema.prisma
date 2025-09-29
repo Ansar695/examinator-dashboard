@@ -98,6 +98,7 @@ model MCQQuestion {
   options       String[]     // Array of 4 options
   correctAnswer Int          // Index of correct option (0-3)
   difficulty    Difficulty   @default(MEDIUM)
+  usageCount    Int          @default(0)  // Track how many times this question has been used
   
   // Hierarchical reference
   chapterId     String       @db.ObjectId
@@ -117,6 +118,7 @@ model ShortQuestion {
   question      String  @unique
   answer        String?
   difficulty    Difficulty   @default(MEDIUM)
+  usageCount    Int          @default(0)  // Track how many times this question has been used
   
   // Hierarchical reference
   chapterId     String       @db.ObjectId
@@ -138,6 +140,7 @@ model LongQuestion {
   question      String  @unique
   answer        String?
   difficulty    Difficulty   @default(MEDIUM)
+  usageCount    Int          @default(0)  // Track how many times this question has been used
   
   // Hierarchical reference
   chapterId     String       @db.ObjectId

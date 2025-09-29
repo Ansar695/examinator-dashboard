@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
       difficulty: (q.difficulty || "medium").toUpperCase(),
       chapterId: q.chapterId,
       isActive: q.isActive ?? true,
+      usageCount: 0,
     }));
 
     // Insert only non-duplicates
