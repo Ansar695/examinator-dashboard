@@ -60,7 +60,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [embeddingsLoader, setEmbeddingLoader] = useState(false);
-  console.log("chapterData =>>> ", chapterData)
+
   const [createChapter, { isLoading: isCreating }] = useCreateChapterMutation();
   const [updateChapter, { isLoading: isUpdating }] = useUpdateChapterMutation();
   const { data: classes, isLoading: classesLoading } = useGetClassesQuery();

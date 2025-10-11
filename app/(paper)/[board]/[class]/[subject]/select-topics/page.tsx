@@ -7,14 +7,17 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { Topic, topicsData } from '@/utils/static-data/topics'
 import { PageTransition } from '@/components/shared/Transition'
 import { TopicCard } from '@/components/subjects/TopicCard'
-import { useGetChaptersMutation } from '@/redux/services/chapters'
 import { useToast } from '@/hooks/use-toast'
+import { Topic, topicsData } from '@/utils/static-data/topics'
+import { useGetChaptersMutation } from '@/lib/api/chapters'
+import { useGetChaptersBySubjectQuery } from '@/lib/api/educationApi'
+import { ChapterMultiSelect } from '@/components/subjects/ChaptersMultiSelect'
 
 export default function SelectTopics() {
   const [selectedTopics, setSelectedTopics] = useState<Record<string, string[]>>({})
+  const[chapterIds, setChapterIds] = useState<string[]>([])
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
@@ -25,30 +28,15 @@ export default function SelectTopics() {
   const subject = params.subject as string
   const subjectId = searchParams.get("subjectId")
 
-    const [getChapters, { data, isLoading }] = useGetChaptersMutation();
-  console.log("data ", data)
-    const getChatptersData = async () => {
-      try {
-        const response = await getChapters(subjectId).unwrap();
-        if(!response){
-          toast({
-            title: "No board found.",
-            description: "There is no board added yet.",
-          })
+  const { data: chapters, isLoading: chaptersLoading } =
+      useGetChaptersBySubjectQuery(
+        { classId: classNumber, subjectId: subjectId || "" },
+        {
+          skip: !subjectId,
         }
-      } catch (error: any) {
-        console.log(error);
-        toast({
-          variant: 'destructive',
-          title: "Error.",
-          description: "Something went wrong, please refresh the page.",
-        })
-      }
-    };
+      );
 
-    useEffect(() => {
-      getChatptersData();
-    }, []);
+  console.log("chapters ", chapters)
 
   const topics: Topic[] = topicsData[board]?.[classNumber]?.[subject] || []
 
@@ -101,45 +89,14 @@ export default function SelectTopics() {
               {board.replace('-', ' ')} - Class {classNumber} - {subject}
             </p>
           </motion.div>
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-            {topics.map((topic, index) => (
-              <motion.div
-                key={topic.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <TopicCard
-                  name={topic.name}
-                  subtopics={topic.subtopics}
-                  onSelect={handleTopicSelection}
-                />
-              </motion.div>
-            ))}
-          </div>
-          <AnimatePresence>
-            {Object.keys(selectedTopics).length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                className="mt-12 text-center"
-              >
-                <p className="text-2xl font-semibold mb-4 text-gray-800">
-                  You have selected topics. Ready to create your paper?
-                </p>
-                <Button 
-                  size="lg" 
-                  onClick={handleContinue}
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-300"
-                >
-                  Next
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+          <ChapterMultiSelect
+              chapters={chapters || []}
+              loading={chaptersLoading}
+              values={chapterIds}
+              onChange={setChapterIds}
+              onSubmit={() => console.log("Submitted chapters ", chapterIds)}
+            />
         </div>
       </div>
     </PageTransition>

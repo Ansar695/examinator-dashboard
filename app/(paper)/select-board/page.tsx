@@ -95,7 +95,7 @@ const BoardSelection = () => {
                       <Button 
                         className="w-full group-hover:bg-blue-600 transition-colors"
                         onClick={() => {
-                            router.push(`/${board?.slug}/select-class`)
+                            router.push(`/${board?.id}/select-class`)
                         }}
                       >
                         <span>Select Board</span>

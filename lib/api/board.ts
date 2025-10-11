@@ -14,7 +14,14 @@ export const boardApi = createApi({
       }),
       providesTags: ["Boards"],
     }),
+    getBoardClasses: builder.query({
+      query: ({params}) => ({
+        url: `/classes?${params}`,
+        method: 'GET',
+      }),
+      providesTags: ["Class"],
+    }),
   }),
 })
 
-export const { useGetBoardsQuery } = boardApi
+export const { useGetBoardsQuery, useGetBoardClassesQuery } = boardApi

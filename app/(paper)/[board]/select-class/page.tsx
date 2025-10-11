@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { GraduationCap, BookOpen, ChevronRight, ArrowLeft } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import CustomSpinner from "@/components/shared/CustomSpinner";
+import { useGetBoardClassesQuery } from "@/lib/api/board";
+import { useGetClassesByBoardQuery } from "@/lib/api/educationApi";
+import { transformClasses } from "@/utils/ClassesCategoryTranformer";
 
 const classTypeIcons = [
   {
@@ -21,7 +24,12 @@ const classTypeIcons = [
     color: "from-purple-500 to-purple-600",
   },
   {
-    type: "Intermediate",
+    type: "INTERMEDIATE",
+    icon: <GraduationCap className="w-8 h-8" />,
+    color: "from-indigo-500 to-indigo-600",
+  },
+  {
+    type: "INTERMEDIATE",
     icon: <GraduationCap className="w-8 h-8" />,
     color: "from-indigo-500 to-indigo-600",
   },
@@ -32,31 +40,15 @@ const ClassSelection = () => {
   const { toast } = useToast();
   const pathname = usePathname();
   const currBoard = pathname?.split("/")?.[1];
-  console.log("currBoard: " , currBoard)
-  const [getClasses, { data, isLoading, error }] = useGetClassesMutation();
+  const [categorizedClasses, setCategorizedClasses] = useState<any>([]);
 
-  const getClassesData = async () => {
-    try {
-      const response = await getClasses(currBoard).unwrap();
-      if (!response) {
-        toast({
-          title: "No class found.",
-          description: "There is no class added yet.",
-        });
-      }
-    } catch (error: any) {
-      console.log("error ", error);
-      toast({
-        variant: "destructive",
-        title: "Error.",
-        description: "Something went wrong, please refresh the page.",
-      });
-    }
-  };
-
-  useEffect(() => {
-    getClassesData();
-  }, []);
+  const {
+    data: classes,
+    isLoading,
+    error,
+  } = useGetClassesByBoardQuery(currBoard, {
+    skip: !currBoard,
+  });
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -72,6 +64,17 @@ const ClassSelection = () => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
+
+  useEffect(() => {
+    if (classes) {
+        const grouped = transformClasses(classes);
+      const transformed = Object.keys(grouped).map((key) => ({
+        type: key,
+        classes: grouped[key],
+      }));
+      setCategorizedClasses(transformed);
+    }
+  }, [classes]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -129,9 +132,9 @@ const ClassSelection = () => {
             animate="visible"
             className="grid gap-8 max-w-6xl mx-auto"
           >
-            {data?.data.map((level: any, levelIndex: number) => (
+            {categorizedClasses?.map((level: any, levelIndex: number) => (
               <motion.div
-                key={level.type}
+                key={level?.type}
                 variants={itemVariants}
                 className="relative"
               >
@@ -148,7 +151,7 @@ const ClassSelection = () => {
                     <div className="grid md:grid-cols-3 gap-4">
                       {level?.classes?.length > 0 ? (
                         level?.classes?.map(
-                          (classInfo: ClassTypes, classIndex: number) => (
+                          (classInfo: any, classIndex: number) => (
                             <motion.div
                               key={classInfo?.id}
                               initial={{ opacity: 0 }}
@@ -175,7 +178,7 @@ const ClassSelection = () => {
                                       className="w-full group-hover:bg-blue-600 transition-colors"
                                       onClick={() =>
                                         router.push(
-                                          `/${currBoard}/${classInfo?.slug}/select-subjects`
+                                          `/${currBoard}/${classInfo?.id}/select-subjects`
                                         )
                                       }
                                     >
