@@ -12,31 +12,31 @@ interface SidebarProps {
 const navigation = [
   {
     name: "Dashboard",
-    href: "/",
+    href: "/admin",
     icon: Home,
     description: "Overview and analytics",
   },
   {
     name: "Boards",
-    href: "/boards",
+    href: "/admin/boards",
     icon: BookOpen,
     description: "Manage educational boards",
   },
   {
     name: "Classes",
-    href: "/classes",
+    href: "/admin/classes",
     icon: GraduationCap,
     description: "Manage classes and grades",
   },
   {
     name: "Subjects",
-    href: "/subjects",
+    href: "/admin/subjects",
     icon: Library,
     description: "Manage subjects and topics",
   },
   {
     name: "Chapters",
-    href: "/chapters",
+    href: "/admin/chapters",
     icon: FileText,
     description: "Manage chapters and PDFs",
   },
@@ -45,7 +45,7 @@ const navigation = [
 const secondaryNavigation = [
   {
     name: "Settings",
-    href: "/settings",
+    href: "/admin/settings",
     icon: Settings,
   },
 ]
@@ -73,7 +73,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-2">
-                  {navigation.map((item) => (
+                  {navigation?.map((item) => (
                     <li key={item.name}>
                       <Link
                         href={item.href}

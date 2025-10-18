@@ -8,6 +8,8 @@ export interface Board {
   logoUrl?: string
   createdAt: string
   updatedAt: string
+  classes?: any[]
+  subjects?: any[]
 }
 
 export interface Class {

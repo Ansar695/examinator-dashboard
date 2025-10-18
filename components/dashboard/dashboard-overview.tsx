@@ -47,7 +47,7 @@ const quickActions = [
   {
     title: "Add New Board",
     description: "Create a new educational board",
-    href: "/boards",
+    href: "/admin/boards",
     icon: BookOpen,
     color: "text-blue-600",
     bgColor: "bg-blue-50",
@@ -56,7 +56,7 @@ const quickActions = [
   {
     title: "Add Class",
     description: "Add a new class to existing board",
-    href: "/classes",
+    href: "/admin/classes",
     icon: GraduationCap,
     color: "text-emerald-600",
     bgColor: "bg-emerald-50",
@@ -65,7 +65,7 @@ const quickActions = [
   {
     title: "Add Subject",
     description: "Create a new subject for classes",
-    href: "/subjects",
+    href: "/admin/subjects",
     icon: Library,
     color: "text-purple-600",
     bgColor: "bg-purple-50",
@@ -74,7 +74,7 @@ const quickActions = [
   {
     title: "Upload Chapter",
     description: "Upload PDF chapters for subjects",
-    href: "/chapters",
+    href: "/admin/chapters",
     icon: FileText,
     color: "text-orange-600",
     bgColor: "bg-orange-50",
