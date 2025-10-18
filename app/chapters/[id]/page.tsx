@@ -195,12 +195,7 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
     page: selectedQuestionType === "long" ? currentPage : 1,
     limit: pageSize
   })
-  const { data: papersResponse } = useGetPaperMCQsQuery({
-    chapterIds: [params.id],
-    page: selectedQuestionType === "long" ? currentPage : 1,
-    limit: pageSize
-  })
-  console.log("papersResponse ", papersResponse)
+
   const { data: chapters = [], isLoading, error } = useGetChaptersQuery()
   const chapterData = chapters.find((c) => c.id === params.id)
 

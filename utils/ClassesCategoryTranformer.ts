@@ -5,7 +5,6 @@ type GroupedClasses = {
 };
 
 export const transformClasses = (data: Class[]): any => {
-    console.log("Transforming classes:", data);
   const grouped = data.reduce(
     (acc: any, item) => {
       acc[item?.type]?.push(item);
