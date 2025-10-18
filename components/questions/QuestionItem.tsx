@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -6,11 +6,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 interface QuestionItemProps {
   question: any;
-  onSelect: (id: string, selected: boolean) => void
+  onSelect: (id: string, selected: boolean) => void;
+  initialSelected?: boolean;
 }
 
-export function QuestionItem({ question, onSelect }: QuestionItemProps) {
-  const [isSelected, setIsSelected] = useState(false)
+export function QuestionItem({ question, onSelect, initialSelected = false }: QuestionItemProps) {
+  const [isSelected, setIsSelected] = useState(initialSelected)
+
+  // Update selected state when initialSelected prop changes
+  useEffect(() => {
+    setIsSelected(initialSelected)
+  }, [initialSelected])
 
   const handleToggle = () => {
     setIsSelected(!isSelected)

@@ -10,6 +10,8 @@ interface QuestionSelectionHeaderProps {
   subject: string;
   subjectId: string | null;
   totalSelected: number;
+  isEditMode?: boolean;
+  paperId?: string | null;
 }
 
 export const QuestionSelectionHeader: React.FC<QuestionSelectionHeaderProps> = ({
@@ -18,16 +20,24 @@ export const QuestionSelectionHeader: React.FC<QuestionSelectionHeaderProps> = (
   subject,
   subjectId,
   totalSelected,
+  isEditMode = false,
+  paperId,
 }) => {
+  const backUrl = isEditMode && paperId
+    ? `/${board}/${classNumber}/${subject}/view-paper?paperId=${paperId}&subjectId=${subjectId}`
+    : `/${board}/${classNumber}/${subject}/select-topics${subjectId ? `?subjectId=${subjectId}` : ''}`;
+  
+  const backText = isEditMode ? 'Back to Paper Preview' : 'Back to Topic Selection';
+
   return (
     <div className="mb-8 flex justify-between items-center">
-      <Link href={`/${board}/${classNumber}/${subject}/select-topics${subjectId ? `?subjectId=${subjectId}` : ''}`}>
+      <Link href={backUrl}>
         <Button
           variant="ghost"
           className="flex items-center text-blue-600 hover:text-blue-800"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Topic Selection
+          {backText}
         </Button>
       </Link>
       <Badge variant="outline" className="text-lg px-3 py-1">

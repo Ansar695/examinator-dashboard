@@ -17,23 +17,32 @@ export default function SelectQuestions() {
   const classNumber = params.class as string;
   const subject = params.subject as string;
   const subjectId = searchParams.get("subjectId");
+  const paperId = searchParams.get("paperId");
 
   const {
     questions,
+    selectedQuestions,
     isLoading,
     error,
     isCreatingPaper,
     currentQuestionType,
+    pages,
+    searchTerms,
     handleQuestionSelect,
     handleRandomSelection,
     handleTabChange,
     handleContinue,
+    handlePageChange,
+    handleSearchChange,
     getTotalSelectedQuestions,
+    getPaginationInfo,
+    isEditMode,
   } = useQuestionSelection({
     board,
     classNumber,
     subject,
     subjectId,
+    paperId,
   });
 
   return (
@@ -47,6 +56,8 @@ export default function SelectQuestions() {
             subject={subject}
             subjectId={subjectId}
             totalSelected={getTotalSelectedQuestions()}
+            isEditMode={isEditMode}
+            paperId={paperId}
           />
 
           {/* Title */}
@@ -57,7 +68,7 @@ export default function SelectQuestions() {
             className="text-center mb-12"
           >
             <h1 className="text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              Select Questions for Your Paper
+              {isEditMode ? 'Edit Paper Questions' : 'Select Questions for Your Paper'}
             </h1>
             <p className="text-xl text-gray-600">
               {board.replace("-", " ")} - Class {classNumber} - {subject}
@@ -76,19 +87,28 @@ export default function SelectQuestions() {
               <TabsTrigger value="long">Long Questions</TabsTrigger>
             </TabsList>
 
-            {(["mcq", "short", "long"] as const).map((type) => (
-              <QuestionSelectionTab
-                key={type}
-                type={type}
-                questions={questions[type]}
-                isLoading={isLoading}
-                error={error}
-                onRandomSelect={() => handleRandomSelection(type)}
-                onQuestionSelect={(id: string, selected: boolean) => 
-                  handleQuestionSelect(type, id, selected)
-                }
-              />
-            ))}
+            {(["mcq", "short", "long"] as const).map((type) => {
+              const paginationInfo = getPaginationInfo(type);
+              return (
+                <QuestionSelectionTab
+                  key={type}
+                  type={type}
+                  questions={questions[type]}
+                  selectedQuestions={selectedQuestions[type]}
+                  isLoading={isLoading}
+                  error={error}
+                  onRandomSelect={() => handleRandomSelection(type)}
+                  onQuestionSelect={(id: string, selected: boolean) =>
+                    handleQuestionSelect(type, id, selected)
+                  }
+                  searchTerm={searchTerms[type]}
+                  onSearchChange={(value) => handleSearchChange(type, value)}
+                  currentPage={pages[type]}
+                  totalPages={paginationInfo.totalPages}
+                  onPageChange={(page) => handlePageChange(type, page)}
+                />
+              );
+            })}
           </Tabs>
 
           {/* Continue Button */}
@@ -107,11 +127,11 @@ export default function SelectQuestions() {
               {isCreatingPaper ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Paper...
+                  {isEditMode ? 'Updating Paper...' : 'Creating Paper...'}
                 </>
               ) : (
                 <>
-                  Preview Paper
+                  {isEditMode ? 'Update Paper' : 'Preview Paper'}
                   <ArrowRight className="ml-2 h-5 w-4" />
                 </>
               )}

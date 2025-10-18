@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       );
 
     const body = await request.json();
-    const { subjectId, mcqs, shortQs, longQs, title, totalMarks } = body;
+    const { subjectId, mcqs, shortQs, longQs, title, totalMarks, examTime } = body;
 
     if (!subjectId) {
       return NextResponse.json(
@@ -123,6 +123,7 @@ export async function POST(request: Request) {
       data: {
         title,
         totalMarks,
+        examTime: examTime,
         userId,
         subjectId,
         mcqs,

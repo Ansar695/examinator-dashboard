@@ -47,6 +47,7 @@ export interface QueryParams {
   chapterIds?: any;
   page?: number;
   limit?: number;
+  search?: string;
 }
 
 export interface McqPayload {
@@ -83,6 +84,7 @@ export interface CreatePaperRequest {
   title: string;
   subjectId: string;
   totalMarks: number;
+  examTime?: string;
   mcqs: McqPayload[];
   shortQs: ShortQuestionPayload[];
   longQs: LongQuestionPayload[];
@@ -92,6 +94,7 @@ export interface GeneratedPaper {
   id: string;
   title: string;
   totalMarks: number;
+  examTime?: string;
   userId: string;
   subjectId: string;
   mcqs: McqPayload[];
@@ -107,25 +110,25 @@ export const paperGenerationApi = createApi({
   tagTypes: ["MCQs", "Short", "Long", "GeneratedPaper"],
   endpoints: (builder) => ({
     getPaperMCQs: builder.query<PaginatedResponse<MCQs>, QueryParams>({
-      query: ({ chapterIds, page = 1, limit = 10 }) => ({
+      query: ({ chapterIds, page = 1, limit = 10, search }) => ({
         url: `/paper-generation/mcqs`,
-        params: { chapterIds, page, limit }
+        params: { chapterIds, page, limit, ...(search && { search }) }
       }),
-      providesTags: ["Long"],
+      providesTags: ["MCQs"],
     }),
 
     getPaperShortQs: builder.query<PaginatedResponse<ShortQuestion>, QueryParams>({
-      query: ({ chapterIds, page = 1, limit = 10 }) => ({
+      query: ({ chapterIds, page = 1, limit = 10, search }) => ({
         url: `/paper-generation/short-questions`,
-        params: { chapterIds, page, limit }
+        params: { chapterIds, page, limit, ...(search && { search }) }
       }),
-      providesTags: ["Long"],
+      providesTags: ["Short"],
     }),
 
     getPaperLongQs: builder.query<PaginatedResponse<LongQuestion>, QueryParams>({
-      query: ({ chapterIds, page = 1, limit = 10 }) => ({
+      query: ({ chapterIds, page = 1, limit = 10, search }) => ({
         url: `/paper-generation/long-questions`,
-        params: { chapterIds, page, limit }
+        params: { chapterIds, page, limit, ...(search && { search }) }
       }),
       providesTags: ["Long"],
     }),

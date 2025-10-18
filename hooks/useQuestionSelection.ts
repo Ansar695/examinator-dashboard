@@ -6,6 +6,8 @@ import {
   useGetPaperMCQsQuery,
   useGetPaperShortQsQuery,
   useCreatePaperMutation,
+  useUpdatePaperMutation,
+  useGetPaperByIdQuery,
 } from '@/lib/api/paperGeneration';
 
 type QuestionType = 'mcq' | 'short' | 'long';
@@ -15,6 +17,7 @@ interface UseQuestionSelectionProps {
   classNumber: string;
   subject: string;
   subjectId: string | null;
+  paperId?: string | null;
 }
 
 export const useQuestionSelection = ({
@@ -22,10 +25,10 @@ export const useQuestionSelection = ({
   classNumber,
   subject,
   subjectId,
+  paperId,
 }: UseQuestionSelectionProps) => {
   const router = useRouter();
   const { toast } = useToast();
-  const [page, setPage] = useState(1);
   const [currentQuestionType, setCurrentQuestionType] = useState<QuestionType>('mcq');
   const [selectedQuestions, setSelectedQuestions] = useState<Record<QuestionType, string[]>>({
     mcq: [],
@@ -33,10 +36,24 @@ export const useQuestionSelection = ({
     long: [],
   });
 
+  // Separate pagination for each question type
+  const [pages, setPages] = useState<Record<QuestionType, number>>({
+    mcq: 1,
+    short: 1,
+    long: 1,
+  });
+
+  // Search terms for each question type
+  const [searchTerms, setSearchTerms] = useState<Record<QuestionType, string>>({
+    mcq: '',
+    short: '',
+    long: '',
+  });
+
   // Get chapter IDs from localStorage
   const chapterIds = JSON.parse(localStorage.getItem('selectedChapters') || '[]');
 
-  // Fetch questions
+  // Fetch questions with pagination and search
   const {
     data: mcqsResponse,
     isLoading: mcqsLoading,
@@ -44,8 +61,9 @@ export const useQuestionSelection = ({
   } = useGetPaperMCQsQuery(
     {
       chapterIds: JSON.stringify(chapterIds),
-      page: currentQuestionType === 'mcq' ? page : 1,
-      limit: 25,
+      page: pages.mcq,
+      limit: 10,
+      search: searchTerms.mcq,
     },
     {
       skip: chapterIds.length === 0,
@@ -59,8 +77,9 @@ export const useQuestionSelection = ({
   } = useGetPaperShortQsQuery(
     {
       chapterIds: JSON.stringify(chapterIds),
-      page: currentQuestionType === 'short' ? page : 1,
-      limit: 25,
+      page: pages.short,
+      limit: 10,
+      search: searchTerms.short,
     },
     {
       skip: chapterIds.length === 0,
@@ -74,8 +93,9 @@ export const useQuestionSelection = ({
   } = useGetPaperLongQsQuery(
     {
       chapterIds: JSON.stringify(chapterIds),
-      page: currentQuestionType === 'long' ? page : 1,
-      limit: 25,
+      page: pages.long,
+      limit: 10,
+      search: searchTerms.long,
     },
     {
       skip: chapterIds.length === 0,
@@ -84,6 +104,36 @@ export const useQuestionSelection = ({
 
   // Create paper mutation
   const [createPaper, { isLoading: isCreatingPaper }] = useCreatePaperMutation();
+  const [updatePaper, { isLoading: isUpdatingPaper }] = useUpdatePaperMutation();
+
+  // Fetch existing paper data if editing
+  const { data: existingPaperData } = useGetPaperByIdQuery(paperId || '', {
+    skip: !paperId,
+  });
+
+  // Load existing paper selections when editing
+  useEffect(() => {
+    if (existingPaperData?.data && paperId) {
+      const paper = existingPaperData.data;
+      
+      // Extract question IDs from the paper
+      const mcqIds = paper.mcqs.map(q => q.questionId);
+      const shortIds = paper.shortQs.map(q => q.questionId);
+      const longIds = paper.longQs.map(q => q.questionId);
+
+      setSelectedQuestions({
+        mcq: mcqIds,
+        short: shortIds,
+        long: longIds,
+      });
+
+      // Also need to set the chapters in localStorage for the queries to work
+      // Extract unique chapter IDs from all questions
+      const allQuestionIds = [...mcqIds, ...shortIds, ...longIds];
+      // Note: We might need to fetch the questions to get their chapter IDs
+      // For now, we'll assume the chapters are already set from the previous flow
+    }
+  }, [existingPaperData, paperId]);
 
   // Memoized questions data
   const questions = useMemo(() => {
@@ -158,7 +208,31 @@ export const useQuestionSelection = ({
   // Handle tab change
   const handleTabChange = (value: string) => {
     setCurrentQuestionType(value as QuestionType);
-    setPage(1); // Reset page when changing tabs
+  };
+
+  // Handle page change for specific question type
+  const handlePageChange = (type: QuestionType, newPage: number) => {
+    setPages(prev => ({ ...prev, [type]: newPage }));
+  };
+
+  // Handle search change for specific question type
+  const handleSearchChange = (type: QuestionType, searchTerm: string) => {
+    setSearchTerms(prev => ({ ...prev, [type]: searchTerm }));
+    setPages(prev => ({ ...prev, [type]: 1 })); // Reset to first page on search
+  };
+
+  // Get pagination info for current question type
+  const getPaginationInfo = (type: QuestionType) => {
+    switch (type) {
+      case 'mcq':
+        return mcqsResponse?.pagination || { totalPages: 1, currentPage: 1 };
+      case 'short':
+        return shortResponse?.pagination || { totalPages: 1, currentPage: 1 };
+      case 'long':
+        return longResponse?.pagination || { totalPages: 1, currentPage: 1 };
+      default:
+        return { totalPages: 1, currentPage: 1 };
+    }
   };
 
   // Handle continue to preview
@@ -220,30 +294,58 @@ export const useQuestionSelection = ({
       const totalMarks = mcqMarks + shortMarks + longMarks;
 
       // Create paper title
-      const paperTitle = `${subject} Annual Exam ${new Date().getFullYear()}`;
+      const paperTitle = paperId && existingPaperData?.data?.title
+        ? existingPaperData.data.title
+        : `${subject} Annual Exam ${new Date().getFullYear()}`;
 
-      // Call the API to create the paper
-      const response = await createPaper({
-        title: paperTitle,
-        subjectId,
-        totalMarks,
-        mcqs: mcqsPayload,
-        shortQs: shortQsPayload,
-        longQs: longQsPayload,
-      }).unwrap();
+      // Call the API to create or update the paper
+      if (paperId) {
+        // Update existing paper
+        const response = await updatePaper({
+          id: paperId,
+          data: {
+            title: paperTitle,
+            subjectId,
+            totalMarks,
+            mcqs: mcqsPayload,
+            shortQs: shortQsPayload,
+            longQs: longQsPayload,
+          }
+        }).unwrap();
 
-      if (response.success && response.data) {
-        // Save the generated paper ID and selected questions to localStorage
-        localStorage.setItem('generatedPaperId', response.data.id);
-        localStorage.setItem('selectedQuestions', JSON.stringify(selectedQuestions));
+        if (response.success && response.data) {
+          toast({
+            title: 'Paper updated successfully',
+            description: 'Redirecting to paper preview...',
+          });
 
-        toast({
-          title: 'Paper created successfully',
-          description: 'Redirecting to paper preview...',
-        });
+          // Navigate to the view paper page
+          router.push(`/${board}/${classNumber}/${subject}/view-paper?paperId=${paperId}&subjectId=${subjectId}`);
+        }
+      } else {
+        // Create new paper
+        const response = await createPaper({
+          title: paperTitle,
+          subjectId,
+          totalMarks,
+          mcqs: mcqsPayload,
+          shortQs: shortQsPayload,
+          longQs: longQsPayload,
+        }).unwrap();
 
-        // Navigate to the view paper page
-        router.push(`/${board}/${classNumber}/${subject}/view-paper?paperId=${response.data.id}&subjectId=${subjectId}`);
+        if (response.success && response.data) {
+          // Save the generated paper ID and selected questions to localStorage
+          localStorage.setItem('generatedPaperId', response.data.id);
+          localStorage.setItem('selectedQuestions', JSON.stringify(selectedQuestions));
+
+          toast({
+            title: 'Paper created successfully',
+            description: 'Redirecting to paper preview...',
+          });
+
+          // Navigate to the view paper page
+          router.push(`/${board}/${classNumber}/${subject}/view-paper?paperId=${response.data.id}&subjectId=${subjectId}`);
+        }
       }
     } catch (error) {
       console.error('Error creating paper:', error);
@@ -267,12 +369,18 @@ export const useQuestionSelection = ({
     questions,
     isLoading,
     error,
-    isCreatingPaper,
+    isCreatingPaper: isCreatingPaper || isUpdatingPaper,
+    isEditMode: !!paperId,
     currentQuestionType,
+    pages,
+    searchTerms,
     handleQuestionSelect,
     handleRandomSelection,
     handleTabChange,
     handleContinue,
+    handlePageChange,
+    handleSearchChange,
     getTotalSelectedQuestions,
+    getPaginationInfo,
   };
 };

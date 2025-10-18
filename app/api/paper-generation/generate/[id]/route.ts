@@ -77,7 +77,7 @@ export async function PUT(request: Request, { params }: Params) {
     }
 
     const body = await request.json();
-    const { title, totalMarks, mcqs, shortQs, longQs } = body;
+    const { title, totalMarks, examTime, mcqs, shortQs, longQs } = body;
 
     // Check if paper exists and belongs to user
     const existingPaper = await prisma.generatedPaper.findFirst({
@@ -100,6 +100,7 @@ export async function PUT(request: Request, { params }: Params) {
       data: {
         ...(title && { title }),
         ...(totalMarks !== undefined && { totalMarks }),
+        ...(examTime !== undefined && { examTime }),
         ...(mcqs && { mcqs }),
         ...(shortQs && { shortQs }),
         ...(longQs && { longQs }),

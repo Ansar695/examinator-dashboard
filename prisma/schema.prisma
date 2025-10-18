@@ -162,6 +162,7 @@ model GeneratedPaper {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   totalMarks  Int
+  examTime    String?  @default("2:30") // Format: "H:MM" e.g., "3:00" for 3 hours
   userId      String   @db.ObjectId
   subjectId   String   @db.ObjectId
 

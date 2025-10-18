@@ -4,6 +4,8 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Shuffle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { QuestionItem } from "@/components/questions/QuestionItem";
+import { QuestionSearch } from "@/components/questions/QuestionSearch";
+import { QuestionPagination } from "@/components/questions/QuestionPagination";
 
 interface QuestionSelectionTabProps {
   type: 'mcq' | 'short' | 'long';
@@ -12,6 +14,12 @@ interface QuestionSelectionTabProps {
   error: any;
   onRandomSelect: () => void;
   onQuestionSelect: (id: string, selected: boolean) => void;
+  selectedQuestions?: string[];
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
 export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
@@ -21,6 +29,12 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
   error,
   onRandomSelect,
   onQuestionSelect,
+  selectedQuestions = [],
+  searchTerm,
+  onSearchChange,
+  currentPage,
+  totalPages,
+  onPageChange,
 }) => {
   const getTitle = () => {
     switch (type) {
@@ -37,6 +51,13 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
 
   return (
     <TabsContent value={type}>
+      {/* Search Bar */}
+      <QuestionSearch
+        value={searchTerm}
+        onChange={onSearchChange}
+        placeholder={`Search ${type === 'mcq' ? 'MCQs' : type} questions...`}
+      />
+
       <div className="mb-6 flex justify-between items-center">
         <h2 className="text-2xl font-semibold text-gray-800">
           {getTitle()}
@@ -88,9 +109,20 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
               key={question.id}
               question={question}
               onSelect={onQuestionSelect}
+              initialSelected={selectedQuestions.includes(question.id)}
             />
           ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && !error && questions.length > 0 && (
+        <QuestionPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          isLoading={isLoading}
+        />
       )}
     </TabsContent>
   );
