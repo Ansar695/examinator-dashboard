@@ -4,13 +4,14 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, BookOpen, ChevronRight, ArrowLeft } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import CustomSpinner from "@/components/shared/CustomSpinner";
 import { useGetBoardClassesQuery } from "@/lib/api/board";
 import { useGetClassesByBoardQuery } from "@/lib/api/educationApi";
 import { transformClasses } from "@/utils/ClassesCategoryTranformer";
+import { slugToTitle } from "@/utils/transformers/slugToTitle";
 
 const classTypeIcons = [
   {
@@ -39,15 +40,19 @@ const ClassSelection = () => {
   const router = useRouter();
   const { toast } = useToast();
   const pathname = usePathname();
-  const currBoard = pathname?.split("/")?.[1];
+  const currBoardSlug = pathname?.split("/")?.[1];
   const [categorizedClasses, setCategorizedClasses] = useState<any>([]);
 
+  const searchParams = useSearchParams();
+  const boardId = searchParams.get('boardId') || "";
+
+  
   const {
     data: classes,
     isLoading,
     error,
-  } = useGetClassesByBoardQuery(currBoard, {
-    skip: !currBoard,
+  } = useGetClassesByBoardQuery(boardId, {
+    skip: !boardId,
   });
 
   const containerVariants = {
@@ -178,7 +183,7 @@ const ClassSelection = () => {
                                       className="w-full group-hover:bg-blue-600 transition-colors"
                                       onClick={() =>
                                         router.push(
-                                          `/${currBoard}/${classInfo?.id}/select-subjects`
+                                          `/${currBoardSlug}/${classInfo?.name}/select-subjects?&boardId=${boardId}&classId=${classInfo?.id}`
                                         )
                                       }
                                     >
@@ -210,7 +215,7 @@ const ClassSelection = () => {
           className="mt-12 text-center text-gray-600"
         >
           <p>
-            Selected Board: <span className="font-semibold">Punjab Board</span>
+            Selected Board: <span className="font-semibold capitalize">{slugToTitle(currBoardSlug)}</span>
           </p>
         </motion.div>
       </div>

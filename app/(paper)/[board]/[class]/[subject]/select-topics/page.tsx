@@ -1,76 +1,63 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { PageTransition } from '@/components/shared/Transition'
-import { TopicCard } from '@/components/subjects/TopicCard'
-import { useToast } from '@/hooks/use-toast'
-import { Topic, topicsData } from '@/utils/static-data/topics'
-import { useGetChaptersMutation } from '@/lib/api/chapters'
-import { useGetChaptersBySubjectQuery } from '@/lib/api/educationApi'
-import { ChapterMultiSelect } from '@/components/subjects/ChaptersMultiSelect'
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { PageTransition } from "@/components/shared/Transition";
+import { useToast } from "@/hooks/use-toast";
+import { Topic, topicsData } from "@/utils/static-data/topics";
+import { useGetChaptersBySubjectQuery } from "@/lib/api/educationApi";
+import { ChapterMultiSelect } from "@/components/subjects/ChaptersMultiSelect";
 
 export default function SelectTopics() {
-  const [selectedTopics, setSelectedTopics] = useState<Record<string, string[]>>({})
-  const[chapterIds, setChapterIds] = useState<string[]>([])
-  const params = useParams()
-  const router = useRouter()
-  const { toast } = useToast()
-  const searchParams = useSearchParams()
+  const [chapterIds, setChapterIds] = useState<string[]>([]);
+  const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedChapters = JSON.parse(localStorage.getItem("selectedChapters") || "[]");
 
-  const board = params.board as any
-  const classNumber = params.class as string
-  const subject = params.subject as string
-  const subjectId = searchParams.get("subjectId")
+  const board = params.board as any;
+  const classNumber = params.class as string;
+  const subject = params.subject as string;
+  const subjectId = searchParams.get("subjectId");
 
   const { data: chapters, isLoading: chaptersLoading } =
-      useGetChaptersBySubjectQuery(
-        { classId: classNumber, subjectId: subjectId || "" },
-        {
-          skip: !subjectId,
-        }
-      );
+    useGetChaptersBySubjectQuery(
+      { subjectId: subjectId || "" },
+      {
+        skip: !subjectId,
+      }
+    );
 
-  console.log("chapters ", chapters)
+  const handleSubmit = () => {
+    if (chapterIds.length === 0)  return
+    localStorage.setItem("selectedChapters", JSON.stringify(chapterIds));
+    router.push(
+      `/${board}/${classNumber}/${subject}/select-questions`
+    );
+  };
 
-  const topics: Topic[] = topicsData[board]?.[classNumber]?.[subject] || []
+  console.log("chapters ", chapters);
 
-  const handleTopicSelection = (topic: string, subtopics: string[]) => {
-    setSelectedTopics(prev => ({
-      ...prev,
-      [topic]: subtopics
-    }))
-  }
-
-  const handleContinue = () => {
-    const selectedTopicsAndSubtopics = Object.entries(selectedTopics)
-      .filter(([_, subtopics]) => subtopics.length > 0)
-      .reduce((acc, [topic, subtopics]) => {
-        acc[topic] = subtopics
-        return acc
-      }, {} as Record<string, string[]>)
-
-    if (Object.keys(selectedTopicsAndSubtopics).length > 0) {
-      console.log('Selected topics and subtopics:', selectedTopicsAndSubtopics)
-      alert('Topics selected! Proceeding to paper creation...')
-      router.push(`/${board}/${classNumber}/${subject}/select-questions`)
-    } else {
-      alert('Please select at least one topic to continue.')
+  useEffect(() => {
+    if(selectedChapters.length) {
+      setChapterIds(selectedChapters)
     }
-  }
-
+  }, [])
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="mb-8">
             <Link href={`/${board}/${classNumber}/select-subjects`}>
-              <Button variant="ghost" className="flex items-center text-blue-600 hover:text-blue-800">
+              <Button
+                variant="ghost"
+                className="flex items-center text-blue-600 hover:text-blue-800"
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Subject Selection
               </Button>
@@ -85,21 +72,20 @@ export default function SelectTopics() {
             <h1 className="text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
               Select Topics for Your Paper
             </h1>
-            <p className="text-xl text-gray-600">
-              {board.replace('-', ' ')} - Class {classNumber} - {subject}
+            <p className="text-xl text-gray-600 capitalize">
+              {board.replace("-", " ")} - Class {classNumber} - {subject}
             </p>
           </motion.div>
 
           <ChapterMultiSelect
-              chapters={chapters || []}
-              loading={chaptersLoading}
-              values={chapterIds}
-              onChange={setChapterIds}
-              onSubmit={() => console.log("Submitted chapters ", chapterIds)}
-            />
+            chapters={chapters || []}
+            loading={chaptersLoading}
+            values={chapterIds}
+            onChange={setChapterIds}
+            onSubmit={() => handleSubmit()}
+          />
         </div>
       </div>
     </PageTransition>
-  )
+  );
 }
-
