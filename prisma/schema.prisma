@@ -17,6 +17,7 @@ model User {
   updatedAt DateTime @updatedAt
   
   @@map("users")
+  GeneratedPaper  GeneratedPaper[]
 }
 
 model Board {
@@ -69,6 +70,7 @@ model Subject {
   chapters    Chapter[]
   
   @@map("subjects")
+  GeneratedPaper GeneratedPaper[]
 }
 
 model Chapter {
@@ -154,6 +156,62 @@ model LongQuestion {
   
   @@index([chapterId])
   @@map("long_questions")
+}
+
+model GeneratedPaper {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  totalMarks  Int
+  userId      String   @db.ObjectId
+  subjectId   String   @db.ObjectId
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  // Embedded question sets
+  mcqs        MCQEntry[]
+  shortQs     ShortEntry[]
+  longQs      LongEntry[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("generated_papers")
+}
+
+/// Embedded document for MCQs in a generated paper
+type MCQEntry {
+  questionId    String    @db.ObjectId
+  question      String
+  options       String[]  // Array of options
+  correctAnswer Int?      // Index of correct option (optional)
+  marks         Int
+}
+
+/// Embedded document for Short Questions in a generated paper
+type ShortEntry {
+  questionId String  @db.ObjectId
+  question   String
+  answer     String? // Optional answer
+  marks      Int
+}
+
+/// Embedded document for Long Questions (can have multiple parts)
+type LongEntry {
+  questionId String    @db.ObjectId
+  question   String
+  answer     String?   // Optional answer for the main question
+  totalMarks Int
+  parts      LongPart[]
+}
+
+/// Sub-parts of a long question (optional)
+type LongPart {
+  partLabel  String  // e.g. "a", "b"
+  question   String
+  answer     String? // Optional answer for the part
+  marks      Int
 }
 
 enum ClassType {

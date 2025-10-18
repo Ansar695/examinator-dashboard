@@ -37,7 +37,7 @@ export default function SelectTopics() {
     if (chapterIds.length === 0)  return
     localStorage.setItem("selectedChapters", JSON.stringify(chapterIds));
     router.push(
-      `/${board}/${classNumber}/${subject}/select-questions`
+      `/${board}/${classNumber}/${subject}/select-questions${subjectId ? `?subjectId=${subjectId}` : ''}`
     );
   };
 

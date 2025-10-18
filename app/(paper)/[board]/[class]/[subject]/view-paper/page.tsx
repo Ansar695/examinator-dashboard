@@ -1,61 +1,177 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Printer, Edit } from 'lucide-react'
+import { ArrowLeft, Printer, Edit, Loader2, Save } from 'lucide-react'
 import { PageTransition } from '@/components/shared/Transition'
 import { PaperTemplateSelector } from '@/components/questions/PaperTemplates'
 import { LanguageSelector } from '@/components/questions/LanguageSelector'
 import { EditableQuestion } from '@/components/questions/EditableQuestion'
 import { EditableMcq } from '@/components/questions/EditableMcq'
+import { useGetPaperByIdQuery, useUpdatePaperMutation } from '@/lib/api/paperGeneration'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useToast } from '@/hooks/use-toast'
 
-// Mock data for selected questions (replace with actual data in a real application)
-const initialQuestions = {
-  mcq: [
-    { id: 'mcq1', text: 'What is the capital of France?', options: ['London', 'Berlin', 'Paris', 'Madrid'] },
-    { id: 'mcq2', text: 'Which planet is known as the Red Planet?', options: ['Mars', 'Venus', 'Jupiter', 'Saturn'] },
-  ],
-  short: [
-    { id: 'short1', text: 'Explain the process of photosynthesis.' },
-    { id: 'short2', text: 'Describe the water cycle.' },
-  ],
-  long: [
-    { 
-      id: 'long1', 
-      text: 'Discuss the impacts of the Industrial Revolution.',
-      parts: [
-        'a) Describe the major technological advancements during the Industrial Revolution.',
-        'b) Explain how these advancements affected society and the environment.'
-      ]
-    },
-    { 
-      id: 'long2', 
-      text: 'Analyze the themes in George Orwell\'s "1984".',
-      parts: [
-        'a) Identify and explain the main themes present in the novel.',
-        'b) Discuss how these themes relate to the historical context of the book\'s publication.'
-      ]
-    },
-  ],
+interface Question {
+  id: string;
+  text: string;
+  options?: string[];
+  parts?: string[];
 }
 
 export default function PreviewPaper() {
-  const [questions, setQuestions] = useState(initialQuestions)
+  const [questions, setQuestions] = useState<{
+    mcq: Question[];
+    short: Question[];
+    long: Question[];
+  }>({
+    mcq: [],
+    short: [],
+    long: [],
+  })
   const [mcqMarks, setMcqMarks] = useState<number | undefined>()
   const [marks, setMarks] = useState<Record<string, number | undefined>>({})
   const [selectedTemplateId, setSelectedTemplateId] = useState('punjab-board-standard')
   const [selectedLanguage, setSelectedLanguage] = useState('english')
   const [examTime, setExamTime] = useState('2:30')
   const [paperName, setPaperName] = useState('Annual Examination')
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true)
+  const [hasChanges, setHasChanges] = useState(false)
+  const [originalPaperData, setOriginalPaperData] = useState<any>(null)
+  
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { toast } = useToast()
   const board = params.board as string
   const classNumber = params.class as string
   const subject = params.subject as string
+  const paperId = searchParams.get('paperId')
+
+  // Fetch paper data
+  const { data: paperData, isLoading: isPaperLoading, error: paperError } = useGetPaperByIdQuery(paperId || '', {
+    skip: !paperId,
+  })
+
+  // Update paper mutation
+  const [updatePaper, { isLoading: isUpdating }] = useUpdatePaperMutation()
+
+  // Get selected questions from the paper - they are already in the correct format
+  const paperMcqs = paperData?.data?.mcqs || []
+  const paperShorts = paperData?.data?.shortQs || []
+  const paperLongs = paperData?.data?.longQs || []
+
+  // Process questions from paper data
+  useEffect(() => {
+    if (paperData?.data) {
+      // For MCQs, use data directly from paper including options
+      const mcqsWithOptions = paperMcqs.map(paperMcq => ({
+        id: paperMcq.questionId,
+        text: paperMcq.question,
+        options: paperMcq.options || [],
+      }))
+
+      // For short questions, use data directly from paper
+      const shortQuestions = paperShorts.map(q => ({
+        id: q.questionId,
+        text: q.question,
+      }))
+
+      // For long questions, use data directly from paper including parts
+      const longQuestions = paperLongs.map(q => ({
+        id: q.questionId,
+        text: q.question,
+        parts: q.parts?.map(p => `${p.partLabel}) ${p.question}`) || [],
+      }))
+
+      setQuestions({
+        mcq: mcqsWithOptions,
+        short: shortQuestions,
+        long: longQuestions,
+      })
+
+      // Set initial marks
+      if (paperData.data.totalMarks) {
+        const mcqTotalMarks = paperMcqs.reduce((sum, q) => sum + q.marks, 0)
+        setMcqMarks(mcqTotalMarks)
+        
+        // Set individual marks for short and long questions
+        paperShorts.forEach(q => {
+          setMarks(prev => ({ ...prev, [q.questionId]: q.marks }))
+        })
+        
+        paperLongs.forEach(q => {
+          if (q.totalMarks) {
+            setMarks(prev => ({ ...prev, [q.questionId]: q.totalMarks }))
+          }
+          q.parts?.forEach((part, idx) => {
+            setMarks(prev => ({ ...prev, [`${q.questionId}-${idx}`]: part.marks }))
+          })
+        })
+      }
+
+      // Store original data for comparison
+      setOriginalPaperData(paperData.data)
+      setIsLoadingQuestions(false)
+    }
+  }, [paperData, paperMcqs, paperShorts, paperLongs])
+
+  // Update paper name when data is loaded
+  useEffect(() => {
+    if (paperData?.data?.title) {
+      setPaperName(paperData.data.title)
+    }
+  }, [paperData])
+
+  // Track changes - compare with original data
+  useEffect(() => {
+    if (!originalPaperData) {
+      setHasChanges(false)
+      return
+    }
+
+    // Check if paper name changed
+    const nameChanged = paperName !== originalPaperData.title
+
+    // Check if any question text changed
+    const questionsChanged =
+      questions.mcq.some(q => {
+        const original = paperMcqs.find(m => m.questionId === q.id)
+        return original && (q.text !== original.question ||
+          JSON.stringify(q.options) !== JSON.stringify(original.options))
+      }) ||
+      questions.short.some(q => {
+        const original = paperShorts.find(s => s.questionId === q.id)
+        return original && q.text !== original.question
+      }) ||
+      questions.long.some(q => {
+        const original = paperLongs.find(l => l.questionId === q.id)
+        return original && q.text !== original.question
+      })
+
+    // Check if marks changed
+    const marksChanged =
+      mcqMarks !== paperMcqs.reduce((sum, q) => sum + q.marks, 0) ||
+      Object.entries(marks).some(([id, value]) => {
+        if (id.includes('-')) {
+          // Part marks
+          const [questionId, partIdx] = id.split('-')
+          const longQ = paperLongs.find(l => l.questionId === questionId)
+          return longQ?.parts?.[parseInt(partIdx)]?.marks !== value
+        } else {
+          // Question marks
+          const shortQ = paperShorts.find(s => s.questionId === id)
+          const longQ = paperLongs.find(l => l.questionId === id)
+          return (shortQ && shortQ.marks !== value) || (longQ && longQ.totalMarks !== value)
+        }
+      })
+
+    setHasChanges(nameChanged || questionsChanged || marksChanged)
+  }, [paperName, examTime, questions, marks, mcqMarks, originalPaperData, paperMcqs, paperShorts, paperLongs])
 
   const handleQuestionEdit = (type: 'mcq' | 'short' | 'long', id: string, newText: string) => {
     setQuestions(prev => ({
@@ -67,8 +183,8 @@ export default function PreviewPaper() {
   const handleMCQOptionEdit = (questionId: string, optionIndex: number, newText: string) => {
     setQuestions(prev => ({
       ...prev,
-      mcq: prev.mcq.map(q => 
-        q.id === questionId 
+      mcq: prev.mcq.map(q =>
+        q.id === questionId && q.options
           ? { ...q, options: q.options.map((opt, idx) => idx === optionIndex ? newText : opt) }
           : q
       )
@@ -82,12 +198,90 @@ export default function PreviewPaper() {
     }))
   }
 
+  const handleSaveChanges = async () => {
+    if (!paperId || !originalPaperData) return
+
+    try {
+      // Prepare updated data
+      const updatedMcqs = questions.mcq.map(q => {
+        const originalMcq = paperMcqs.find(m => m.questionId === q.id)
+        return {
+          questionId: q.id,
+          question: q.text,
+          options: q.options || [],
+          correctAnswer: originalMcq?.correctAnswer,
+          marks: mcqMarks ? Math.floor(mcqMarks / questions.mcq.length) : 1,
+        }
+      })
+
+      const updatedShorts = questions.short.map(q => {
+        const originalShort = paperShorts.find(s => s.questionId === q.id)
+        return {
+          questionId: q.id,
+          question: q.text,
+          answer: originalShort?.answer,
+          marks: marks[q.id] || 5,
+        }
+      })
+
+      const updatedLongs = questions.long.map(q => {
+        const originalLong = paperLongs.find(l => l.questionId === q.id)
+        const updatedParts = originalLong?.parts?.map((part, idx) => ({
+          ...part,
+          marks: marks[`${q.id}-${idx}`] || part.marks,
+        })) || []
+
+        return {
+          questionId: q.id,
+          question: q.text,
+          answer: originalLong?.answer,
+          totalMarks: marks[q.id] || 10,
+          parts: updatedParts,
+        }
+      })
+
+      // Calculate new total marks
+      const newTotalMarks =
+        (mcqMarks || 0) +
+        updatedShorts.reduce((sum, q) => sum + (q.marks || 0), 0) +
+        updatedLongs.reduce((sum, q) => sum + (q.totalMarks || 0), 0)
+
+      const response = await updatePaper({
+        id: paperId,
+        data: {
+          title: paperName,
+          totalMarks: newTotalMarks,
+          mcqs: updatedMcqs,
+          shortQs: updatedShorts,
+          longQs: updatedLongs,
+        }
+      }).unwrap()
+
+      if (response.success) {
+        toast({
+          title: "Paper updated successfully",
+          description: "Your changes have been saved.",
+        })
+        setHasChanges(false)
+        setOriginalPaperData(response.data)
+      }
+    } catch (error) {
+      console.error('Error updating paper:', error)
+      toast({
+        title: "Error updating paper",
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handlePrint = () => {
     window.print()
   }
 
   const handleEdit = () => {
-    router.push(`/${board}/${classNumber}/${subject}/select-questions`)
+    const subjectId = searchParams.get('subjectId')
+    router.push(`/${board}/${classNumber}/${subject}/select-questions${subjectId ? `?subjectId=${subjectId}` : ''}`)
   }
 
   const handleTemplateSelect = (template: any) => {
@@ -113,13 +307,32 @@ export default function PreviewPaper() {
         <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
           <div className="p-6 bg-gray-100 border-b space-y-4">
             <div className="flex justify-between items-center">
-              <Link href={`/${board}/${classNumber}/${subject}/select-questions`}>
+              <Link href={`/${board}/${classNumber}/${subject}/select-questions${searchParams.get('subjectId') ? `?subjectId=${searchParams.get('subjectId')}` : ''}`}>
                 <Button variant="ghost" className="flex items-center text-blue-600 hover:text-blue-800">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Question Selection
                 </Button>
               </Link>
               <div className="space-x-2">
+                {hasChanges && (
+                  <Button
+                    onClick={handleSaveChanges}
+                    disabled={isUpdating}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {isUpdating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                )}
                 <Button variant="outline" onClick={handleEdit}>
                   <Edit className="mr-2 h-4 w-4" />
                   Edit Paper
@@ -136,6 +349,27 @@ export default function PreviewPaper() {
             </div>
           </div>
           
+          {/* Loading State */}
+          {(isPaperLoading || isLoadingQuestions) && (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <span className="ml-3 text-gray-600">Loading paper...</span>
+            </div>
+          )}
+
+          {/* Error State */}
+          {paperError && !isPaperLoading && (
+            <div className="p-6">
+              <Alert variant="destructive">
+                <AlertDescription>
+                  Failed to load paper. Please try again later.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+
+          {/* Paper Content */}
+          {!isPaperLoading && !isLoadingQuestions && !paperError && (
           <div className="p-6" style={{
             backgroundColor: 'var(--paper-bg-color, white)',
             color: 'var(--paper-text-color, black)',
@@ -196,17 +430,19 @@ export default function PreviewPaper() {
                       initialText={`${index + 1}. ${question.text}`}
                       onSave={(newText) => handleQuestionEdit('mcq', question.id, newText.replace(/^\d+\.\s*/, ''))}
                     />
-                    <div className="pl-8 mt-2">
-                      {question.options.map((option, optionIndex) => (
-                        <div key={optionIndex} className="flex items-center space-x-2">
-                          <span>{String.fromCharCode(97 + optionIndex)})</span>
-                          <EditableMcq
-                            initialText={option}
-                            onSave={(newText) => handleMCQOptionEdit(question.id, optionIndex, newText)}
-                          />
-                        </div>
-                      ))}
-                    </div>
+                    {question.options && (
+                      <div className="pl-8 mt-2">
+                        {question.options.map((option, optionIndex) => (
+                          <div key={optionIndex} className="flex items-center space-x-2">
+                            <span>{String.fromCharCode(97 + optionIndex)})</span>
+                            <EditableMcq
+                              initialText={option}
+                              onSave={(newText) => handleMCQOptionEdit(question.id, optionIndex, newText)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -244,35 +480,40 @@ export default function PreviewPaper() {
                       initialText={`${index + 1}. ${question.text}`}
                       onSave={(newText) => handleQuestionEdit('long', question.id, newText.replace(/^\d+\.\s*/, ''))}
                     />
-                    <div className="pl-8 mt-2 space-y-2">
-                      {question.parts.map((part, partIndex) => (
-                        <div key={partIndex} className="flex justify-between items-start">
-                          <EditableQuestion
-                            initialText={part}
-                            onSave={(newText) => {
-                              const newParts = [...question.parts]
-                              newParts[partIndex] = newText
-                              setQuestions(prev => ({
-                                ...prev,
-                                long: prev.long.map(q => q.id === question.id ? { ...q, parts: newParts } : q)
-                              }))
-                            }}
-                          />
-                          <Input
-                            type="number"
-                            placeholder="Marks"
-                            className="w-20 ml-4"
-                            value={marks[`${question.id}-${partIndex}`] || ''}
-                            onChange={(e) => handleMarksChange(`${question.id}-${partIndex}`, e.target.value)}
-                          />
-                        </div>
-                      ))}
-                    </div>
+                    {question.parts && question.parts.length > 0 && (
+                      <div className="pl-8 mt-2 space-y-2">
+                        {question.parts.map((part, partIndex) => (
+                          <div key={partIndex} className="flex justify-between items-start">
+                            <EditableQuestion
+                              initialText={part}
+                              onSave={(newText) => {
+                                if (question.parts) {
+                                  const newParts = [...question.parts]
+                                  newParts[partIndex] = newText
+                                  setQuestions(prev => ({
+                                    ...prev,
+                                    long: prev.long.map(q => q.id === question.id ? { ...q, parts: newParts } : q)
+                                  }))
+                                }
+                              }}
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Marks"
+                              className="w-20 ml-4"
+                              value={marks[`${question.id}-${partIndex}`] || ''}
+                              onChange={(e) => handleMarksChange(`${question.id}-${partIndex}`, e.target.value)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           </div>
+          )}
         </div>
       </div>
     </PageTransition>
