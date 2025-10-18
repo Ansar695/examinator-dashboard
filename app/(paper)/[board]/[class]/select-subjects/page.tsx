@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -19,15 +19,16 @@ import { Subject, useGetSubjectsByClassQuery } from "@/lib/api/educationApi";
 export default function SelectSubject() {
   const params = useParams();
   const router = useRouter();
-  const { toast } = useToast();
 
   const board = params?.board as string;
   const classNumber = params?.class as string;
 
+    const searchParams = useSearchParams();
+    const classId = searchParams.get('classId') || "";
+
 
   const { data: subjects, isLoading: subjectsLoading } =
-    useGetSubjectsByClassQuery({ boardId: "", classId: classNumber });
-  console.log("subjects ", subjects);
+    useGetSubjectsByClassQuery({ boardId: "", classId: classId });
 
   const handleSubjectSelection = (slug: string, id: string) => {
     router.push(

@@ -2,30 +2,21 @@
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Chapter } from "@/lib/api/educationApi";
+import CustomSpinner from "../shared/CustomSpinner";
 
 export function ChapterMultiSelect({
   chapters,
   values,
   loading,
   onChange,
-  //   onBack,
   onSubmit,
 }: {
   chapters: Chapter[];
   values: string[];
   loading?: boolean;
   onChange: (ids: string[]) => void;
-  //   onBack: () => void
   onSubmit: () => void;
 }) {
   const toggle = (id: string) => {
@@ -67,7 +58,7 @@ export function ChapterMultiSelect({
       </div>
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
         {loading ? (
-          <div className="text-muted-foreground">Loading chapters...</div>
+          <CustomSpinner />
         ) : chapters.length ? (
           chapters.map((ch) => (
             <label
@@ -75,16 +66,16 @@ export function ChapterMultiSelect({
               className="flex items-center justify-between gap-3 rounded-md border p-3 bg-white h-16"
             >
               <div className="flex items-center gap-3">
-                <Checkbox
-                  checked={values.includes(ch.id)}
-                  onCheckedChange={() => toggle(ch?.id)}
-                  className="border border-gray-800 w-6 h-6"
-                />
+                <div className="w-16 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                  Ch: {ch?.chapterNumber}
+                </div>
                 <span className="text-lg">{ch?.name}</span>
               </div>
-              <div className="w-16 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                Ch: {ch?.chapterNumber}
-              </div>
+              <Checkbox
+                checked={values.includes(ch.id)}
+                onCheckedChange={() => toggle(ch?.id)}
+                className="border border-gray-800 w-6 h-6"
+              />
             </label>
           ))
         ) : (
@@ -92,9 +83,13 @@ export function ChapterMultiSelect({
         )}
       </div>
       <div className="w-full flex items-end justify-end mt-6">
-          <Button className="w-48 h-12 cursor-pointer" onClick={onSubmit} disabled={!values.length}>
-            Continue
-          </Button>
+        <Button
+          className="w-48 h-12 cursor-pointer"
+          onClick={onSubmit}
+          disabled={!values.length}
+        >
+          Continue
+        </Button>
       </div>
     </div>
   );

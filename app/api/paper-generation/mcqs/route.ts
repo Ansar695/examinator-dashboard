@@ -10,23 +10,17 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const skip = (page - 1) * limit;
 
-    // Filters
-    const chapterId = searchParams.get("chapterId");
     const chapterIds = searchParams.getAll("chapterIds");
+    const parsedIds = JSON.parse(chapterIds as any);
 
     // Build dynamic filter
     const where: any = {
       isActive: true // Only get active questions
     };
 
-    // Single chapter filter
-    if (chapterId) {
-      where.chapterId = chapterId;
-    }
-
     // Multiple chapters filter
-    if (chapterIds.length > 0) {
-      where.chapterId = { in: chapterIds };
+    if (parsedIds.length > 0) {
+      where.chapterId = { in: parsedIds };
     }
 
     // Optimized query using aggregation pipeline for better performance
