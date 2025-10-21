@@ -21,7 +21,7 @@ export default function LoginPage() {
 
   // Login form state
   const [loginData, setLoginData] = useState({
-    email: "",
+    emailOrUsername: "",
     password: ""
   })
 
@@ -40,15 +40,28 @@ export default function LoginPage() {
 
     try {
       const result = await signIn("credentials", {
-        email: loginData.email,
+        emailOrUsername: loginData.emailOrUsername,
         password: loginData.password,
         redirect: false
       })
 
       if (result?.error) {
-        setError("Invalid email or password")
+        setError("Invalid credentials")
       } else {
-        router.push("/")
+        // Get session to determine user role
+        const response = await fetch("/api/auth/session")
+        const session = await response.json()
+        
+        // Redirect based on user role
+        if (session?.user?.role === "ADMIN") {
+          router.push("/admin")
+        } else if (session?.user?.role === "TEACHER") {
+          router.push("/teacher")
+        } else if (session?.user?.role === "STUDENT") {
+          router.push("/student")
+        } else {
+          router.push("/dashboard")
+        }
         router.refresh()
       }
     } catch (error) {
@@ -60,51 +73,9 @@ export default function LoginPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError("")
-
-    if (registerData.password !== registerData.confirmPassword) {
-      setError("Passwords do not match")
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: registerData.name,
-          email: registerData.email,
-          password: registerData.password
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error || "Registration failed")
-      } else {
-        // Auto login after successful registration
-        const result = await signIn("credentials", {
-          email: registerData.email,
-          password: registerData.password,
-          redirect: false
-        })
-
-        if (result?.error) {
-          setError("Registration successful but login failed. Please login manually.")
-          setActiveTab("login")
-        } else {
-          router.push("/")
-          router.refresh()
-        }
-      }
-    } catch (error) {
-      setError("An error occurred. Please try again.")
-    } finally {
-      setIsLoading(false)
-    }
+    setError("Please use the full registration form")
+    // Redirect to the full registration page
+    router.push("/register")
   }
 
   return (
@@ -145,13 +116,13 @@ export default function LoginPage() {
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email">Email or Username</Label>
                     <Input
                       id="login-email"
-                      type="email"
-                      placeholder="name@example.com"
-                      value={loginData.email}
-                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                      type="text"
+                      placeholder="email@example.com or username"
+                      value={loginData.emailOrUsername}
+                      onChange={(e) => setLoginData({ ...loginData, emailOrUsername: e.target.value })}
                       required
                       disabled={isLoading}
                       className="bg-white dark:bg-gray-700"
@@ -199,78 +170,21 @@ export default function LoginPage() {
               </TabsContent>
 
               <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="register-name">Name</Label>
-                    <Input
-                      id="register-name"
-                      type="text"
-                      placeholder="John Doe"
-                      value={registerData.name}
-                      onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
-                      required
-                      disabled={isLoading}
-                      className="bg-white dark:bg-gray-700"
-                    />
+                <div className="space-y-4">
+                  <div className="text-center py-8">
+                    <GraduationCap className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                    <h3 className="text-lg font-semibold mb-2">Create a New Account</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                      Join our educational platform and start your learning journey
+                    </p>
+                    <Button
+                      onClick={() => router.push("/register")}
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md"
+                    >
+                      Go to Registration Page
+                    </Button>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
-                    <Input
-                      id="register-email"
-                      type="email"
-                      placeholder="name@example.com"
-                      value={registerData.email}
-                      onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                      required
-                      disabled={isLoading}
-                      className="bg-white dark:bg-gray-700"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="register-password">Password</Label>
-                    <Input
-                      id="register-password"
-                      type="password"
-                      placeholder="Create a password"
-                      value={registerData.password}
-                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                      required
-                      disabled={isLoading}
-                      className="bg-white dark:bg-gray-700"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm Password</Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      placeholder="Confirm your password"
-                      value={registerData.confirmPassword}
-                      onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                      required
-                      disabled={isLoading}
-                      className="bg-white dark:bg-gray-700"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
-                </form>
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -294,10 +208,13 @@ export default function LoginPage() {
           </CardFooter>
         </Card>
 
-        {/* Demo credentials hint */}
+        {/* Registration link */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Demo credentials: demo@example.com / demo123
+            Don't have an account?{" "}
+            <Link href="/register" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+              Register here
+            </Link>
           </p>
         </div>
       </div>
