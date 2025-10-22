@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookOpen, GraduationCap, Loader2, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
@@ -17,20 +16,11 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [activeTab, setActiveTab] = useState("login")
 
   // Login form state
   const [loginData, setLoginData] = useState({
     emailOrUsername: "",
     password: ""
-  })
-
-  // Register form state
-  const [registerData, setRegisterData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: ""
   })
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -71,13 +61,6 @@ export default function LoginPage() {
     }
   }
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("Please use the full registration form")
-    // Redirect to the full registration page
-    router.push("/register")
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
       <div className="absolute inset-0 bg-grid-slate-100 [mask-image:radial-gradient(ellipse_at_center,white,transparent)] dark:bg-grid-slate-700/25" />
@@ -101,92 +84,75 @@ export default function LoginPage() {
           </CardHeader>
           
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
-              </TabsList>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-              {error && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email or Username</Label>
-                    <Input
-                      id="login-email"
-                      type="text"
-                      placeholder="email@example.com or username"
-                      value={loginData.emailOrUsername}
-                      onChange={(e) => setLoginData({ ...loginData, emailOrUsername: e.target.value })}
-                      required
-                      disabled={isLoading}
-                      className="bg-white dark:bg-gray-700"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="login-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
-                        value={loginData.password}
-                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                        required
-                        disabled={isLoading}
-                        className="bg-white dark:bg-gray-700 pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md"
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-email">Email or Username</Label>
+                <Input
+                  id="login-email"
+                  type="text"
+                  placeholder="email@example.com or username"
+                  value={loginData.emailOrUsername}
+                  onChange={(e) => setLoginData({ ...loginData, emailOrUsername: e.target.value })}
+                  required
+                  disabled={isLoading}
+                  className="bg-white dark:bg-gray-700"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={loginData.password}
+                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                    required
                     disabled={isLoading}
+                    className="bg-white dark:bg-gray-700 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      "Sign In"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="register">
-                <div className="space-y-4">
-                  <div className="text-center py-8">
-                    <GraduationCap className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <h3 className="text-lg font-semibold mb-2">Create a New Account</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                      Join our educational platform and start your learning journey
-                    </p>
-                    <Button
-                      onClick={() => router.push("/register")}
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md"
-                    >
-                      Go to Registration Page
-                    </Button>
-                  </div>
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+            </form>
+
+            {/* Register link */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Don't have an account?{" "}
+                <Link href="/register" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium hover:underline">
+                  Register here
+                </Link>
+              </p>
+            </div>
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4 pt-4">
@@ -207,16 +173,6 @@ export default function LoginPage() {
             </div>
           </CardFooter>
         </Card>
-
-        {/* Registration link */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
-              Register here
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   )
