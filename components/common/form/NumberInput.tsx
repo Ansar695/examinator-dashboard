@@ -57,7 +57,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
         step={step}
         className="transition-all duration-300 focus:shadow-md border border-gray-300 h-10"
         value={value}
-        onChange={(e) => setValue(id, e.target.value)}
+        onChange={(e) => setValue(id, parseInt(e.target.value))}
       />
       {error && (
         <p className="text-sm text-destructive animate-fade-in">{error}</p>
