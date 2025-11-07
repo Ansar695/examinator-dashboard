@@ -41,8 +41,6 @@ export default function SelectTopics() {
     );
   };
 
-  console.log("chapters ", chapters);
-
   useEffect(() => {
     if(selectedChapters.length) {
       setChapterIds(selectedChapters)

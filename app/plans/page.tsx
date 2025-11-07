@@ -1,15 +1,23 @@
 "use client"
 
 import { MainLayout } from "@/components/layout/main-layout"
+import CustomSpinner from "@/components/shared/CustomSpinner";
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useToast } from '@/hooks/use-toast';
+import { useSubscribePlanMutation } from "@/lib/api/plansApi"
 import { Check, Star, Zap, Crown } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation";
 
 export default function Plans() {
+  const { toast } = useToast();
+  const router = useRouter()
+
   const plans = [
     {
       name: "Free",
+      type: "FREE",
       icon: Star,
       price: "0",
       period: "forever",
@@ -27,7 +35,8 @@ export default function Plans() {
       gradient: "from-muted to-muted/50",
     },
     {
-      name: "Pro",
+      name: "Standard",
+      type: "STANDARD",
       icon: Zap,
       price: "29",
       period: "month",
@@ -48,7 +57,8 @@ export default function Plans() {
       gradient: "from-primary/20 to-secondary/20",
     },
     {
-      name: "Enterprise",
+      name: "Premium",
+      type: "PREMIUM",
       icon: Crown,
       price: "99",
       period: "month",
@@ -70,6 +80,24 @@ export default function Plans() {
       gradient: "from-accent/20 to-primary/20",
     },
   ]
+  const [subscribePlan, { isLoading, error }] = useSubscribePlanMutation();
+
+  const handleSubscribe = async (planType: string) => {
+    try {
+      const response = await subscribePlan({ planType }).unwrap();
+      console.log("Subscription successful:", response);
+      if (response.success && response.data) {
+          toast({
+            title: 'Paper created successfully',
+            description: 'Redirecting to paper preview...',
+          });
+          router.push(`/select-board`);
+        }
+    } catch (err) {
+      console.error("Subscription failed:", err);
+    }
+  };
+
 
   return (
     <MainLayout>
@@ -142,8 +170,10 @@ export default function Plans() {
                       : ""
                   }`}
                   variant={plan.popular ? "default" : "outline"}
+                  onClick={() => handleSubscribe(plan?.type)}
+                  disabled={isLoading}
                 >
-                  {plan.cta}
+                  {isLoading ? <CustomSpinner /> : plan.cta}
                 </Button>
               </Link>
             </Card>

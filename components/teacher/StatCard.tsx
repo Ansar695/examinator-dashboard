@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 
 interface StatCardProps {
   title: string
-  value: string
+  value: number | string
   icon: LucideIcon
   trend: string
   color: string
@@ -21,7 +21,7 @@ export default function StatCard({ title, value, icon: Icon, trend, color, delay
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-muted-foreground font-medium">{title}</p>
-          <h3 className="text-3xl font-bold text-foreground mt-2">{value}</h3>
+          <h3 className="text-2xl font-bold text-foreground mt-2 capitalize">{value}</h3>
           <p className="text-xs text-muted-foreground mt-2">{trend}</p>
         </div>
         <div

@@ -8,11 +8,18 @@ import RecentPapers from "./RecentPapers"
 import PapersTable from "./PapersTable"
 import ActivityFeed from "./ActivityFeed"
 import CreatePaperModal from "./CreatePaperModal"
+import { DashboardCardsSkeleton } from "../skeletons/DashboardSkeleton"
 
-export default function Dashboard() {
+interface DashboardProps {
+  isLoading: boolean;
+  statsData: any;
+}
+
+export default function Dashboard(props: DashboardProps) {
+  const { isLoading, statsData } = props;
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [dateFilter, setDateFilter] = useState("month")
-
+  console.log("Dashboard Stats Data in Dashboard Component:", statsData?.stats?.totalPaper);
   return (
     <div className="p-4 md:p-8 space-y-8">
       {/* Header */}
@@ -32,25 +39,27 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
+        {isLoading ? 
+        <DashboardCardsSkeleton />
+        : <StatCard
           title="Total Papers"
-          value="24"
+          value={statsData?.stats?.totalPaper ?? 0}
           icon={FileText}
           trend="+3 this month"
           color="from-blue-500 to-blue-600"
           delay={0}
-        />
+        />}
         <StatCard
           title="Papers Generated"
-          value="18/25"
+          value={statsData?.stats?.usedPaper ?? 0}
           icon={TrendingUp}
-          trend="72% of monthly quota"
+          trend={`${statsData?.stats?.usedPercentage ?? 0}% of monthly quota`}
           color="from-purple-500 to-purple-600"
           delay={100}
         />
         <StatCard
           title="Remaining"
-          value="7"
+          value={statsData?.stats?.remainingPaper ?? 0}
           icon={Zap}
           trend="Resets on Nov 1"
           color="from-green-500 to-green-600"
@@ -58,7 +67,7 @@ export default function Dashboard() {
         />
         <StatCard
           title="Plan Type"
-          value="Premium"
+          value={statsData?.stats?.currentPlan?.toLowerCase() ?? 'free'}
           icon={FileText}
           trend="Expires Dec 15"
           color="from-orange-500 to-orange-600"

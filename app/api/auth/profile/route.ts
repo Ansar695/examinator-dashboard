@@ -35,7 +35,6 @@ const profileUpdateSchema = z.object({
   newPassword: z.string().min(6, "Password must be at least 6 characters").optional(),
 });
 
-// GET /api/profile - Get current user profile
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -64,15 +63,25 @@ export async function GET() {
         profilePicture: true,
         createdAt: true,
         updatedAt: true,
-        // Don't include password
+        // 👇 Include related subscription data
+        Subscription: {
+          select: {
+            id: true,
+            planType: true,
+            monthlyLimit: true,
+            papersGenerated: true,
+            pricePerMonth: true,
+            renewalDate: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
       },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -87,6 +96,7 @@ export async function GET() {
     );
   }
 }
+
 
 // PATCH /api/profile - Update user profile
 export async function PATCH(request: Request) {

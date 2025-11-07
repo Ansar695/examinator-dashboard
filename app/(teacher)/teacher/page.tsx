@@ -2,12 +2,14 @@
 
 import { TeacherDashboardLayout } from "@/components/layout/teacher-layout"
 import Dashboard from "@/components/teacher/Dashboard"
+import { useGeDashboardStatsQuery } from "@/lib/api/dashboardApi";
 import { useState } from "react"
 
 export default function Home() {
 //   const { data: session, status } = useSession()
 //   const router = useRouter()
-
+const { data, isLoading, error } = useGeDashboardStatsQuery('');
+console.log("Dashboard Stats Data:", data);
 //   useEffect(() => {
 //     if (status === "loading") return
 //     if (!session || (session.user.role !== "TEACHER" && session.user.role !== "ADMIN")) {
@@ -29,7 +31,10 @@ export default function Home() {
 
   return (
     <div>
-        <Dashboard />
+        <Dashboard 
+          isLoading={isLoading}
+          statsData={data?.data}
+        />
     </div>
   )
 }
