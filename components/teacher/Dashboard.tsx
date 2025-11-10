@@ -18,8 +18,7 @@ interface DashboardProps {
 export default function Dashboard(props: DashboardProps) {
   const { isLoading, statsData } = props;
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [dateFilter, setDateFilter] = useState("month")
-  console.log("Dashboard Stats Data in Dashboard Component:", statsData?.stats?.totalPaper);
+
   return (
     <div className="p-4 md:p-8 space-y-8">
       {/* Header */}
@@ -40,15 +39,22 @@ export default function Dashboard(props: DashboardProps) {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {isLoading ? 
+        <>
         <DashboardCardsSkeleton />
-        : <StatCard
+        <DashboardCardsSkeleton />
+        <DashboardCardsSkeleton />
+        <DashboardCardsSkeleton />
+        </>
+        : 
+        <>
+        <StatCard
           title="Total Papers"
           value={statsData?.stats?.totalPaper ?? 0}
           icon={FileText}
           trend="+3 this month"
           color="from-blue-500 to-blue-600"
           delay={0}
-        />}
+        />
         <StatCard
           title="Papers Generated"
           value={statsData?.stats?.usedPaper ?? 0}
@@ -73,13 +79,14 @@ export default function Dashboard(props: DashboardProps) {
           color="from-orange-500 to-orange-600"
           delay={300}
         />
+        </>
+        }
       </div>
 
-      <RecentPapers />
+      <RecentPapers isLoading={isLoading} papers={statsData?.papers} />
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Papers Section */}
+      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4 animate-slide-in-up" style={{ animationDelay: "200ms" }}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h2 className="text-2xl font-bold text-foreground">Generated Papers</h2>
@@ -103,12 +110,11 @@ export default function Dashboard(props: DashboardProps) {
           <PapersTable />
         </div>
 
-        {/* Activity Feed */}
         <div className="animate-slide-in-up" style={{ animationDelay: "300ms" }}>
           <h2 className="text-2xl font-bold text-foreground mb-4">Recent Activity</h2>
           <ActivityFeed />
         </div>
-      </div>
+      </div> */}
 
       {/* Create Paper Modal */}
       {showCreateModal && <CreatePaperModal onClose={() => setShowCreateModal(false)} />}
