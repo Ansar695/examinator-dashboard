@@ -9,6 +9,7 @@ import PapersTable from "./PapersTable"
 import ActivityFeed from "./ActivityFeed"
 import CreatePaperModal from "./CreatePaperModal"
 import { DashboardCardsSkeleton } from "../skeletons/DashboardSkeleton"
+import Link from "next/link"
 
 interface DashboardProps {
   isLoading: boolean;
@@ -27,13 +28,14 @@ export default function Dashboard(props: DashboardProps) {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Welcome back, Dr. Sarah</p>
         </div>
+        <Link href="/select-board">
         <Button
-          onClick={() => setShowCreateModal(true)}
           className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 w-full md:w-auto"
         >
           <Plus size={20} />
           Create New Paper
         </Button>
+        </Link>
       </div>
 
       {/* Stats Grid */}

@@ -21,6 +21,32 @@ export async function GET() {
       where: { userId: auth.userId },
       orderBy: { createdAt: "desc" },
       take: 5,
+      select: {
+        id: true,
+        title: true,
+        createdAt: true,
+        subject: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            class: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        board: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
     });
 
     const stats = {

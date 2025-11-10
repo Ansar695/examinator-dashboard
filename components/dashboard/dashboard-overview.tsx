@@ -9,26 +9,18 @@ import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 
 interface DashboardStats {
-  boards: {
-    count: number
-    change: string
-    changeType: "positive" | "negative"
-  }
-  classes: {
-    count: number
-    change: string
-    changeType: "positive" | "negative"
-  }
-  subjects: {
-    count: number
-    change: string
-    changeType: "positive" | "negative"
-  }
-  chapters: {
-    count: number
-    change: string
-    changeType: "positive" | "negative"
-  }
+  // Legacy fields (if ever provided)
+  boards?: { count: number; change: string; changeType: "positive" | "negative" }
+  classes?: { count: number; change: string; changeType: "positive" | "negative" }
+  subjects?: { count: number; change: string; changeType: "positive" | "negative" }
+  chapters?: { count: number; change: string; changeType: "positive" | "negative" }
+  // Current API fields
+  totalPaper?: number
+  usedPaper?: number
+  remainingPaper?: number
+  currentPlan?: string
+  expiryDate?: string | Date | null
+  usedPercentage?: number
 }
 
 interface RecentActivity {
@@ -40,7 +32,8 @@ interface RecentActivity {
 
 interface DashboardData {
   stats: DashboardStats
-  recentActivities: RecentActivity[]
+  recentActivities?: RecentActivity[]
+  papers?: any[]
 }
 
 const quickActions = [
@@ -107,40 +100,41 @@ export function DashboardOverview() {
     }
   }
 
+  // Align with /api/dashboard/stats response shape
   const stats = data
     ? [
         {
-          name: "Total Boards",
-          value: data.stats.boards.count.toString(),
-          change: data.stats.boards.change,
-          changeType: data.stats.boards.changeType,
+          name: "Monthly Limit",
+          value: (data?.stats?.totalPaper ?? 0).toString(),
+          change: `${data?.stats?.usedPercentage ?? 0}% used`,
+          changeType: "positive" as const,
           icon: BookOpen,
           color: "text-blue-600",
           bgColor: "bg-blue-50",
         },
         {
-          name: "Active Classes",
-          value: data.stats.classes.count.toString(),
-          change: data.stats.classes.change,
-          changeType: data.stats.classes.changeType,
+          name: "Used Papers",
+          value: (data?.stats?.usedPaper ?? 0).toString(),
+          change: `${data?.stats?.usedPercentage ?? 0}% of quota`,
+          changeType: "positive" as const,
           icon: GraduationCap,
           color: "text-emerald-600",
           bgColor: "bg-emerald-50",
         },
         {
-          name: "Subjects",
-          value: data.stats.subjects.count.toString(),
-          change: data.stats.subjects.change,
-          changeType: data.stats.subjects.changeType,
+          name: "Remaining",
+          value: (data?.stats?.remainingPaper ?? 0).toString(),
+          change: "Resets monthly",
+          changeType: "positive" as const,
           icon: Library,
           color: "text-purple-600",
           bgColor: "bg-purple-50",
         },
         {
-          name: "Chapters",
-          value: data.stats.chapters.count.toLocaleString(),
-          change: data.stats.chapters.change,
-          changeType: data.stats.chapters.changeType,
+          name: "Plan",
+          value: String(data?.stats?.currentPlan ?? "FREE"),
+          change: data?.stats?.expiryDate ? "Active" : "No expiry set",
+          changeType: "positive" as const,
           icon: FileText,
           color: "text-orange-600",
           bgColor: "bg-orange-50",
@@ -280,11 +274,11 @@ export function DashboardOverview() {
                 </div>
               ))}
             </div>
-          ) : data?.recentActivities.length === 0 ? (
+          ) : (data?.recentActivities?.length ?? 0) === 0 && (data?.papers?.length ?? 0) === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">No recent activities</p>
           ) : (
             <div className="space-y-4">
-              {data?.recentActivities.map((activity) => {
+              {(data?.recentActivities ?? []).map((activity) => {
                 const iconData = getActivityIcon(activity.type)
                 return (
                   <div
@@ -304,6 +298,26 @@ export function DashboardOverview() {
                   </div>
                 )
               })}
+
+              {/* Fallback: Show recent papers from API if no recentActivities */}
+              {(data?.recentActivities?.length ?? 0) === 0 &&
+                (data?.papers ?? []).map((paper: any) => (
+                  <div
+                    key={paper.id}
+                    className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl border border-border/50 hover:bg-muted/70 transition-colors"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <p className="text-sm font-semibold text-foreground">{paper.title}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>{formatDistanceToNow(new Date(paper.createdAt), { addSuffix: true })}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
             </div>
           )}
         </CardContent>

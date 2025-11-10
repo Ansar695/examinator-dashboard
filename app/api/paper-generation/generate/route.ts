@@ -119,6 +119,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Derive boardId and classId from subject
+    const subject = await prisma.subject.findUnique({
+      where: { id: subjectId },
+      select: { boardId: true, classId: true },
+    });
+
+    if (!subject?.boardId || !subject?.classId) {
+      return NextResponse.json(
+        { success: false, message: "Subject not found" },
+        { status: 404 }
+      );
+    }
+
     const paper = await prisma.generatedPaper.create({
       data: {
         title,
@@ -126,6 +139,8 @@ export async function POST(request: Request) {
         examTime: examTime,
         userId,
         subjectId,
+        boardId: subject?.boardId,
+        classId: subject?.classId,
         mcqs,
         shortQs,
         longQs,

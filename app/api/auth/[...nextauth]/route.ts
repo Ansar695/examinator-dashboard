@@ -20,13 +20,16 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Check if input is email or username
-        const isEmail = credentials.emailOrUsername.includes("@")
-        
+        const identifier = credentials.emailOrUsername.trim()
+        const isEmail = identifier.includes("@")
+
         const user = await prisma.user.findFirst({
           where: isEmail
-            ? { email: credentials.emailOrUsername }
-            : { username: credentials.emailOrUsername }
+            ? { email: identifier }
+            : { username: identifier }
         })
+
+        console.log("user " , user)
 
         if (!user || !user?.password) {
           throw new Error("Invalid credentials")
@@ -41,12 +44,14 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials")
         }
 
+        const safeUsername = user.username ?? (user.email?.split("@")[0] || "")
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
           role: user.role,
-          username: user.username,
+          username: safeUsername,
           institutionName: user.institutionName
         }
       }
@@ -59,7 +64,7 @@ export const authOptions: NextAuthOptions = {
           ...token,
           id: user.id,
           role: user.role,
-          username: user.username,
+          username: (user as any).username ?? "",
           institutionName: user.institutionName
         }
       }

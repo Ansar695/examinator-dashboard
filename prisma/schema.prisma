@@ -14,11 +14,13 @@ model User {
   password        String
   name            String
   role            UserRole @default(STUDENT)
-  age             Int
+  status          UserStatus? @default(PENDING)
+  age             Int?
   phone           String?
   profilePicture  String?
   institutionName String?
   institutionLogo String?
+  approvedAt      DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
@@ -41,6 +43,7 @@ model Board {
   subjects    Subject[]
   
   @@map("boards")
+  GeneratedPaper GeneratedPaper[]
 }
 
 model Class {
@@ -58,6 +61,7 @@ model Class {
   chapters  Chapter[]
   
   @@map("classes")
+  GeneratedPaper GeneratedPaper[]
 }
 
 model Subject {
@@ -172,10 +176,14 @@ model GeneratedPaper {
   examTime    String?  @default("2:30") // Format: "H:MM" e.g., "3:00" for 3 hours
   userId      String   @db.ObjectId
   subjectId   String   @db.ObjectId
+  boardId     String   @db.ObjectId
+  classId     String   @db.ObjectId
 
   // Relations
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   // Embedded question sets
   mcqs        MCQEntry[]
@@ -270,4 +278,11 @@ enum UserRole {
   STUDENT
   TEACHER
   ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
 }

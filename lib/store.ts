@@ -7,6 +7,7 @@ import { authApi } from "./api/authApi"
 import { profileApi } from "./api/profileApi"
 import { dashboardStatsApi } from "./api/dashboardApi"
 import { plansApi } from "./api/plansApi"
+import { usersApi } from "./api/usersApi"
 
 export const store = configureStore({
   reducer: {
@@ -16,7 +17,8 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [profileApi.reducerPath]: profileApi.reducer,
     [dashboardStatsApi.reducerPath]: dashboardStatsApi.reducer,
-    [plansApi.reducerPath]: plansApi.reducer
+    [plansApi.reducerPath]: plansApi.reducer,
+    [usersApi.reducerPath]: usersApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -27,6 +29,7 @@ export const store = configureStore({
       profileApi.middleware,
       dashboardStatsApi.middleware,
       plansApi.middleware,
+      usersApi.middleware,
     ),
 })
 

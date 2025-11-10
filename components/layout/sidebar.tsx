@@ -40,6 +40,12 @@ const navigation = [
     icon: FileText,
     description: "Manage chapters and PDFs",
   },
+  {
+    name: "Users",
+    href: "/admin/users",
+    icon: FileText,
+    description: "Manage chapters and PDFs",
+  },
 ]
 
 const secondaryNavigation = [
