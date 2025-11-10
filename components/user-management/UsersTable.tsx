@@ -27,10 +27,12 @@ interface UsersTableProps {
   handleApprove: (userId: string) => void;
   handleSuspend: (userId: string) => void;
   handleInactivate: (userId: string) => void;
+  handleUserEdit: (user: User) => void;
 }
 
 const UsersTable = (props: UsersTableProps) => {
-    const { filteredUsers, handleApprove, handleSuspend, handleInactivate } = props;
+  const { filteredUsers, handleApprove, handleSuspend, handleInactivate, handleUserEdit } =
+    props;
   return (
     <Table>
       <TableHeader>
@@ -113,7 +115,7 @@ const UsersTable = (props: UsersTableProps) => {
                         <Check className="h-4 w-4 mr-2" />
                         Approve
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleUserEdit(user)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>

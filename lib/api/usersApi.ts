@@ -7,7 +7,7 @@ export const usersApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
   tagTypes: ["Users", "User"],
   endpoints: (builder) => ({
-    listUsers: builder.query<any, Pagination | void>({
+    listUsers: builder.query<any, any | void>({
       query: (params) => ({
         url: "/users",
         params,
@@ -20,7 +20,7 @@ export const usersApi = createApi({
             ]
           : [{ type: "Users", id: "LIST" }],
     }),
-    createUser: builder.mutation<any, { email: string; username: string; password: string; name: string; role?: string }>({
+    createUser: builder.mutation<any, any>({
       query: (body) => ({
         url: "/users",
         method: "POST",
@@ -31,31 +31,31 @@ export const usersApi = createApi({
     updateUser: builder.mutation<any, { id: string; data: any }>({
       query: ({ id, data }) => ({
         url: `/users/${id}`,
-        method: "PATCH",
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: (result, error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
+      invalidatesTags: (_result, _error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
     }),
     approveUser: builder.mutation<any, { id: string }>({
       query: ({ id }) => ({
         url: `/users/${id}/approve`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
+      invalidatesTags: (_result, _error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
     }),
     suspendUser: builder.mutation<any, { id: string }>({
       query: ({ id }) => ({
         url: `/users/${id}/suspend`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
+      invalidatesTags: (_result, _error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
     }),
     inactivateUser: builder.mutation<any, { id: string }>({
       query: ({ id }) => ({
         url: `/users/${id}/inactivate`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
+      invalidatesTags: (_result, _error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
     }),
   }),
 });

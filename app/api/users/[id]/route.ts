@@ -2,19 +2,19 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/authMiddleware";
 
-export async function PATCH(
+export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   const auth = await requireAuth();
   if (!auth.ok) return auth.response;
-  if (auth.session.user.role !== "ADMIN") {
+  if (!auth.session || auth.session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const id = params.id;
   const body = await request.json();
-  const { name, email, username, role, status } = body || {};
+  const { email, username, name, role, age, phone, profilePicture, institutionName, institutionLogo } = body || {};
 
   try {
     const updated = await prisma.user.update({
@@ -24,7 +24,11 @@ export async function PATCH(
         ...(email ? { email } : {}),
         ...(username ? { username } : {}),
         ...(role ? { role } : {}),
-        ...(status ? { status } : {}),
+        ...(age ? { age } : {}),
+        ...(phone ? { phone } : {}),
+        ...(profilePicture ? { profilePicture } : {}),
+        ...(institutionName ? { institutionName } : {}),
+        ...(institutionLogo ? { institutionLogo } : {}),
       },
       select: { id: true, name: true, email: true, username: true, role: true, status: true },
     });

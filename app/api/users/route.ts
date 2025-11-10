@@ -52,6 +52,10 @@ export async function GET(request: Request) {
   });
 }
 
+function generateSixDigitPassword() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
 export async function POST(request: Request) {
   const auth = await requireAuth();
   if (!auth.ok) return auth.response;
@@ -60,12 +64,26 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { email, username, password, name, role } = body || {};
+  const { email, username, name, role, age, phone, profilePicture, institutionName, institutionLogo } = body || {};
 
-  if (!email || !username || !password || !name) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 422 });
+
+  const isExist = await prisma.user.findFirst({
+    where: {
+      OR: [{ email }, { username }],
+    },
+  });
+
+  if (isExist) {
+    return NextResponse.json(
+      { error: "Email or username already exists" },
+      { status: 409 }
+    );
   }
 
+  if (!email || !username || !name) {
+    return NextResponse.json({ error: "Missing fields" }, { status: 422 });
+  }
+  const password = generateSixDigitPassword();
   // Password hashing should be centralized; using bcryptjs here
   const bcrypt = await import("bcryptjs");
   const hashed = await bcrypt.hash(password, 10);
@@ -75,10 +93,14 @@ export async function POST(request: Request) {
       data: {
         email,
         username,
-        password: hashed,
         name,
-        role: role || "TEACHER",
-        age: 0,
+        password: hashed,
+        role,
+        age: age ? Number(age) : null,
+        phone: phone || null,
+        profilePicture: profilePicture || null,
+        institutionName: institutionName || null,
+        institutionLogo: institutionLogo || null,
       },
     });
 
@@ -87,10 +109,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, data: user }, { status: 201 });
   } catch (e: any) {
     if (e.code === "P2002") {
-      return NextResponse.json({ error: "Email or username already exists" }, { status: 409 });
+      return NextResponse.json(
+        { error: "Email or username already exists" },
+        { status: 409 }
+      );
     }
-    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create user" },
+      { status: 500 }
+    );
   }
 }
-
-
