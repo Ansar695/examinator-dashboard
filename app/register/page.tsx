@@ -32,6 +32,7 @@ import {
   FileUpload,
 } from "@/components/common/form";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import { userTypeOptions } from "@/utils/static/userTypes";
 
 type RegistrationFormData = z.infer<typeof registrationSchema>;
 
@@ -177,12 +178,6 @@ const Register = () => {
       });
     }
   };
-
-  const userTypeOptions = [
-    { value: "student", label: "Student" },
-    { value: "teacher", label: "Teacher" },
-    { value: "other", label: "Institution/Organization" },
-  ];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12 relative overflow-hidden">

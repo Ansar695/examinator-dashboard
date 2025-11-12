@@ -62,6 +62,7 @@ model Class {
   
   @@map("classes")
   GeneratedPaper GeneratedPaper[]
+  ImportantNotes ImportantNotes[]
 }
 
 model Subject {
@@ -212,6 +213,20 @@ model Subscription {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("subscriptions")
+}
+
+model ImportantNotes {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userType        UserRole @default(STUDENT)
+  notesTitle      String
+  classId         String   @unique @db.ObjectId
+  file            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  class           Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+    
+  @@map("important_notes")
 }
 
 enum PlanType {

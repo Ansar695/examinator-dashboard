@@ -30,22 +30,22 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3, href: "/teacher" },
     {
-      id: "papers",
+      id: "generated-papers",
       label: "Generated Papers",
       icon: FileText,
-      href: "/teacher/papers",
+      href: "/teacher/generated-papers",
     },
     {
-      id: "create",
-      label: "Create Paper",
+      id: "board-papers",
+      label: "Board Papers",
       icon: Plus,
-      href: "/teacher/create",
+      href: "/teacher/all-boards-papers",
     },
     {
-      id: "library",
-      label: "Question Library",
+      id: "notes",
+      label: "Important Notes",
       icon: BookOpen,
-      href: "/teacher/library",
+      href: "/teacher/important-notes",
     },
     {
       id: "settings",

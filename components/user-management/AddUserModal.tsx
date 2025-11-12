@@ -14,23 +14,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   GraduationCap,
   Building2,
   User,
@@ -41,8 +24,6 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
-import { useRegisterMutation } from "@/lib/api/authApi";
 import { addUserSchema } from "@/utils/schemas/registerSchema";
 import {
   TextInput,
