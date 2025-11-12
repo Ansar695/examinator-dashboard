@@ -27,37 +27,43 @@ import SelectClass from "../common/SelectClass";
 import SelectBoard from "../common/SelectBoard";
 import { userTypeOptions } from "@/utils/static/userTypes";
 import { addNotesSchema } from "@/utils/schemas/notesSchema";
-import { useCreateNoteMutation } from "@/lib/api/notesApi";
+import {
+  Note,
+  useCreateNoteMutation,
+  useUpdateNoteMutation,
+} from "@/lib/api/notesApi";
 import CustomSpinner from "../shared/CustomSpinner";
 
 interface NotesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddNote: (note: {
-    title: string;
-    class: string;
-    fileName: string;
-    fileSize: number;
-  }) => void;
+  editingNote?: Note | null;
+  refetchNotes: () => void;
 }
 
 export default function NotesModal({
   isOpen,
   onClose,
-  onAddNote,
+  editingNote,
+  refetchNotes,
 }: NotesModalProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [isFileUploading, setIsFileUploading] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
   const [allBoards, setAllBoards] = useState<any>([]);
+  const [fileSize, setFileSize] = useState<number>(0);
 
   const [createNote, { isLoading, error }] = useCreateNoteMutation();
+  const [updateNote, { isLoading: isUpdating, error: updateError }] =
+    useUpdateNoteMutation();
 
   const { data: boards = [], isLoading: boardsLoading } = useGetBoardsQuery();
   const { data: classes = [], isLoading: classesLoading } =
     useGetClassesByBoardQuery(selectedBoardId, {
       skip: !selectedBoardId,
     });
+
+  const loading = isLoading || isUpdating;
 
   const {
     register,
@@ -73,13 +79,15 @@ export default function NotesModal({
   const file = watch("file");
 
   useEffect(() => {
-    if (boards) {
+    if (boards?.length > 0) {
       setAllBoards(boards);
     }
   }, [boards]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    const fileSizeInBytes = file ? file.size : 0;
+    setFileSize(fileSizeInBytes);
     if (file) {
       try {
         setIsFileUploading(true);
@@ -97,13 +105,12 @@ export default function NotesModal({
 
         toast({
           title: "Profile picture uploaded",
-          description: "Your profile picture has been uploaded successfully.",
+          description: "file uploaded successfully.",
         });
       } catch (error) {
-        console.error("Profile picture upload error:", error);
         toast({
           title: "Upload failed",
-          description: "Failed to upload profile picture. Please try again.",
+          description: "Failed to upload file. Please try again.",
           variant: "destructive",
         });
         setPreview(null);
@@ -114,38 +121,44 @@ export default function NotesModal({
   };
 
   const handleFormSubmit = async (data: z.infer<typeof addNotesSchema>) => {
-    console.log("data =>>> ", data);
     try {
       const role = data.userType === "student" ? "STUDENT" : "TEACHER";
-      // if (editingUser) {
-      //   await updateUser!({
-      //     id: editingUser?.id,
-      //     data: { ...data, role, age: parseInt(data.age.toString()) },
-      //   });
-      //   toast({
-      //     title: "Success!",
-      //     description: "User Updated Successful.",
-      //   });
-      // } else {
-      await createNote({
-        notesTitle: data.title,
-        boardId: data.boardId,
-        classId: data.classId,
-        file: data.file,
-        userType: role,
-      });
-      toast({
-        title: "Success!",
-        description: "User added Successful.",
-      });
-      // }
+      if (editingNote) {
+        await updateNote!({
+          id: editingNote?.id,
+          payload: {
+            notesTitle: data.title,
+            boardId: data.boardId,
+            classId: data.classId,
+            file: data.file,
+            userType: role,
+            fileSize: fileSize,
+          },
+        });
+        toast({
+          title: "Success!",
+          description: "Note Updated Successful.",
+        });
+      } else {
+        await createNote({
+          notesTitle: data.title,
+          boardId: data.boardId,
+          classId: data.classId,
+          file: data.file,
+          userType: role,
+          fileSize: fileSize,
+        });
+        toast({
+          title: "Success!",
+          description: "Note added Successful.",
+        });
+        refetchNotes();
+      }
 
-      // refetch();
-      // onOpenChange(false);
+      onClose()
     } catch (error: any) {
-      console.error("error:", error);
       toast({
-        title: "User Registration Failed",
+        title: "Note Add Failed",
         description:
           error?.data?.error ||
           error?.message ||
@@ -165,7 +178,19 @@ export default function NotesModal({
     if (watchedBoardId) {
       setSelectedBoardId(watchedBoardId);
     }
-  }, [watchedBoardId, setValue]);
+  }, [watchedBoardId]);
+
+  useEffect(() => {
+    if (editingNote) {
+      setValue("title", editingNote?.notesTitle);
+      setValue("boardId", editingNote?.boardId);
+      setValue("classId", editingNote?.classId);
+      setValue("userType", editingNote?.userType.toLowerCase() as any);
+      setValue("file", editingNote?.file || "");
+      setPreview(editingNote?.file || null);
+      setFileSize(editingNote?.fileSize || 0);
+    }
+  }, [editingNote]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -184,9 +209,7 @@ export default function NotesModal({
             label="Note Title"
             placeholder="e.g., Chemistry Notes - Chapter 5"
             value={watch("title") || ""}
-            setValue={(val: string) =>
-              setValue("title", val, { shouldValidate: true })
-            }
+            setValue={setValue}
             error={errors.title?.message}
             required
           />
@@ -254,13 +277,19 @@ export default function NotesModal({
               disabled={isLoading || !file}
               className="flex-1 relative"
             >
-              {isLoading ? (
+              {loading ? (
                 <span className="absolute left-1/2 -translate-x-1/2">
                   Uploading...
                 </span>
               ) : (
                 <>
-                  <Upload className="w-4 h-4 mr-2" /> Upload Note
+                  {editingNote ? (
+                    "Update Note"
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" /> Upload Note
+                    </>
+                  )}
                 </>
               )}
             </Button>

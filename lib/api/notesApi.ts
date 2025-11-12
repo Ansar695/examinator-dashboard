@@ -1,14 +1,30 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
 
-interface Note {
+export interface Note {
   id: string
   notesTitle: string
   boardId: string
   classId: string
+  class: any
   file: string
+  fileSize: number
   userType: string
   createdAt: string
   updatedAt: string
+}
+
+export interface Class {
+  id: string
+  name: string
+}
+
+export interface MetaProps {
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
 }
 
 interface CreateNotePayload {
@@ -17,6 +33,7 @@ interface CreateNotePayload {
   classId: string
   userType: string
   file: string
+  fileSize: number
 }
 
 interface UpdateNotePayload {
@@ -25,6 +42,13 @@ interface UpdateNotePayload {
   classId?: string
   userType?: string
   file?: string
+  fileSize?: number
+}
+
+export interface NotesResponseProps {
+  success: boolean
+  data: Note[]
+  meta: MetaProps
 }
 
 export const notesApi = createApi({
@@ -33,11 +57,22 @@ export const notesApi = createApi({
     baseUrl: "/api",
     credentials: "include",
   }),
-  tagTypes: ["Notes"],
+  tagTypes: ["Notes", "Classes"],
   endpoints: (builder) => ({
-    // Get all notes
-    getNotes: builder.query<{ success: boolean; data: Note[] }, void>({
-      query: () => "/notes",
+    getNotes: builder.query<
+      { success: boolean; data: Note[]; meta: MetaProps },
+      { classId?: string; search?: string; page?: number; limit?: number, userType: string } | void
+    >({
+      query: (params) => {
+        if (!params) return "/notes"
+        const queryParams = new URLSearchParams()
+        if (params.classId) queryParams.append("classId", params.classId)
+        if (params.search) queryParams.append("search", params.search)
+        if (params.userType) queryParams.append("userType", params.userType)
+        if (params.page) queryParams.append("page", params.page.toString())
+        if (params.limit) queryParams.append("limit", params.limit.toString())
+        return `/notes?${queryParams.toString()}`
+      },
       providesTags: ["Notes"],
     }),
 
@@ -45,6 +80,11 @@ export const notesApi = createApi({
     getNotesByClass: builder.query<{ success: boolean; data: Note[] }, string>({
       query: (classId) => `/notes?classId=${classId}`,
       providesTags: ["Notes"],
+    }),
+
+    getClasses: builder.query<{ success: boolean; data: Class[] }, void>({
+      query: () => "/classes",
+      providesTags: ["Classes"],
     }),
 
     // Create note
@@ -81,6 +121,7 @@ export const notesApi = createApi({
 export const {
   useGetNotesQuery,
   useGetNotesByClassQuery,
+  useGetClassesQuery,
   useCreateNoteMutation,
   useUpdateNoteMutation,
   useDeleteNoteMutation,

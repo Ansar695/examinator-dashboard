@@ -17,6 +17,8 @@ import Filters from "@/components/user-management/Filters";
 import UsersTable from "@/components/user-management/UsersTable";
 import { UserTableSkeleton } from "@/components/skeletons/UsersManagementSkeleton";
 import { AddUserModal } from "@/components/user-management/AddUserModal";
+import Pagination from "@/components/common/Pagination";
+import CustomPagination from "@/components/common/Pagination";
 
 export default function AdminUsersPage() {
   const [page, setPage] = useState<number>(1);
@@ -79,7 +81,7 @@ export default function AdminUsersPage() {
   }
 
   const users: User[] = data?.data || [];
-  const pagination = data?.pagination || {
+  const pagination = data?.meta || {
     page: 1,
     limit: 20,
     total: 0,
@@ -138,41 +140,15 @@ export default function AdminUsersPage() {
             />
 
             {/* Pagination */}
-            <div className="flex items-center justify-between p-4 border-t">
-              <div className="text-sm text-gray-600">
-                Showing {filteredUsers.length} of {pagination.total} users
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                {[...Array(pagination.totalPages)].map((_, idx) => (
-                  <Button
-                    key={idx}
-                    variant={page === idx + 1 ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setPage(idx + 1)}
-                  >
-                    {idx + 1}
-                  </Button>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setPage(Math.min(pagination.totalPages, page + 1))
-                  }
-                  disabled={page === pagination.totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+            <CustomPagination
+              totalPages={pagination?.totalPages}
+              currentUsers={data?.data?.length}
+              currentPage={page}
+              limit={pagination?.limit}
+              total={pagination?.total}
+              onPageChange={(p: number) => setPage(p)}
+              isLoading={isLoading}
+            />
           </Card>
         )}
 

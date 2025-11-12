@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     data: users,
-    pagination: {
+    meta: {
       page,
       limit,
       total,

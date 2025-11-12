@@ -44,6 +44,7 @@ model Board {
   
   @@map("boards")
   GeneratedPaper GeneratedPaper[]
+  ImportantNotes ImportantNotes[]
 }
 
 model Class {
@@ -219,14 +220,29 @@ model ImportantNotes {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   userType        UserRole @default(STUDENT)
   notesTitle      String
-  classId         String   @unique @db.ObjectId
+  classId         String   @db.ObjectId
+  boardId         String   @db.ObjectId
   file            String
+  fileSize        Int?     // Size in bytes
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   class           Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  board           Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
     
   @@map("important_notes")
+}
+
+model BoardPapers {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  boardName       String
+  boardYear       DateTime
+  paperFile       String
+  fileSize        Int?     // Size in bytes
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+    
+  @@map("board_papers")
 }
 
 enum PlanType {

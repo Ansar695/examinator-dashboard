@@ -8,6 +8,7 @@ import { profileApi } from "./api/profileApi"
 import { dashboardStatsApi } from "./api/dashboardApi"
 import { plansApi } from "./api/plansApi"
 import { usersApi } from "./api/usersApi"
+import { notesApi } from "./api/notesApi"
 
 export const store = configureStore({
   reducer: {
@@ -18,7 +19,8 @@ export const store = configureStore({
     [profileApi.reducerPath]: profileApi.reducer,
     [dashboardStatsApi.reducerPath]: dashboardStatsApi.reducer,
     [plansApi.reducerPath]: plansApi.reducer,
-    [usersApi.reducerPath]: usersApi.reducer
+    [usersApi.reducerPath]: usersApi.reducer,
+    [notesApi.reducerPath]: notesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -30,6 +32,7 @@ export const store = configureStore({
       dashboardStatsApi.middleware,
       plansApi.middleware,
       usersApi.middleware,
+      notesApi.middleware,
     ),
 })
 

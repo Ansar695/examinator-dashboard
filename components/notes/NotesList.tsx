@@ -1,21 +1,16 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { FileText, Trash2, Download } from "lucide-react"
-
-interface Note {
-  id: string
-  title: string
-  class: string
-  fileName: string
-  fileSize: number
-  uploadedAt: Date
-}
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { FileText, Trash2, Download, Edit2 } from "lucide-react";
+import { Note } from "@/lib/api/notesApi";
+import Link from "next/link";
+import { BytesToMegaBytes } from "@/utils/transformers/bytesToMegaBytes";
 
 interface NotesListProps {
-  notes: Note[]
-  onDeleteNote: (id: string) => void
+  notes: Note[];
+  handleEditNote: (note: Note) => void;
+  onDeleteNote: (id: string) => void;
 }
 
 const classColors: Record<string, string> = {
@@ -31,32 +26,37 @@ const classColors: Record<string, string> = {
   "10": "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
   "11": "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-100",
   "12": "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100",
-}
+};
 
-export default function NotesList({ notes, onDeleteNote }: NotesListProps) {
+export default function NotesList({ notes, onDeleteNote, handleEditNote }: NotesListProps) {
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
-  if (notes.length === 0) {
+  if (notes?.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
           <FileText className="w-8 h-8 text-muted-foreground" />
         </div>
         <h3 className="font-semibold text-foreground mb-1">No notes yet</h3>
-        <p className="text-sm text-muted-foreground">Start by uploading your first note to get organized</p>
+        <p className="text-sm text-muted-foreground">
+          Start by uploading your first note to get organized
+        </p>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-3">
-      {notes.map((note) => (
+      {notes.map((note) => {
+        const fileName = note.file?.split("/")?.[note.file?.split("/").length - 1] || "Untitled Note";
+        console.log("fileName ", fileName)
+        return(
         <div
           key={note.id}
           className="flex items-start justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
@@ -67,27 +67,42 @@ export default function NotesList({ notes, onDeleteNote }: NotesListProps) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <h4 className="font-semibold text-foreground truncate">{note.title}</h4>
-                <Badge className={`flex-shrink-0 ${classColors[note.class] || classColors["1"]}`}>
-                  Class {note.class}
+                <h4 className="font-semibold text-foreground truncate">
+                  {note.notesTitle}
+                </h4>
+                <Badge className={`flex-shrink-0 ${classColors[note?.class?.name] || classColors["1"]}`}>
+                  Class {note?.class?.name}
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground truncate">{note.fileName}</p>
+              <p className="text-sm text-muted-foreground truncate">
+                {fileName}
+              </p>
               <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                <span>{note.fileSize.toFixed(2)} MB</span>
+                <span>{BytesToMegaBytes(note?.fileSize)} MB</span>
                 <span>•</span>
-                <span>{formatDate(note.uploadedAt)}</span>
+                <span>{formatDate(new Date(note?.updatedAt))}</span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+            <a href="" download={true}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted"
+                title="Download note"
+              >
+                <Download className="w-4 h-4" />
+              </Button>
+            </a>
             <Button
               variant="ghost"
               size="sm"
-              className="text-muted-foreground hover:text-foreground hover:bg-muted"
-              title="Download note"
+              onClick={() => handleEditNote(note)}
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              title="Delete note"
             >
-              <Download className="w-4 h-4" />
+              <Edit2 className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
@@ -100,7 +115,7 @@ export default function NotesList({ notes, onDeleteNote }: NotesListProps) {
             </Button>
           </div>
         </div>
-      ))}
+      )})}
     </div>
-  )
+  );
 }
