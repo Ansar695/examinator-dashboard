@@ -23,7 +23,7 @@ export default function NotesPage() {
   const [editing, setEditing] = useState<any>(null);
   const [filters, setFilters] = useState({ search: "", classId: "", userType: '' });
   const[currentPage, setCurrentPage] = useState<number>(1)
-  console.log("filters ==>>> ", filters)
+
   const {
     data: allNotes,
     refetch: refetchNotes,
@@ -93,7 +93,7 @@ export default function NotesPage() {
                 </h1>
                 <p className="text-muted-foreground">
                   {allNotes?.meta?.total ?? 0}{" "}
-                  {allNotes?.meta?.total === 1 ? "note" : "notes"} available
+                  {allNotes?.meta?.total === 1 ? "Note" : "Notes"} available
                 </p>
               </div>
               <Button

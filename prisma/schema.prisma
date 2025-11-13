@@ -236,7 +236,7 @@ model ImportantNotes {
 model BoardPapers {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   boardName       String
-  boardYear       DateTime
+  boardYear       String
   paperFile       String
   fileSize        Int?     // Size in bytes
   createdAt       DateTime @default(now())

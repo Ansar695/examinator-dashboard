@@ -38,7 +38,7 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
     {
       id: "board-papers",
       label: "Board Papers",
-      icon: Plus,
+      icon: FileText,
       href: "/teacher/all-boards-papers",
     },
     {

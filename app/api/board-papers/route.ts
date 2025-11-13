@@ -17,11 +17,14 @@ export async function GET(request: Request) {
     // ✅ Filters
     const whereClause: any = {};
 
+    if (boardName && boardName !== "all" && boardName !== undefined) {
+      whereClause.boardName = boardName;
+    }
+
     if (search) {
       whereClause.OR = [
-        { boardName: { contains: boardName, mode: "insensitive" } },
         { boardName: { contains: search, mode: "insensitive" } },
-        { file: { contains: search, mode: "insensitive" } },
+        { paperFile: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -100,7 +103,10 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ success: true, data: boardPaper }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: boardPaper },
+      { status: 201 }
+    );
   } catch (error: any) {
     console.error("Error creating board paper:", error);
 

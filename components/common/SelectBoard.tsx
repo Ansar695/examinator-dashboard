@@ -17,7 +17,7 @@ interface SelectBoardProps {
 
 const SelectBoard = (props: SelectBoardProps) => {
   const { allBoards, watch, setValue, errors } = props;
-  console.log("watch(boardId) = ", watch("boardId"))
+
   return (
     <div className="space-y-2">
       <Label htmlFor="boardId">Board *</Label>

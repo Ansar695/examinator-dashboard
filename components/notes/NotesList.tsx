@@ -2,15 +2,16 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Trash2, Download, Edit2 } from "lucide-react";
+import { FileText, Trash2, Download, Edit2, Eye } from "lucide-react";
 import { Note } from "@/lib/api/notesApi";
 import Link from "next/link";
 import { BytesToMegaBytes } from "@/utils/transformers/bytesToMegaBytes";
 
 interface NotesListProps {
   notes: Note[];
-  handleEditNote: (note: Note) => void;
-  onDeleteNote: (id: string) => void;
+  handleEditNote?: (note: Note) => void;
+  onDeleteNote?: (id: string) => void;
+  isAdmin: boolean
 }
 
 const classColors: Record<string, string> = {
@@ -28,7 +29,7 @@ const classColors: Record<string, string> = {
   "12": "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100",
 };
 
-export default function NotesList({ notes, onDeleteNote, handleEditNote }: NotesListProps) {
+export default function NotesList({ notes, onDeleteNote, handleEditNote, isAdmin}: NotesListProps) {
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
@@ -59,7 +60,7 @@ export default function NotesList({ notes, onDeleteNote, handleEditNote }: Notes
         return(
         <div
           key={note.id}
-          className="flex items-start justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+          className="flex items-start justify-between p-4 border border-border rounded-lg bg-white transition-colors"
         >
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -85,34 +86,46 @@ export default function NotesList({ notes, onDeleteNote, handleEditNote }: Notes
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-            <a href="" download={true}>
+            <Link href={note?.file} download={true}>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-foreground hover:bg-muted"
+                className="text-muted-foreground hover:text-foreground hover:bg-gray-200 w-6 h-6 cursor-pointer"
                 title="Download note"
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-5 h-5" />
               </Button>
-            </a>
+            </Link>
+            <Link href={note?.file} download={true}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground hover:bg-gray-200 w-6 h-6 cursor-pointer"
+                title="Download note"
+              >
+                <Eye className="w-5 h-5" />
+              </Button>
+            </Link>
+            {isAdmin && <>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleEditNote(note)}
-              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              onClick={() => handleEditNote && handleEditNote(note)}
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-6 h-6 cursor-pointer"
               title="Delete note"
             >
-              <Edit2 className="w-4 h-4" />
+              <Edit2 className="w-5 h-5" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onDeleteNote(note.id)}
-              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              onClick={() => onDeleteNote && onDeleteNote(note.id)}
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-6 h-6 cursor-pointer"
               title="Delete note"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-5 h-5" />
             </Button>
+            </>}
           </div>
         </div>
       )})}

@@ -1,50 +1,66 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, X } from "lucide-react"
-import { userTypeOptions } from "@/utils/static/userTypes"
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, X } from "lucide-react";
+import { userTypeOptions } from "@/utils/static/userTypes";
 
 interface NotesFilterProps {
-  classes: Array<{ id: string; name: string }>
+  classes: Array<{ id: string; name: string }>;
+  isAdmin: boolean;
   onFilterChange: (filters: {
-    search: string
-    classId: string
-    userType: string
-  }) => void
-  isLoading?: boolean
+    search: string;
+    classId: string;
+    userType: string;
+  }) => void;
+  isLoading?: boolean;
 }
 
-export function NotesFilter({ classes, onFilterChange, isLoading = false }: NotesFilterProps) {
-  const [search, setSearch] = useState("")
-  const [selectedClass, setSelectedClass] = useState("all")
-  const [selectedUserType, setSelectedUserType] = useState("all")
+export function NotesFilter({
+  classes,
+  onFilterChange,
+  isLoading = false,
+  isAdmin,
+}: NotesFilterProps) {
+  const [search, setSearch] = useState("");
+  const [selectedClass, setSelectedClass] = useState("all");
+  const [selectedUserType, setSelectedUserType] = useState("all");
 
   const handleSearchChange = (value: string) => {
-    setSearch(value)
-    onFilterChange({ search: value, classId: selectedClass, userType: selectedUserType })
-  }
+    setSearch(value);
+    onFilterChange({
+      search: value,
+      classId: selectedClass,
+      userType: selectedUserType,
+    });
+  };
 
   const handleClassChange = (value: string) => {
-    setSelectedClass(value)
-    onFilterChange({ search, classId: value, userType: 'all' })
-  }
+    setSelectedClass(value);
+    onFilterChange({ search, classId: value, userType: "all" });
+  };
 
   const handleUserTypeChange = (value: string) => {
-    setSelectedUserType(value)
-    onFilterChange({ search, classId: 'all', userType: value })
-  }
+    setSelectedUserType(value);
+    onFilterChange({ search, classId: "all", userType: value });
+  };
 
   const handleReset = () => {
-    setSearch("")
-    setSelectedClass("all")
-    setSelectedUserType("all")
-    onFilterChange({ search: "", classId: "all", userType: 'all' })
-  }
+    setSearch("");
+    setSelectedClass("all");
+    setSelectedUserType("all");
+    onFilterChange({ search: "", classId: "all", userType: "all" });
+  };
 
-  const hasActiveFilters = search || selectedClass !== "all"
+  const hasActiveFilters = search || selectedClass !== "all";
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border border-primary/10 backdrop-blur-sm">
@@ -61,7 +77,11 @@ export function NotesFilter({ classes, onFilterChange, isLoading = false }: Note
       </div>
 
       {/* Class Filter */}
-      <Select value={selectedClass} onValueChange={handleClassChange} disabled={isLoading}>
+      <Select
+        value={selectedClass}
+        onValueChange={handleClassChange}
+        disabled={isLoading}
+      >
         <SelectTrigger className="w-full sm:w-56 bg-background/60 border-primary/20 focus:border-primary/50">
           <SelectValue placeholder="Filter by class..." />
         </SelectTrigger>
@@ -76,19 +96,25 @@ export function NotesFilter({ classes, onFilterChange, isLoading = false }: Note
       </Select>
 
       {/* User Type Filter */}
-      <Select value={selectedUserType} onValueChange={handleUserTypeChange} disabled={isLoading}>
-        <SelectTrigger className="w-full sm:w-56 bg-background/60 border-primary/20 focus:border-primary/50">
-          <SelectValue placeholder="Filter by class..." />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All User Types</SelectItem>
-          {userTypeOptions?.map((ut) => (
-            <SelectItem key={ut.value} value={ut.value}>
-              {ut.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {isAdmin && (
+        <Select
+          value={selectedUserType}
+          onValueChange={handleUserTypeChange}
+          disabled={isLoading}
+        >
+          <SelectTrigger className="w-full sm:w-56 bg-background/60 border-primary/20 focus:border-primary/50">
+            <SelectValue placeholder="Filter by class..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All User Types</SelectItem>
+            {userTypeOptions?.map((ut) => (
+              <SelectItem key={ut.value} value={ut.value}>
+                {ut.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {/* Reset Button */}
       {hasActiveFilters && (
@@ -104,5 +130,5 @@ export function NotesFilter({ classes, onFilterChange, isLoading = false }: Note
         </Button>
       )}
     </div>
-  )
+  );
 }
