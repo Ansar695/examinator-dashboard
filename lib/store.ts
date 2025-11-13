@@ -10,6 +10,7 @@ import { plansApi } from "./api/plansApi"
 import { usersApi } from "./api/usersApi"
 import { notesApi } from "./api/notesApi"
 import { paperBoardApi } from "./api/boardPapersApi"
+import { generatedPapersApi } from "./api/generatedPapers"
 
 export const store = configureStore({
   reducer: {
@@ -23,6 +24,7 @@ export const store = configureStore({
     [usersApi.reducerPath]: usersApi.reducer,
     [notesApi.reducerPath]: notesApi.reducer,
     [paperBoardApi.reducerPath]: paperBoardApi.reducer,
+    [generatedPapersApi.reducerPath]: generatedPapersApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -36,6 +38,7 @@ export const store = configureStore({
       usersApi.middleware,  
       notesApi.middleware,
       paperBoardApi.middleware,
+      generatedPapersApi.middleware,
     ),
 })
 

@@ -9,6 +9,16 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
 
+    if (!auth?.session || auth?.session?.user?.role !== "TEACHER") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Authorization error",
+          message: "You are not authorized to access this page",
+        },
+        { status: 404 }
+      );
+    }
     // 🔹 Parse userIds & subjectIds arrays like: ?userIds=[1,2,3]
     const parseArrayParam = (param: string | null): string[] => {
       if (!param) return [];
@@ -23,7 +33,6 @@ export async function GET(request: Request) {
       return [];
     };
 
-    const userIds = parseArrayParam(searchParams.get("userIds"));
     const subjectIds = parseArrayParam(searchParams.get("subjectIds"));
     const search = searchParams.get("search") || "";
 
@@ -37,11 +46,7 @@ export async function GET(request: Request) {
     const sortOrder = searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
 
     // 🔹 Filters
-    const filters: any = {};
-
-    if (userIds.length > 0) {
-      filters.userId = { in: userIds };
-    }
+    const filters: any = {userId: auth?.userId};
 
     if (subjectIds.length > 0) {
       filters.subjectId = { in: subjectIds };
@@ -58,6 +63,9 @@ export async function GET(request: Request) {
     const papers = await prisma.generatedPaper.findMany({
       where: filters,
       orderBy: { [sortBy]: sortOrder },
+      include: {
+        class: true,
+      },
       skip,
       take: limit,
     });
@@ -66,8 +74,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      pagination: {
-        totalRecords,
+      meta: {
+        total:totalRecords,
         totalPages,
         currentPage: page,
         pageSize: limit,
@@ -82,90 +90,6 @@ export async function GET(request: Request) {
         success: false,
         error: "Internal Server Error",
         message: error.message || "Failed to fetch papers",
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const auth = await requireAuth();
-    if (!auth.ok) return auth.response;
-
-    const { userId } = auth;
-    if (!userId)
-      return NextResponse.json(
-        { success: false, message: "User ID not found" },
-        { status: 422 }
-      );
-
-    const body = await request.json();
-    const { subjectId, mcqs, shortQs, longQs, title, totalMarks, examTime } = body;
-
-    if (!subjectId) {
-      return NextResponse.json(
-        { success: false, message: "Subject ID is required" },
-        { status: 422 }
-      );
-    }
-
-    if (!title || !totalMarks) {
-      return NextResponse.json(
-        { success: false, message: "Title and total marks are required" },
-        { status: 422 }
-      );
-    }
-
-    // Derive boardId and classId from subject
-    const subject = await prisma.subject.findUnique({
-      where: { id: subjectId },
-      select: { boardId: true, classId: true },
-    });
-
-    if (!subject?.boardId || !subject?.classId) {
-      return NextResponse.json(
-        { success: false, message: "Subject not found" },
-        { status: 404 }
-      );
-    }
-
-    const paper = await prisma.generatedPaper.create({
-      data: {
-        title,
-        totalMarks,
-        examTime: examTime,
-        userId,
-        subjectId,
-        boardId: subject?.boardId,
-        classId: subject?.classId,
-        mcqs,
-        shortQs,
-        longQs,
-      },
-    });
-
-    return NextResponse.json({ success: true, data: paper }, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating paper:", error);
-
-    // Prisma known request error
-    if (error.code === "P2002") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Duplicate entry",
-          message: "Paper already exists",
-        },
-        { status: 409 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Internal Server Error",
-        message: error.message || "Failed to create paper",
       },
       { status: 500 }
     );

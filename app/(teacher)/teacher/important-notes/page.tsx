@@ -1,16 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import AddNotesModal from "@/components/notes/AddNotesModal";
 import NotesList from "@/components/notes/NotesList";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import {
-  type Note,
-  useDeleteNoteMutation,
   useGetNotesQuery,
   useGetClassesQuery,
+  useGetTeacherNotesQuery,
 } from "@/lib/api/notesApi";
 import CustomSpinner from "@/components/shared/CustomSpinner";
 import { Toaster } from "@/components/ui/toaster";
@@ -31,7 +26,7 @@ export default function ImportantNotes() {
     refetch: refetchNotes,
     isLoading,
     error
-  } = useGetNotesQuery(filters ?? undefined);
+  } = useGetTeacherNotesQuery(filters ?? undefined);
 
   const { data: classesData } = useGetClassesQuery();
 

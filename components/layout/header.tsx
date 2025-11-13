@@ -14,6 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { NotificationBell } from "../notifications/NotificationBell"
 
 interface HeaderProps {
   onMenuClick: () => void
@@ -60,10 +61,11 @@ export function Header({ onMenuClick }: HeaderProps) {
           />
         </form>
         <div className="flex items-center gap-x-4 lg:gap-x-6">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-muted">
+          {/* <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-muted">
             <span className="sr-only">View notifications</span>
             <Bell className="h-5 w-5" aria-hidden="true" />
-          </Button>
+          </Button> */}
+          <NotificationBell />
 
           {/* Separator */}
           <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-border" aria-hidden="true" />

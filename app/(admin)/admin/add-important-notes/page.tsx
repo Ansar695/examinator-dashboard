@@ -112,6 +112,7 @@ export default function NotesPage() {
               classes={classesData as any ?? []}
               onFilterChange={handleFilterChange}
               isLoading={loading}
+              isAdmin={true}
             />
           </div>
 
@@ -123,6 +124,7 @@ export default function NotesPage() {
               notes={allNotes?.data ?? []}
               onDeleteNote={handleDeleteNote}
               handleEditNote={handleEditNote}
+              isAdmin={true}
             />
           )}
           {/* Pagination */}

@@ -47,12 +47,12 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
       icon: BookOpen,
       href: "/teacher/important-notes",
     },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: Settings,
-      href: "/teacher/settings",
-    },
+    // {
+    //   id: "settings",
+    //   label: "Settings",
+    //   icon: Settings,
+    //   href: "/teacher/settings",
+    // },
   ];
 
   const getActiveItem = () => {

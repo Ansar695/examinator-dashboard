@@ -76,6 +76,22 @@ export const notesApi = createApi({
       providesTags: ["Notes"],
     }),
 
+    getTeacherNotes: builder.query<
+      { success: boolean; data: Note[]; meta: MetaProps },
+      { classId?: string; search?: string; page?: number; limit?: number, userType: string } | void
+    >({
+      query: (params) => {
+        if (!params) return "/notes/teacher"
+        const queryParams = new URLSearchParams()
+        if (params.classId) queryParams.append("classId", params.classId)
+        if (params.search) queryParams.append("search", params.search)
+        if (params.page) queryParams.append("page", params.page.toString())
+        if (params.limit) queryParams.append("limit", params.limit.toString())
+        return `/notes/teacher?${queryParams.toString()}`
+      },
+      providesTags: ["Notes"],
+    }),
+
     // Get notes by class
     getNotesByClass: builder.query<{ success: boolean; data: Note[] }, string>({
       query: (classId) => `/notes?classId=${classId}`,
@@ -120,6 +136,7 @@ export const notesApi = createApi({
 
 export const {
   useGetNotesQuery,
+  useGetTeacherNotesQuery,
   useGetNotesByClassQuery,
   useGetClassesQuery,
   useCreateNoteMutation,
