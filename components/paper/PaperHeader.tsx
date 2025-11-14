@@ -55,14 +55,14 @@ export const PaperHeader: React.FC<PaperHeaderProps> = ({
               )}
             </Button>
           )}
-          <Button variant="outline" onClick={onEdit}>
+          <Button variant="outline" onClick={onEdit} className='h-10 px-8 cursor-pointer'>
             <Edit className="mr-2 h-4 w-4" />
             Edit Paper
           </Button>
           <Button 
             variant="outline" 
             onClick={onPreview}
-            className="bg-purple-600 hover:bg-purple-700 text-white"
+            className="h-10 px-8 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-lg"
           >
             <Eye className="mr-2 h-4 w-4" />
             Preview & Print

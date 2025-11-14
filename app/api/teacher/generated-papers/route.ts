@@ -65,6 +65,8 @@ export async function GET(request: Request) {
       orderBy: { [sortBy]: sortOrder },
       include: {
         class: true,
+        board: true,
+        subject: true,
       },
       skip,
       take: limit,

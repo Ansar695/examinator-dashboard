@@ -120,7 +120,7 @@ export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
           <title>${subject} Paper - Class ${classNumber}${showAnswers ? ' (With Answers)' : ''}</title>
           ${styles}
         </head>
-        <body>
+        <body style="margin:0; padding:10mm;">
           ${printContent.innerHTML}
         </body>
       </html>
@@ -149,12 +149,13 @@ export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
         <DialogHeader className="px-6 py-4 border-b bg-gray-50 no-print">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-semibold">Paper Preview</DialogTitle>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 pr-8">
               <div className="flex items-center space-x-2">
                 <Switch
                   id="show-answers"
                   checked={showAnswers}
                   onCheckedChange={setShowAnswers}
+                  className='border border-gray-300 ta-[state=unchecked]:bg-gray-400'
                 />
                 <Label htmlFor="show-answers" className="text-sm font-medium">
                   Show Answers
@@ -162,18 +163,10 @@ export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
               </div>
               <Button
                 onClick={handlePrint}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="h-10 px-8 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-lg"
               >
-                <Printer className="mr-2 h-4 w-4" />
+                <Printer className="mr-2 h-5 w-5" />
                 Print PDF
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="h-8 w-8"
-              >
-                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>

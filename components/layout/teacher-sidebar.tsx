@@ -92,7 +92,7 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
           ) : (
             <div className="p-6 border-b border-sidebar-border animate-slide-in-left">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-16 h-16 bg-gradient-to-br from-sidebar-primary to-accent rounded-lg flex items-center justify-center">
+                <div className="w-16 h-16 rounded-md flex items-center justify-center">
                   {profileData?.user?.institutionLogo ? (
                     <Image
                       src={
@@ -101,7 +101,7 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
                       alt="Institution Logo"
                       width={64}
                       height={64}
-                      className="w-full h-full object-contain"
+                      className="w-full h-full"
                     />
                   ) : (
                     <BookOpen

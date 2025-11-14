@@ -155,6 +155,15 @@ export const paperGenerationApi = createApi({
       }),
       invalidatesTags: ["GeneratedPaper"],
     }),
+
+    deletePaper: builder.mutation<{ success: boolean; data: GeneratedPaper }, { id: string; data: Partial<CreatePaperRequest> }>({
+      query: ({ id, data }) => ({
+        url: `/paper-generation/delete-paper/${id}`,
+        method: 'DELETE',
+        body: data,
+      }),
+      invalidatesTags: ["GeneratedPaper"],
+    }),
   }),
 });
 
@@ -165,4 +174,5 @@ export const {
   useCreatePaperMutation,
   useGetPaperByIdQuery,
   useUpdatePaperMutation,
+  useDeletePaperMutation
 } = paperGenerationApi;

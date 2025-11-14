@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { generateSlug } from "@/lib/utils/slugify"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
