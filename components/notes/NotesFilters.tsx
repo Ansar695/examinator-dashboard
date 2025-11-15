@@ -72,7 +72,7 @@ export function NotesFilter({
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           disabled={isLoading}
-          className="pl-10 bg-background/60 border-primary/20 focus:border-primary/50"
+          className="pl-10 h-12 bg-background/60 border-primary/20 focus:border-primary/50"
         />
       </div>
 
@@ -82,7 +82,7 @@ export function NotesFilter({
         onValueChange={handleClassChange}
         disabled={isLoading}
       >
-        <SelectTrigger className="w-full sm:w-56 bg-background/60 border-primary/20 focus:border-primary/50">
+        <SelectTrigger className="min-h-12 w-full sm:w-56 bg-background/60 border-primary/20 focus:border-primary/50">
           <SelectValue placeholder="Filter by class..." />
         </SelectTrigger>
         <SelectContent>
@@ -102,7 +102,7 @@ export function NotesFilter({
           onValueChange={handleUserTypeChange}
           disabled={isLoading}
         >
-          <SelectTrigger className="w-full sm:w-56 bg-background/60 border-primary/20 focus:border-primary/50">
+          <SelectTrigger className="min-h-12 w-full sm:w-56 bg-background/60 border-primary/20 focus:border-primary/50">
             <SelectValue placeholder="Filter by class..." />
           </SelectTrigger>
           <SelectContent>
@@ -114,20 +114,6 @@ export function NotesFilter({
             ))}
           </SelectContent>
         </Select>
-      )}
-
-      {/* Reset Button */}
-      {hasActiveFilters && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleReset}
-          disabled={isLoading}
-          className="gap-2 border-primary/30 hover:bg-destructive/10 hover:text-destructive bg-transparent"
-        >
-          <X className="w-4 h-4" />
-          Reset
-        </Button>
       )}
     </div>
   );

@@ -9,7 +9,7 @@ export default function Home() {
 //   const { data: session, status } = useSession()
 //   const router = useRouter()
 const { data, isLoading, error } = useGeDashboardStatsQuery('');
-console.log("Dashboard Stats Data:", data);
+
 //   useEffect(() => {
 //     if (status === "loading") return
 //     if (!session || (session.user.role !== "TEACHER" && session.user.role !== "ADMIN")) {

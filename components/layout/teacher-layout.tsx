@@ -29,7 +29,7 @@ export function TeacherDashboardLayout({ children }: DashboardLayoutProps) {
       <TeacherSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       {/* Main content */}
-      <div className="lg:pl-72 bg-gray-100 min-h-screen">
+      <div className="lg:pl-74 bg-gray-100 min-h-screen">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         {/* <Header onMenuClick={() => setSidebarOpen(true)} /> */}
         <main className="p-4 sm:p-6 lg:p-8">

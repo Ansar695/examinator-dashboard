@@ -69,7 +69,7 @@ export default function BoardPapersList({
         return (
           <div
             key={board.id}
-            className="flex items-start justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+            className="flex items-start justify-between p-4 border border-border rounded-lg bg-white transition-colors"
           >
             <div className="flex items-start gap-3 flex-1 min-w-0">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">

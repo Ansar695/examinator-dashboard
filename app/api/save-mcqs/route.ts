@@ -142,9 +142,6 @@ export async function POST(request: NextRequest) {
     const created = await prisma.mCQQuestion.createMany({
       data: data,
     });
-
-    console.log("created ", created);
-
     return NextResponse.json(
       {
         success: true,

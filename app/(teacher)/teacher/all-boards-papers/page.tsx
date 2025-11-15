@@ -11,11 +11,15 @@ import {
 import { BoardPaperFilters } from "@/components/board-papers/BoardPaperFilters";
 import BoardPapersList from "@/components/board-papers/BoardPapersList";
 import { toast } from "@/components/ui/use-toast";
+import { BoardPapersListSkeleton } from "@/components/skeletons/BoardPapersSkeleton";
+import BoardPapersGridView from "@/components/board-papers/BoardPapersGridView";
+import { BoardPaperGridSkeleton } from "@/components/skeletons/BoardPaperGridSkeleton";
 
 export default function BoardsPapers() {
   const [filters, setFilters] = useState({ search: "", boardName: "" });
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [boardNames, setBoardNames] = useState([]);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const {
     data: allPapers,
@@ -60,9 +64,7 @@ export default function BoardsPapers() {
     });
     return (
       <div className="w-full flex items-center justify-center p-6">
-        <p className="text-muted-foreground">
-          No paper found.
-        </p>
+        <p className="text-muted-foreground">No paper found.</p>
       </div>
     );
   }
@@ -90,14 +92,21 @@ export default function BoardsPapers() {
             boardNames={boardNames ?? []}
             onFilterChange={handleFilterChange}
             isLoading={isLoading}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
           />
         </div>
 
         {/* Notes List */}
         {isLoading ? (
-          <CustomSpinner />
-        ) : (
+          <BoardPaperGridSkeleton />
+        ) : viewMode === "list" ? (
           <BoardPapersList
+            boardPapers={allPapers?.data ?? []}
+            isAdmin={false}
+          />
+        ) : (
+          <BoardPapersGridView
             boardPapers={allPapers?.data ?? []}
             isAdmin={false}
           />

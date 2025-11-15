@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/components/ui/use-toast";
 import { NotesFilter } from "@/components/notes/NotesFilters";
 import CustomPagination from "@/components/common/Pagination";
+import { BoardPapersListSkeleton } from "@/components/skeletons/BoardPapersSkeleton";
 
 export default function ImportantNotes() {
   const [filters, setFilters] = useState({
@@ -89,7 +90,7 @@ export default function ImportantNotes() {
 
         {/* Notes List */}
         {isLoading ? (
-          <CustomSpinner />
+          <BoardPapersListSkeleton />
         ) : (
           <NotesList
             notes={allNotes?.data ?? []}

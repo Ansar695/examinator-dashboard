@@ -16,6 +16,9 @@ import { useRouter } from "next/navigation";
 import { useGetProfileQuery } from "@/lib/api/profileApi";
 import Image from "next/image";
 import { SidebarLogoSkeleton } from "../skeletons/SidebarLogo";
+import { ConfirmLogout } from "./ConfirmLogout";
+import { useState } from "react";
+import { signOut } from "next-auth/react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,6 +29,9 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { data: profileData, isLoading, error, refetch } = useGetProfileQuery();
+
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3, href: "/teacher" },
@@ -66,7 +72,13 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
   };
 
   const handleLogout = () => {
-    router.push("/login");
+    setIsLogoutOpen(true)
+  };
+
+  const handleConfirmLogout = async () => {
+    setIsLoggingOut(true);
+    await signOut({ redirect: true });
+    setIsLoggingOut(false);
   };
 
   return (
@@ -150,18 +162,20 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
           <div className="p-4 border-t border-sidebar-border space-y-2 animate-slide-in-up">
             <Link href="/teacher/profile">
               <button
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`group w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   pathname.startsWith("/teacher/profile")
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent"
                 }`}
               >
-                <Settings size={20} />
-                <span className="font-medium">Profile</span>
+                <Settings size={20} className=" group-hover:text-white" />
+                <span className="font-medium group-hover:text-white">
+                  Profile
+                </span>
               </button>
             </Link>
             <button
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
               onClick={handleLogout}
             >
               <LogOut size={20} />
@@ -170,6 +184,13 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
           </div>
         </div>
       </aside>
+
+      <ConfirmLogout
+        isOpen={isLogoutOpen}
+        onClose={() => setIsLogoutOpen(false)}
+        onConfirm={handleConfirmLogout}
+        isLoading={isLoggingOut}
+      />
 
       {/* Overlay for mobile */}
       {isOpen && (

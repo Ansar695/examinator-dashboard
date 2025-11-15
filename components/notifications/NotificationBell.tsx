@@ -30,18 +30,14 @@ export const NotificationBell = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="relative h-10 w-10 rounded-full hover:bg-primary/10 transition-all duration-300"
+          className="relative h-10 w-10 rounded-full hover:bg-primary transition-all duration-300 cursor-pointer"
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="min-h-6 min-w-6" />
           {unreadCount > 0 && (
             <>
-              {/* Pulse animation ring */}
-              <span className="absolute top-0 right-0 flex h-5 w-5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              </span>
-              {/* Badge */}
+              
               <Badge 
-                className="absolute -top-1 -right-1 h-5 min-w-[20px] flex items-center justify-center p-0 text-[10px] font-bold border-2 border-background bg-gradient-to-r from-primary to-purple-600 shadow-lg"
+                className="absolute -top-1 -right-1 h-5 min-w-[20px] flex items-center justify-center p-0 text-[10px] font-bold border-2 border-background bg-red-500 shadow-lg"
               >
                 {unreadCount > 9 ? '9+' : unreadCount}
               </Badge>

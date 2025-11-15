@@ -33,7 +33,7 @@ export default function AddBoardsPapers() {
   } = useGetBoardPapersQuery(filters ?? undefined);
 
   const { data: allNames, isLoading: boardLoading } = useGetSubBoardsQuery();
-  console.log("boardNames ", boardNames)
+
   const [deleteBoardPaper, { isLoading: isDeleting, error: deleteError }] =
     useDeleteBoardPaperMutation();
 

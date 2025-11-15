@@ -1,44 +1,55 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, X } from "lucide-react"
-import { userTypeOptions } from "@/utils/static/userTypes"
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Grid3x3, List, Search, X } from "lucide-react";
+import { userTypeOptions } from "@/utils/static/userTypes";
 
 interface BoardNamesFilterProps {
-  boardNames: Array<{ id: string; name: string }>
-  onFilterChange: (filters: {
-    search: string
-    boardName: string
-  }) => void
-  isLoading?: boolean
+  boardNames: Array<{ id: string; name: string }>;
+  onFilterChange: (filters: { search: string; boardName: string }) => void;
+  isLoading?: boolean;
+  viewMode?: string;
+  setViewMode?: any;
 }
 
-export function BoardPaperFilters({ boardNames, onFilterChange, isLoading = false }: BoardNamesFilterProps) {
-  const [search, setSearch] = useState("")
-  const [selectedBoardName, setSelectedBoardName] = useState("all")
-  const [selectedUserType, setSelectedUserType] = useState("all")
+export function BoardPaperFilters({
+  boardNames,
+  onFilterChange,
+  isLoading = false,
+  viewMode,
+  setViewMode,
+}: BoardNamesFilterProps) {
+  const [search, setSearch] = useState("");
+  const [selectedBoardName, setSelectedBoardName] = useState("all");
+  const [selectedUserType, setSelectedUserType] = useState("all");
 
   const handleSearchChange = (value: string) => {
-    setSearch(value)
-    onFilterChange({ search: value, boardName: selectedBoardName })
-  }
+    setSearch(value);
+    onFilterChange({ search: value, boardName: selectedBoardName });
+  };
 
   const handleBoardNameChange = (value: string) => {
-    setSelectedBoardName(value)
-    onFilterChange({ search, boardName: value })
-  }
+    setSelectedBoardName(value);
+    onFilterChange({ search, boardName: value });
+  };
 
   const handleReset = () => {
-    setSearch("")
-    setSelectedBoardName("all")
-    setSelectedUserType("all")
-    onFilterChange({ search: "", boardName: "all" })
-  }
+    setSearch("");
+    setSelectedBoardName("all");
+    setSelectedUserType("all");
+    onFilterChange({ search: "", boardName: "all" });
+  };
 
-  const hasActiveFilters = search || selectedBoardName !== "all"
+  const hasActiveFilters = search || selectedBoardName !== "all";
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border border-primary/10 backdrop-blur-sm">
@@ -50,13 +61,17 @@ export function BoardPaperFilters({ boardNames, onFilterChange, isLoading = fals
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           disabled={isLoading}
-          className="pl-10 bg-background/60 border-primary/20 focus:border-primary/50"
+          className="pl-10 h-12 bg-background/60 border-primary/20 focus:border-primary/50"
         />
       </div>
 
       {/* Class Filter */}
-      <Select value={selectedBoardName} onValueChange={handleBoardNameChange} disabled={isLoading}>
-        <SelectTrigger className="w-full sm:w-56 bg-background/60 border-primary/20 focus:border-primary/50">
+      <Select
+        value={selectedBoardName}
+        onValueChange={handleBoardNameChange}
+        disabled={isLoading}
+      >
+        <SelectTrigger className="min-h-12 w-full sm:w-56 bg-background/60 border-primary/20 focus:border-primary/50">
           <SelectValue placeholder="Filter by class..." />
         </SelectTrigger>
         <SelectContent>
@@ -69,19 +84,24 @@ export function BoardPaperFilters({ boardNames, onFilterChange, isLoading = fals
         </SelectContent>
       </Select>
 
-      {/* Reset Button */}
-      {hasActiveFilters && (
+      <div className="flex gap-2">
         <Button
-          variant="outline"
-          size="sm"
-          onClick={handleReset}
-          disabled={isLoading}
-          className="gap-2 border-primary/30 hover:bg-destructive/10 hover:text-destructive bg-transparent"
+          variant={viewMode === "grid" ? "default" : "outline"}
+          size="icon"
+          onClick={() => setViewMode("grid")}
+          className="h-11 w-11"
         >
-          <X className="w-4 h-4" />
-          Reset
+          <Grid3x3 className="w-5 h-5" />
         </Button>
-      )}
+        <Button
+          variant={viewMode === "list" ? "default" : "outline"}
+          size="icon"
+          onClick={() => setViewMode("list")}
+          className="h-11 w-11"
+        >
+          <List className="w-5 h-5" />
+        </Button>
+      </div>
     </div>
-  )
+  );
 }

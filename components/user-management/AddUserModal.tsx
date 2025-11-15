@@ -203,7 +203,7 @@ export function AddUserModal({
         profilePicture: editingUser.profilePicture || "",
         institutionLogo: editingUser.institutionLogo || "",
       });
-      console.log("editingUser ", editingUser);
+
       setProfilePreview(editingUser.profilePicture || null);
       setLogoPreview(editingUser.institutionLogo || null);
     }

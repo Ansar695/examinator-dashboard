@@ -56,7 +56,7 @@ export default function NotesList({ notes, onDeleteNote, handleEditNote, isAdmin
     <div className="space-y-3">
       {notes.map((note) => {
         const fileName = note.file?.split("/")?.[note.file?.split("/").length - 1] || "Untitled Note";
-        console.log("fileName ", fileName)
+
         return(
         <div
           key={note.id}

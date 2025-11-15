@@ -35,7 +35,6 @@ export default function CreatePaperModal({ onClose }: CreatePaperModalProps) {
   }
 
   const handleCreate = () => {
-    console.log("Creating paper:", formData)
     onClose()
   }
 

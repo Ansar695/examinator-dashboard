@@ -20,7 +20,6 @@ export function QuestionItem({ question, onSelect, initialSelected = false }: Qu
 
   const handleToggle = () => {
     setIsSelected(!isSelected)
-    console.log("toggle button handling...")
     onSelect(question?.id, !isSelected)
   }
 

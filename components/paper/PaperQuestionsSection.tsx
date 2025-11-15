@@ -116,7 +116,6 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                         initialText={part}
                         onSave={(newText) => {
                           // Handle part editing if needed
-                          console.log('Part edited:', newText);
                         }}
                       />
                       <Input
