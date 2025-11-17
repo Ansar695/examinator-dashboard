@@ -73,7 +73,7 @@ export function TeamSection() {
               Get Started Free
             </Button>
           </Link>
-          <Link href="/contact">
+          <Link href="#contact">
             <Button size="lg" variant="outline" className="text-lg px-8">
               Contact Sales
             </Button>
