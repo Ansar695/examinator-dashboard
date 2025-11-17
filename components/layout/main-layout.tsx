@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-import { Header } from "./header";
 import { LandingNavbar } from "../landing/LandingNavbar";
 
 interface MainLayoutProps {

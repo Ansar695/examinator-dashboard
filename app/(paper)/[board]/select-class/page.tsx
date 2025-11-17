@@ -165,7 +165,7 @@ const ClassSelection = () => {
                                 delay: levelIndex * 0.2 + classIndex * 0.1,
                               }}
                             >
-                              <Card className="cursor-pointer group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                              <Card className="group hover:shadow-lg transition-all duration-300">
                                 <CardContent className="p-6">
                                   <div className="text-center">
                                     <div className="mb-4">
@@ -180,7 +180,7 @@ const ClassSelection = () => {
                                       {classInfo?.name}th Class
                                     </p>
                                     <Button
-                                      className="w-full group-hover:bg-blue-600 transition-colors"
+                                      className="w-full group-hover:bg-blue-600 active:bg-green-800 cursor-pointer transition-colors"
                                       onClick={() =>
                                         router.push(
                                           `/${currBoardSlug}/${classInfo?.name}/select-subjects?&boardId=${boardId}&classId=${classInfo?.id}`

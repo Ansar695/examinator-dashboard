@@ -1,5 +1,6 @@
 import { PrismaClient, type PlanType } from "@prisma/client";
 import { requireAuth } from "@/lib/auth/authMiddleware";
+import { addUsageToHistory } from "@/lib/auth/plansMiddleware";
 
 const prisma = new PrismaClient();
 
@@ -14,6 +15,8 @@ export async function POST(req: Request) {
         {
           error:
             "Only FREE plan can be subscribed currently, Other plans are coming soon",
+            status: 400,
+            success: false,
         },
         { status: 400 }
       );
@@ -22,11 +25,13 @@ export async function POST(req: Request) {
 
     return Response.json({
       subscription,
+      success: true,
       message: "Plan upgraded successfully",
-    });
+      status: 200,
+    }, { status: 200 });
   } catch (error) {
     console.error("Error upgrading plan:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json({ error: "Internal server error", status: 500 }, { status: 500 });
   }
 }
 
@@ -38,6 +43,10 @@ export const subscribePlan = async (userId: string, planType: PlanType) => {
   };
 
   const config = planConfig[planType as PlanType];
+
+  const isPlanExists = await prisma.subscription.findUnique({
+    where: { userId: userId },
+  });
 
   const subscription = await prisma.subscription.upsert({
     where: { userId: userId },
@@ -60,5 +69,10 @@ export const subscribePlan = async (userId: string, planType: PlanType) => {
   if (!subscription) {
     throw new Error("Subscription failed");
   }
+
+  if (isPlanExists) {
+    await addUsageToHistory(userId, subscription);
+  }
+
   return subscription;
 };

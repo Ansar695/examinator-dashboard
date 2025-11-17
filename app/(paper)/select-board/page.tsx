@@ -67,7 +67,7 @@ const BoardSelection = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.2 }}
               >
-                <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden group">
+                <Card className="h-full hover:shadow-xl transition-all duration-300 overflow-hidden group">
                   <CardContent className="p-8">
                     <div className="flex items-start gap-6">
                       <div className=" rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
@@ -104,7 +104,7 @@ const BoardSelection = () => {
                         </div>
 
                         <Button
-                          className="w-full group-hover:bg-blue-600 transition-colors"
+                          className="cursor-pointer w-full group-hover:bg-blue-600 active:bg-green-800 transition-colors"
                           onClick={() => {
                             router.push(
                               `/${board?.slug}/select-class?boardId=${board?.id}`

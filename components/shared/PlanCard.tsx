@@ -11,7 +11,7 @@ type PlanCardProps = {
   onSelect: (planType: PlanType) => void;
 };
 
-export async function PlanCard({ plan, isLoading, onSelect }: PlanCardProps) {
+export function PlanCard({ plan, isLoading, onSelect }: PlanCardProps) {
   return (
     <Card
       className={`relative p-8 transition-all duration-300 hover:shadow-xl ${
@@ -33,7 +33,7 @@ export async function PlanCard({ plan, isLoading, onSelect }: PlanCardProps) {
         <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
         <p className="text-muted-foreground text-sm mb-4">{plan.description}</p>
         <div className="flex items-baseline justify-center gap-1">
-          <span className="text-5xl font-bold">${plan.price}</span>
+          <span className="text-3xl font-bold">{plan.price} <span className="text-lg">Rs</span></span>
           <span className="text-muted-foreground">/{plan.period}</span>
         </div>
       </div>
@@ -59,7 +59,6 @@ export async function PlanCard({ plan, isLoading, onSelect }: PlanCardProps) {
         )}
       </div>
 
-      <Link href="/select-board">
         <Button
           className={`cursor-pointer w-full py-6 text-lg transition-all duration-300 hover:scale-105 ${
             plan.popular
@@ -72,7 +71,6 @@ export async function PlanCard({ plan, isLoading, onSelect }: PlanCardProps) {
         >
           {isLoading ? <CustomSpinner /> : plan.cta}
         </Button>
-      </Link>
     </Card>
   );
 }

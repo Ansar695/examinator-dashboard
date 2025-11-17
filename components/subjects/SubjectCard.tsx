@@ -15,10 +15,10 @@ interface SubjectCardProps {
 export function SubjectCard({ subject, onSelect }: SubjectCardProps) {
   return (
     <motion.div
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1 }}
+      whileTap={{ scale: 1 }}
     >
-      <Card className="overflow-hidden cursor-pointer h-full flex flex-col max-w-[350px]  p-0" onClick={onSelect}>
+      <Card className="overflow-hidden h-full flex flex-col max-w-[350px]  p-0" onClick={onSelect}>
         <div className="relative h-48">
           <Image
             src={subject?.imageUrl ?? "/placeholder-subject.jpg"}
@@ -33,7 +33,7 @@ export function SubjectCard({ subject, onSelect }: SubjectCardProps) {
         </div>
         <CardContent className="flex-grow flex flex-col justify-between p-4">
           <p className="text-gray-600 mb-4">{subject?.description}</p>
-          <Button variant="outline" className="w-full">Select Subject</Button>
+          <Button variant="outline" className="w-full cursor-pointer active:bg-green-800">Select Subject</Button>
         </CardContent>
       </Card>
     </motion.div>

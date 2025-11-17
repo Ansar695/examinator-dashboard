@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 import {
   useGetPaperLongQsQuery,
   useGetPaperMCQsQuery,
@@ -8,9 +8,9 @@ import {
   useCreatePaperMutation,
   useUpdatePaperMutation,
   useGetPaperByIdQuery,
-} from '@/lib/api/paperGeneration';
+} from "@/lib/api/paperGeneration";
 
-type QuestionType = 'mcq' | 'short' | 'long';
+type QuestionType = "mcq" | "short" | "long";
 
 interface UseQuestionSelectionProps {
   board: string;
@@ -29,8 +29,11 @@ export const useQuestionSelection = ({
 }: UseQuestionSelectionProps) => {
   const router = useRouter();
   const { toast } = useToast();
-  const [currentQuestionType, setCurrentQuestionType] = useState<QuestionType>('mcq');
-  const [selectedQuestions, setSelectedQuestions] = useState<Record<QuestionType, string[]>>({
+  const [currentQuestionType, setCurrentQuestionType] =
+    useState<QuestionType>("mcq");
+  const [selectedQuestions, setSelectedQuestions] = useState<
+    Record<QuestionType, string[]>
+  >({
     mcq: [],
     short: [],
     long: [],
@@ -45,13 +48,15 @@ export const useQuestionSelection = ({
 
   // Search terms for each question type
   const [searchTerms, setSearchTerms] = useState<Record<QuestionType, string>>({
-    mcq: '',
-    short: '',
-    long: '',
+    mcq: "",
+    short: "",
+    long: "",
   });
 
   // Get chapter IDs from localStorage
-  const chapterIds = JSON.parse(localStorage.getItem('selectedChapters') || '[]');
+  const chapterIds = JSON.parse(
+    localStorage.getItem("selectedChapters") || "[]"
+  );
 
   // Fetch questions with pagination and search
   const {
@@ -103,11 +108,13 @@ export const useQuestionSelection = ({
   );
 
   // Create paper mutation
-  const [createPaper, { isLoading: isCreatingPaper }] = useCreatePaperMutation();
-  const [updatePaper, { isLoading: isUpdatingPaper }] = useUpdatePaperMutation();
+  const [createPaper, { isLoading: isCreatingPaper }] =
+    useCreatePaperMutation();
+  const [updatePaper, { isLoading: isUpdatingPaper }] =
+    useUpdatePaperMutation();
 
   // Fetch existing paper data if editing
-  const { data: existingPaperData } = useGetPaperByIdQuery(paperId || '', {
+  const { data: existingPaperData } = useGetPaperByIdQuery(paperId || "", {
     skip: !paperId,
   });
 
@@ -115,11 +122,11 @@ export const useQuestionSelection = ({
   useEffect(() => {
     if (existingPaperData?.data && paperId) {
       const paper = existingPaperData.data;
-      
+
       // Extract question IDs from the paper
-      const mcqIds = paper.mcqs.map(q => q.questionId);
-      const shortIds = paper.shortQs.map(q => q.questionId);
-      const longIds = paper.longQs.map(q => q.questionId);
+      const mcqIds = paper.mcqs.map((q) => q.questionId);
+      const shortIds = paper.shortQs.map((q) => q.questionId);
+      const longIds = paper.longQs.map((q) => q.questionId);
 
       setSelectedQuestions({
         mcq: mcqIds,
@@ -147,11 +154,11 @@ export const useQuestionSelection = ({
   // Check loading state
   const isLoading = useMemo(() => {
     switch (currentQuestionType) {
-      case 'mcq':
+      case "mcq":
         return mcqsLoading;
-      case 'short':
+      case "short":
         return shortLoading;
-      case 'long':
+      case "long":
         return longLoading;
       default:
         return false;
@@ -161,11 +168,11 @@ export const useQuestionSelection = ({
   // Check error state
   const error = useMemo(() => {
     switch (currentQuestionType) {
-      case 'mcq':
+      case "mcq":
         return mcqsError;
-      case 'short':
+      case "short":
         return shortError;
-      case 'long':
+      case "long":
         return longError;
       default:
         return null;
@@ -173,7 +180,11 @@ export const useQuestionSelection = ({
   }, [currentQuestionType, mcqsError, shortError, longError]);
 
   // Handle question selection
-  const handleQuestionSelect = (type: QuestionType, id: string, selected: boolean) => {
+  const handleQuestionSelect = (
+    type: QuestionType,
+    id: string,
+    selected: boolean
+  ) => {
     setSelectedQuestions((prev) => ({
       ...prev,
       [type]: selected
@@ -212,23 +223,23 @@ export const useQuestionSelection = ({
 
   // Handle page change for specific question type
   const handlePageChange = (type: QuestionType, newPage: number) => {
-    setPages(prev => ({ ...prev, [type]: newPage }));
+    setPages((prev) => ({ ...prev, [type]: newPage }));
   };
 
   // Handle search change for specific question type
   const handleSearchChange = (type: QuestionType, searchTerm: string) => {
-    setSearchTerms(prev => ({ ...prev, [type]: searchTerm }));
-    setPages(prev => ({ ...prev, [type]: 1 })); // Reset to first page on search
+    setSearchTerms((prev) => ({ ...prev, [type]: searchTerm }));
+    setPages((prev) => ({ ...prev, [type]: 1 })); // Reset to first page on search
   };
 
   // Get pagination info for current question type
   const getPaginationInfo = (type: QuestionType) => {
     switch (type) {
-      case 'mcq':
+      case "mcq":
         return mcqsResponse?.pagination || { totalPages: 1, currentPage: 1 };
-      case 'short':
+      case "short":
         return shortResponse?.pagination || { totalPages: 1, currentPage: 1 };
-      case 'long':
+      case "long":
         return longResponse?.pagination || { totalPages: 1, currentPage: 1 };
       default:
         return { totalPages: 1, currentPage: 1 };
@@ -239,30 +250,36 @@ export const useQuestionSelection = ({
   const handleContinue = async () => {
     if (getTotalSelectedQuestions() === 0) {
       toast({
-        title: 'No questions selected',
-        description: 'Please select at least one question!',
-        variant: 'destructive',
+        title: "No questions selected",
+        description: "Please select at least one question!",
+        variant: "destructive",
       });
       return;
     }
 
     if (!subjectId) {
       toast({
-        title: 'Subject not found',
-        description: 'Please go back and select a subject again.',
-        variant: 'destructive',
+        title: "Subject not found",
+        description: "Please go back and select a subject again.",
+        variant: "destructive",
       });
       return;
     }
 
     try {
       // Get selected questions with their details
-      const selectedMcqDetails = questions.mcq.filter(q => selectedQuestions.mcq.includes(q.id));
-      const selectedShortDetails = questions.short.filter(q => selectedQuestions.short.includes(q.id));
-      const selectedLongDetails = questions.long.filter(q => selectedQuestions.long.includes(q.id));
+      const selectedMcqDetails = questions.mcq.filter((q) =>
+        selectedQuestions.mcq.includes(q.id)
+      );
+      const selectedShortDetails = questions.short.filter((q) =>
+        selectedQuestions.short.includes(q.id)
+      );
+      const selectedLongDetails = questions.long.filter((q) =>
+        selectedQuestions.long.includes(q.id)
+      );
 
       // Prepare MCQs payload
-      const mcqsPayload = selectedMcqDetails.map(q => ({
+      const mcqsPayload = selectedMcqDetails.map((q) => ({
         questionId: q.id,
         question: q.question,
         options: q.options || [],
@@ -271,7 +288,7 @@ export const useQuestionSelection = ({
       }));
 
       // Prepare short questions payload
-      const shortQsPayload = selectedShortDetails.map(q => ({
+      const shortQsPayload = selectedShortDetails.map((q) => ({
         questionId: q.id,
         question: q.question,
         answer: q.answer,
@@ -279,7 +296,7 @@ export const useQuestionSelection = ({
       }));
 
       // Prepare long questions payload
-      const longQsPayload = selectedLongDetails.map(q => ({
+      const longQsPayload = selectedLongDetails.map((q) => ({
         questionId: q.id,
         question: q.question,
         answer: q.answer,
@@ -290,13 +307,17 @@ export const useQuestionSelection = ({
       // Calculate total marks
       const mcqMarks = mcqsPayload.reduce((sum, q) => sum + q.marks, 0);
       const shortMarks = shortQsPayload.reduce((sum, q) => sum + q.marks, 0);
-      const longMarks = longQsPayload.reduce((sum, q) => sum + (q.totalMarks || 0), 0);
+      const longMarks = longQsPayload.reduce(
+        (sum, q) => sum + (q.totalMarks || 0),
+        0
+      );
       const totalMarks = mcqMarks + shortMarks + longMarks;
 
       // Create paper title
-      const paperTitle = paperId && existingPaperData?.data?.title
-        ? existingPaperData.data.title
-        : `${subject} Annual Exam ${new Date().getFullYear()}`;
+      const paperTitle =
+        paperId && existingPaperData?.data?.title
+          ? existingPaperData.data.title
+          : `${subject} Annual Exam ${new Date().getFullYear()}`;
 
       // Call the API to create or update the paper
       if (paperId) {
@@ -310,17 +331,19 @@ export const useQuestionSelection = ({
             mcqs: mcqsPayload,
             shortQs: shortQsPayload,
             longQs: longQsPayload,
-          }
+          },
         }).unwrap();
 
         if (response.success && response.data) {
           toast({
-            title: 'Paper updated successfully',
-            description: 'Redirecting to paper preview...',
+            title: "Paper updated successfully",
+            description: "Redirecting to paper preview...",
           });
 
           // Navigate to the view paper page
-          router.push(`/${board}/${classNumber}/${subject}/view-paper?paperId=${paperId}&subjectId=${subjectId}`);
+          router.push(
+            `/${board}/${classNumber}/${subject}/view-paper?paperId=${paperId}&subjectId=${subjectId}`
+          );
         }
       } else {
         // Create new paper
@@ -333,34 +356,58 @@ export const useQuestionSelection = ({
           longQs: longQsPayload,
         }).unwrap();
 
+        console.log("response =>>> ", response);
+
         if (response.success && response.data) {
           // Save the generated paper ID and selected questions to localStorage
-          localStorage.setItem('generatedPaperId', response.data.id);
-          localStorage.setItem('selectedQuestions', JSON.stringify(selectedQuestions));
+          localStorage.setItem("generatedPaperId", response.data.id);
+          localStorage.setItem(
+            "selectedQuestions",
+            JSON.stringify(selectedQuestions)
+          );
 
           toast({
-            title: 'Paper created successfully',
-            description: 'Redirecting to paper preview...',
+            title: "Paper created successfully",
+            description: "Redirecting to paper preview...",
           });
 
           // Navigate to the view paper page
-          router.push(`/${board}/${classNumber}/${subject}/view-paper?paperId=${response.data.id}&subjectId=${subjectId}`);
+          router.push(
+            `/${board}/${classNumber}/${subject}/view-paper?paperId=${response.data.id}&subjectId=${subjectId}`
+          );
         }
       }
-    } catch (error) {
-      console.error('Error creating paper:', error);
-      toast({
-        title: 'Error creating paper',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+      console.log("Error creating paper:", error);
+      if (error?.status === 402) {
+        toast({
+          title: "Error creating paper",
+          description:
+            error?.data?.message ?? "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          router.push("/plans");
+        }, 4000);
+      }else{
+        toast({
+          title: "Error creating paper",
+          description:
+            error?.data?.message ?? "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   // Redirect if no chapters selected
   useEffect(() => {
     if (chapterIds.length === 0) {
-      router.push(`/${board}/${classNumber}/${subject}/select-topics${subjectId ? `?subjectId=${subjectId}` : ''}`);
+      router.push(
+        `/${board}/${classNumber}/${subject}/select-topics${
+          subjectId ? `?subjectId=${subjectId}` : ""
+        }`
+      );
     }
   }, [chapterIds, router, board, classNumber, subject, subjectId]);
 

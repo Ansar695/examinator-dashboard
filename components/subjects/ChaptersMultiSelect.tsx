@@ -84,7 +84,7 @@ export function ChapterMultiSelect({
       </div>
       <div className="w-full flex items-end justify-end mt-6">
         <Button
-          className="w-48 h-12 cursor-pointer"
+          className="w-48 h-12 cursor-pointer active:bg-green-800"
           onClick={onSubmit}
           disabled={!values.length}
         >

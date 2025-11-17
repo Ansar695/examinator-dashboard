@@ -27,6 +27,7 @@ model User {
   @@map("users")
   GeneratedPaper  GeneratedPaper[]
   Subscription    Subscription[]
+  SubscriptionHistory SubscriptionHistory[]
 }
 
 model Board {
@@ -214,6 +215,33 @@ model Subscription {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("subscriptions")
+}
+
+model SubscriptionHistory {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String    @db.ObjectId
+  // Billing period
+  month            Int
+  year             Int
+  // Plan info for that cycle
+  planType         PlanType
+  monthlyLimit     Int
+  pricePerMonth    Int
+  planStatus       String    // "ACTIVE", "EXPIRED", "UPGRADED", "DOWNGRADED"
+  
+  // Usage info
+  papersGenerated  Int       @default(0)
+  
+  cycleStart       DateTime
+  cycleEnd         DateTime?
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+  @@index([userId, month, year])
+  @@map("subscription_history")
 }
 
 model ImportantNotes {

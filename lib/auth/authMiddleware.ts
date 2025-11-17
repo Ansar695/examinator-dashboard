@@ -7,7 +7,6 @@ import { NextResponse } from "next/server";
  */
 export async function requireAuth() {
   const session = await getServerSession(authOptions);
-
   if (!session) {
     return {
       ok: false,

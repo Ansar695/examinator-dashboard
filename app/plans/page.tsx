@@ -1,16 +1,11 @@
 "use client";
 
 import { MainLayout } from "@/components/layout/main-layout";
-import CustomSpinner from "@/components/shared/CustomSpinner";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { useSubscribePlanMutation } from "@/lib/api/plansApi";
 import { Check } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
-import { PLANS, Plan, PlanType } from "@/utils/static/plans";
+import { useEffect } from "react";
+import { PLANS, PlanType } from "@/utils/static/plans";
 import { toast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import { PlanCard } from "@/components/shared/PlanCard";
@@ -20,34 +15,46 @@ export default function Plans() {
 
   const [subscribePlan, { isLoading, error }] = useSubscribePlanMutation();
 
-  const handleSubscribe = useCallback(
-    async (planType: PlanType) => {
+  const handleSubscribe = async (planType: PlanType) => {
       try {
         const response = await subscribePlan({ planType }).unwrap();
-        if (response.success && response.data) {
+        console.log("Subscription response:", response);
+        if (response.success) {
           toast({
-            title: "Subscription updated",
-            description: "Redirecting...",
+            title: `Congratulations!`,
+            description: `You have successfully subscribed to the ${planType?.toLocaleLowerCase()} plan. Redirecting...`,
           });
           router.push(`/select-board`);
+        }else{
+          toast({
+            title: "Error",
+            description: response?.message || "Failed to subscribe to the selected plan. Please try again later.",
+            variant: "destructive",
+          });
         }
       } catch (err) {
         console.error("Subscription failed:", err);
+        toast({
+          title: "Error",
+          description:
+            "Failed to subscribe to the selected plan. Please try again later OR contact support team.",
+          variant: "destructive",
+        });
       }
-    },
-    [router, subscribePlan, toast]
-  );
+    }
 
-  if (error) {
-    toast({
-      title: "Error",
-      description: "Failed to subscribe to the selected plan. Please try again later.",
-    });
-  }
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description:
+          "Failed to subscribe to the selected plan. Please try again later.",
+      });
+    }
+  }, [error]);
 
   return (
     <MainLayout>
-      <Toaster />
       <div className="min-h-screen pt-16 bg-gradient-to-br from-background via-background to-primary/5">
         {/* Header */}
         <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 py-16">
@@ -62,7 +69,7 @@ export default function Plans() {
         {/* Plans Grid */}
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid md:grid-cols-3 gap-8">
-            {PLANS.map((plan, i) => (
+            {PLANS?.map((plan, i) => (
               <div
                 key={plan.type}
                 className="animate-scale-in"
