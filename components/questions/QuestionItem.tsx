@@ -25,22 +25,22 @@ export function QuestionItem({ question, onSelect, initialSelected = false }: Qu
 
   return (
     <motion.div
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
-      className={`p-6 rounded-lg shadow-md mb-6 cursor-pointer transition-all duration-300 ${
+      whileHover={{ scale: 1 }}
+      whileTap={{ scale: 1 }}
+      className={`p-2 md:p-6 rounded-lg shadow-md mb-6 cursor-pointer transition-all duration-300 ${
         isSelected ? 'bg-blue-50 border-2 border-blue-500' : 'bg-white hover:shadow-lg'
       }`}
       // onClick={handleToggle}
     >
-      <div className="flex items-start space-x-4">
+      <div className="flex items-start space-x-2 md:space-x-4">
         <Checkbox
           id={question?.id}
           checked={isSelected}
           onCheckedChange={handleToggle}
-          className="mt-1 w-5 h-5 border-gray-600"
+          className="mt-1 w-4 md:w-5 h-4 md:h-5 border-gray-600"
         />
         <div className="flex-grow">
-          <Label htmlFor={question?.id} className="text-lg font-semibold text-gray-800 mb-2 block cursor-pointer">
+          <Label htmlFor={question?.id} className="text-sm md:text-md font-semibold text-gray-800 mb-2 block cursor-pointer">
             {question?.question}
           </Label>
           {question?.options && (

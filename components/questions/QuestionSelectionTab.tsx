@@ -4,7 +4,6 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Shuffle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { QuestionItem } from "@/components/questions/QuestionItem";
-import { QuestionSearch } from "@/components/questions/QuestionSearch";
 import { QuestionPagination } from "@/components/questions/QuestionPagination";
 
 interface QuestionSelectionTabProps {
@@ -51,21 +50,14 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
 
   return (
     <TabsContent value={type}>
-      {/* Search Bar */}
-      <QuestionSearch
-        value={searchTerm}
-        onChange={onSearchChange}
-        placeholder={`Search ${type === 'mcq' ? 'MCQs' : type} questions...`}
-      />
-
       <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-2xl font-semibold text-gray-800">
+        <h2 className="text-md md:text-2xl font-semibold text-gray-800">
           {getTitle()}
         </h2>
         <Button
           onClick={onRandomSelect}
           variant="outline"
-          className="flex items-center"
+          className="flex items-center cursor-pointer"
           disabled={isLoading || questions.length === 0}
         >
           <Shuffle className="mr-2 h-4 w-4" />
@@ -103,7 +95,7 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
 
       {/* Questions List */}
       {!isLoading && !error && questions.length > 0 && (
-        <div>
+        <div className='bg-gray-100 p-2 md:p-5 rounded-md'>
           {questions.map((question: any) => (
             <QuestionItem
               key={question.id}
@@ -116,7 +108,7 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
       )}
 
       {/* Pagination */}
-      {!isLoading && !error && questions.length > 0 && (
+      {questions.length > 0 && (
         <QuestionPagination
           currentPage={currentPage}
           totalPages={totalPages}
