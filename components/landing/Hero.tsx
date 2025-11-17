@@ -24,7 +24,7 @@ const heroSlides = [
   },
 ]
 
-export function HeroSection() {
+export function HeroSection({isRegistered}: {isRegistered: any}) {
   const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export function HeroSection() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animationDelay: "0.8s" }}>
-              <Link href="/plans">
+              {!isRegistered && <Link href="/plans">
                 <Button
                   size="lg"
                   className="group text-lg px-10 py-7 bg-gradient-to-r from-primary via-secondary to-primary hover:shadow-2xl transition-all duration-500 hover:scale-110 animate-pulse"
@@ -116,7 +116,7 @@ export function HeroSection() {
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform" />
                 </Button>
-              </Link>
+              </Link>}
               <Link href="/about">
                 <Button
                   size="lg"

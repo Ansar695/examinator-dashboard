@@ -1,12 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Filter, TrendingUp, FileText, Zap } from "lucide-react"
+import { Plus, TrendingUp, FileText, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import StatCard from "./StatCard"
 import RecentPapers from "./RecentPapers"
-import PapersTable from "./PapersTable"
-import ActivityFeed from "./ActivityFeed"
 import CreatePaperModal from "./CreatePaperModal"
 import { DashboardCardsSkeleton } from "../skeletons/DashboardSkeleton"
 import Link from "next/link"
@@ -21,12 +19,11 @@ export default function Dashboard(props: DashboardProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   return (
-    <div className="p-4 md:p-8 space-y-8">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-slide-in-up">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Welcome back, Dr. Sarah</p>
         </div>
         <Link href="/select-board">
         <Button

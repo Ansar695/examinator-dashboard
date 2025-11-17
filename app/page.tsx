@@ -11,17 +11,19 @@ import { TeamSection } from "@/components/landing/TeamSection";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { MainLayout } from "@/components/layout/main-layout";
 import Contact from "@/components/landing/ContactUs";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
+  const { data } = useSession()
   return (
     <MainLayout>
       <div id="home" className="pt-16">
-        <HeroSection />
+        <HeroSection isRegistered={data?.user} />
       </div>
       <AboutSection />
       <HowItWorks />
       <FeaturesGrid />
-      <MissionSection />
+      <MissionSection isRegistered={data?.user} />
       <ValuesSection />
       <TeamSection />
       <Contact />

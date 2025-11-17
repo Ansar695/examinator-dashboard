@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { UserRole } from "@prisma/client"
+import { subscribePlan } from "../../subscription/subscribe-plan/route"
 
 export async function POST(request: NextRequest) {
   try {
@@ -88,6 +89,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    await subscribePlan(user?.id, "FREE");
+    
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user
 
