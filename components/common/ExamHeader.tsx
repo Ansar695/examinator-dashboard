@@ -5,7 +5,7 @@ export const ExamHeader = ({ institutionName, examDetails }: any) => (
   <div className="flex items-center gap-6 mb-6">
     <TemplateLogo />
     <div className="flex-grow">
-      <h1 className="text-2xl font-bold text-blue-900 mb-4 text-center uppercase">
+      <h1 className="text-2xl font-bold text-blue-900 mb-6 text-center uppercase">
         {institutionName}
       </h1>
       <div className="grid grid-cols-4 gap-x-3 gap-y-3 text-sm mb-3">
