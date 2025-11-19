@@ -181,7 +181,7 @@ export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
             {/* Paper Header */}
             <div className="text-center mb-8 border-b-2 border-black pb-4">
               <h1 className="text-2xl font-bold uppercase mb-2">
-                {formatBoardName(board)} Board
+                {formatBoardName(board)} 
               </h1>
               <h2 className="text-xl font-semibold mb-2">
                 {paperData.title || `${subject} Examination`}

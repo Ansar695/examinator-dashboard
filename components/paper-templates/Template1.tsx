@@ -72,6 +72,7 @@ const Template1: React.FC<DefaultTemplateProps> = ({
     timeAllowed: "45",
     examSyllabus: "CHAP 5",
     totalMarks: calculatedTotalMarks ?? "0",
+    institutionLogo: profileData?.institutionLogo || "",
     examDate: "",
     className: classNumber ?? "",
     paperCode: "#" + randomThreeDigitCode(),
@@ -82,7 +83,7 @@ const Template1: React.FC<DefaultTemplateProps> = ({
       <div className="max-w-5xl mx-auto bg-white">
         {/* Header Section */}
         <ExamHeader
-          institutionName={profileData?.institutionName || "ABC Institution"}
+          profileData={profileData}
           examDetails={examDetails}
         />
 
@@ -95,14 +96,6 @@ const Template1: React.FC<DefaultTemplateProps> = ({
             instruction="Choose the correct option and mark it on the answer sheet"
           />
           <div className="space-y-4">
-            {/* {mcqQuestions.map((q) => (
-              <MCQQuestion
-                key={q.id}
-                questionNumber={q.id}
-                questionText={q.text}
-                options={q.options}
-              />
-            ))} */}
             <PaperQuestionsSection
               title="Multiple Choice Questions"
               sectionType="mcq"
