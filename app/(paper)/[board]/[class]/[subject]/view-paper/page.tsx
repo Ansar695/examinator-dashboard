@@ -1,30 +1,38 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
-import { PageTransition } from '@/components/shared/Transition'
-import { PaperTemplateSelector } from '@/components/questions/PaperTemplates'
-import { LanguageSelector } from '@/components/questions/LanguageSelector'
-import { PaperPreviewModal } from '@/components/questions/PaperPreviewModal'
-import { PaperHeader } from '@/components/paper/PaperHeader'
-import { PaperInfo } from '@/components/paper/PaperInfo'
-import { PaperQuestionsSection } from '@/components/paper/PaperQuestionsSection'
-import { usePaperManagement } from '@/hooks/usePaperManagement'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2 } from 'lucide-react'
+import { useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { PageTransition } from "@/components/shared/Transition";
+import { PaperTemplateSelector } from "@/components/questions/PaperTemplates";
+import { LanguageSelector } from "@/components/questions/LanguageSelector";
+import { PaperPreviewModal } from "@/components/questions/PaperPreviewModal";
+import { PaperHeader } from "@/components/paper/PaperHeader";
+import { PaperInfo } from "@/components/paper/PaperInfo";
+import { PaperQuestionsSection } from "@/components/paper/PaperQuestionsSection";
+import { usePaperManagement } from "@/hooks/usePaperManagement";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
+import DefaultTemplate from "@/components/paper-templates/DefaultTemplate";
+import { useGetProfileQuery } from "@/lib/api/profileApi";
+import Template1 from "@/components/paper-templates/Template1";
 
 export default function PreviewPaper() {
-  const params = useParams()
-  const searchParams = useSearchParams()
-  const board = params.board as string
-  const classNumber = params.class as string
-  const subject = params.subject as string
-  const paperId = searchParams.get('paperId')
-  const subjectId = searchParams.get('subjectId')
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const board = params.board as string;
+  const classNumber = params.class as string;
+  const subject = params.subject as string;
+  const paperId = searchParams.get("paperId");
+  const subjectId = searchParams.get("subjectId");
+  const [currentTemplate, setCurrentTemplate] = useState("default");
 
-  const [selectedTemplateId, setSelectedTemplateId] = useState('punjab-board-standard')
-  const [selectedLanguage, setSelectedLanguage] = useState('english')
-  const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [selectedTemplateId, setSelectedTemplateId] = useState(
+    "punjab-board-standard"
+  );
+  const [selectedLanguage, setSelectedLanguage] = useState("english");
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  const { data: profileData } = useGetProfileQuery();
 
   const {
     questions,
@@ -52,15 +60,28 @@ export default function PreviewPaper() {
     board,
     classNumber,
     subject,
-  })
+  });
 
   const handleTemplateSelect = (template: any) => {
-    setSelectedTemplateId(template.id)
+    setSelectedTemplateId(template.id);
     // Apply template styles to the paper
-    document.body.style.setProperty('--paper-bg-color', template.styles.backgroundColor)
-    document.body.style.setProperty('--paper-text-color', template.styles.textColor)
-    document.body.style.setProperty('--paper-font-family', template.styles.fontFamily)
-  }
+    document.body.style.setProperty(
+      "--paper-bg-color",
+      template.styles.backgroundColor
+    );
+    document.body.style.setProperty(
+      "--paper-text-color",
+      template.styles.textColor
+    );
+    document.body.style.setProperty(
+      "--paper-font-family",
+      template.styles.fontFamily
+    );
+  };
+
+  const handleCurrentTemplateChange = (templateId: string) => {
+    setCurrentTemplate(templateId);
+  };
 
   return (
     <PageTransition>
@@ -85,17 +106,19 @@ export default function PreviewPaper() {
             onSaveChanges={handleSaveChanges}
             onEdit={handleEdit}
             onPreview={() => setShowPreviewModal(true)}
+            currentTemplate={currentTemplate}
+            onTemplateChange={handleCurrentTemplateChange}
           />
 
           <div className="p-6 bg-gray-100 border-b">
             <div className="flex justify-between items-center">
-              <PaperTemplateSelector 
-                onSelect={handleTemplateSelect} 
-                selectedTemplateId={selectedTemplateId} 
+              <PaperTemplateSelector
+                onSelect={handleTemplateSelect}
+                selectedTemplateId={selectedTemplateId}
               />
-              <LanguageSelector 
-                onLanguageChange={setSelectedLanguage} 
-                selectedLanguage={selectedLanguage} 
+              <LanguageSelector
+                onLanguageChange={setSelectedLanguage}
+                selectedLanguage={selectedLanguage}
               />
             </div>
           </div>
@@ -121,64 +144,53 @@ export default function PreviewPaper() {
 
           {/* Paper Content */}
           {!isPaperLoading && !isLoadingQuestions && !paperError && (
-            <div className="p-6" style={{
-              backgroundColor: 'var(--paper-bg-color, white)',
-              color: 'var(--paper-text-color, black)',
-              fontFamily: 'var(--paper-font-family, serif)'
-            }}>
-              <PaperInfo
-                board={board}
-                classNumber={classNumber}
-                subject={subject}
-                paperName={paperName}
-                examTime={examTime}
-                totalMarks={calculatedTotalMarks || paperData?.data?.totalMarks || 0}
-                onPaperNameChange={setPaperName}
-                onExamTimeChange={setExamTime}
-              />
-
-              {selectedLanguage === 'both' && (
-                <p className="text-sm italic text-center mb-4">
-                  Note: Questions are provided in both English and Urdu
-                </p>
+            <>
+              {currentTemplate === 'default' && (
+                <DefaultTemplate
+                  board={board}
+                  classNumber={classNumber}
+                  subject={subject}
+                  paperName={paperName}
+                  examTime={examTime}
+                  calculatedTotalMarks={calculatedTotalMarks}
+                  questions={questions}
+                  marks={marks}
+                  mcqMarks={mcqMarks}
+                  selectedLanguage={selectedLanguage}
+                  handleQuestionEdit={handleQuestionEdit}
+                  handleMCQOptionEdit={handleMCQOptionEdit}
+                  handleMarksChange={handleMarksChange}
+                  setMcqMarks={setMcqMarks}
+                  setPaperName={setPaperName}
+                  setExamTime={setExamTime}
+                  paperData={paperData}
+                  profileData={profileData?.user}
+                />
               )}
 
-              {/* MCQs Section */}
-              <PaperQuestionsSection
-                title="Multiple Choice Questions"
-                sectionType="mcq"
-                questions={questions.mcq}
-                marks={marks}
-                mcqMarks={mcqMarks}
-                startIndex={1}
-                onQuestionEdit={handleQuestionEdit}
-                onMCQOptionEdit={handleMCQOptionEdit}
-                onMarksChange={handleMarksChange}
-                onMcqMarksChange={setMcqMarks}
-              />
-
-              {/* Short Questions Section */}
-              <PaperQuestionsSection
-                title="Short Questions"
-                sectionType="short"
-                questions={questions.short}
-                marks={marks}
-                startIndex={questions.mcq.length + 1}
-                onQuestionEdit={handleQuestionEdit}
-                onMarksChange={handleMarksChange}
-              />
-
-              {/* Long Questions Section */}
-              <PaperQuestionsSection
-                title="Long Questions"
-                sectionType="long"
-                questions={questions.long}
-                marks={marks}
-                startIndex={questions.mcq.length + questions.short.length + 1}
-                onQuestionEdit={handleQuestionEdit}
-                onMarksChange={handleMarksChange}
-              />
-            </div>
+              {currentTemplate === 'academic' && (
+                <Template1
+                  board={board}
+                  classNumber={classNumber}
+                  subject={subject}
+                  paperName={paperName}
+                  examTime={examTime}
+                  calculatedTotalMarks={calculatedTotalMarks}
+                  questions={questions}
+                  marks={marks}
+                  mcqMarks={mcqMarks}
+                  selectedLanguage={selectedLanguage}
+                  handleQuestionEdit={handleQuestionEdit}
+                  handleMCQOptionEdit={handleMCQOptionEdit}
+                  handleMarksChange={handleMarksChange}
+                  setMcqMarks={setMcqMarks}
+                  setPaperName={setPaperName}
+                  setExamTime={setExamTime}
+                  paperData={paperData}
+                  profileData={profileData?.user}
+                />
+              )}
+            </>
           )}
         </div>
       </div>
@@ -193,5 +205,5 @@ export default function PreviewPaper() {
         subject={subject}
       />
     </PageTransition>
-  )
+  );
 }

@@ -17,30 +17,33 @@ const templates = [
     id: 1,
     image: '/images/template1.png',
     name: "Classic Professional",
+    type: "default",
     description: "Clean and timeless design"
   },
   {
     id: 2,
     image: '/images/template1.png',
-    name: "Modern Minimalist",
+    name: "Academic",
+    type: "academic",
     description: "Simple and elegant layout"
   },
   {
     id: 3,
     image: '/images/template1.png',
-    name: "Creative Style",
+    name: "Board",
+    type: "board",
     description: "Express your creativity"
   },
   {
     id: 4,
     image: '/images/template1.png',
-    name: "Business Formal",
+    name: "Pre-Board",
+    type: "pre-board",
     description: "Professional and polished"
   }
 ];
 
-export function TemplatesModal({ isOpen, onOpenChange }: any) {
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+export function TemplatesModal({ isOpen, onOpenChange, currentTemplate, onTemplateChange }: any) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -60,12 +63,12 @@ export function TemplatesModal({ isOpen, onOpenChange }: any) {
         <div className="px-8 py-6 overflow-y-auto max-h-[calc(90vh-180px)]">
           <div className="grid grid-cols-2 gap-6">
             {templates.map((template) => {
-              const isSelected = selectedTemplate === template.id;
+              const isSelected = currentTemplate === template.type;
               
               return (
                 <div
                   key={template.id}
-                  onClick={() => setSelectedTemplate(template.id as any)}
+                  onClick={() => onTemplateChange(template?.type)}
                   className={`group relative cursor-pointer rounded-xl border-2 transition-all duration-300 overflow-hidden bg-white ${
                     isSelected 
                       ? 'border-blue-500 shadow-lg shadow-blue-100' 
@@ -124,24 +127,6 @@ export function TemplatesModal({ isOpen, onOpenChange }: any) {
               );
             })}
           </div>
-
-          {/* Footer Action */}
-          {selectedTemplate && (
-            <div className="mt-8 p-6 bg-blue-50 rounded-xl border border-blue-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Selected Template</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {templates.find(t => t.id === selectedTemplate)?.name}
-                  </p>
-                </div>
-                <button className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-md flex items-center gap-2">
-                  Continue
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -14,6 +14,8 @@ interface PaperHeaderProps {
   onSaveChanges: () => void;
   onEdit: () => void;
   onPreview: () => void;
+  currentTemplate: string;
+  onTemplateChange: (templateId: string) => void;
 }
 
 export const PaperHeader: React.FC<PaperHeaderProps> = ({
@@ -26,8 +28,11 @@ export const PaperHeader: React.FC<PaperHeaderProps> = ({
   onSaveChanges,
   onEdit,
   onPreview,
+  currentTemplate,
+  onTemplateChange
 }) => {
-  const[showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+
   return (
     <div className="p-6 bg-gray-100 border-b space-y-4">
       <div className="flex justify-between items-center">
@@ -78,6 +83,11 @@ export const PaperHeader: React.FC<PaperHeaderProps> = ({
       <TemplatesModal 
         isOpen={showTemplatesModal} 
         onOpenChange={setShowTemplatesModal}
+        currentTemplate={currentTemplate}
+        onTemplateChange={(type: string) => {
+          onTemplateChange(type);
+          setShowTemplatesModal(false);
+        }}
       />
     </div>
   );

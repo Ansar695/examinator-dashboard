@@ -4,11 +4,6 @@ export const LongAnswerQuestion = ({ questionNumber, questionText, lines = 6 }: 
       <span className="font-semibold text-sm">{questionNumber}.</span>
       <div className="flex-grow">
         <p className="text-sm mb-3">{questionText}</p>
-        <div className="space-y-3">
-          {Array.from({ length: lines }).map((_, idx) => (
-            <div key={idx} className="border-b border-gray-300 h-4"></div>
-          ))}
-        </div>
       </div>
     </div>
   </div>
