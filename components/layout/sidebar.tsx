@@ -219,6 +219,12 @@ const navigation = [
     name: "Dashboard",
     href: "/admin",
     icon: Home,
+    description: "Overview",
+  },
+  {
+    name: "Analytics",
+    href: "/admin/analytics",
+    icon: Home,
     description: "Overview and analytics",
   },
   {

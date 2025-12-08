@@ -15,11 +15,6 @@ interface DefaultTemplateProps {
   paperName: string;
   examTime: string;
   calculatedTotalMarks: number;
-  questions: {
-    mcq: any[];
-    short: any[];
-    long: any[];
-  };
   marks: any;
   mcqMarks: any;
   selectedLanguage: string;
@@ -37,12 +32,10 @@ interface DefaultTemplateProps {
   setMcqMarks: (value: number | undefined) => void;
   setPaperName: (name: string) => void;
   setExamTime: (time: string) => void;
-  paperData?: {
-    data: {
-      totalMarks: number;
-    };
-  };
+  paperData: any;
   profileData?: any;
+  isPreview?: boolean;
+  showAnswers?: boolean;
 }
 
 const Template1: React.FC<DefaultTemplateProps> = ({
@@ -52,7 +45,6 @@ const Template1: React.FC<DefaultTemplateProps> = ({
   paperName,
   examTime,
   calculatedTotalMarks,
-  questions,
   marks,
   mcqMarks,
   selectedLanguage,
@@ -64,6 +56,8 @@ const Template1: React.FC<DefaultTemplateProps> = ({
   setExamTime,
   paperData,
   profileData,
+  isPreview=false,
+  showAnswers=false
 }) => {
   const examDetails = {
     studentName: " ",
@@ -76,6 +70,7 @@ const Template1: React.FC<DefaultTemplateProps> = ({
     examDate: "",
     className: classNumber ?? "",
     paperCode: "#" + randomThreeDigitCode(),
+    isPreview
   };
 
   return (
@@ -99,7 +94,7 @@ const Template1: React.FC<DefaultTemplateProps> = ({
             <PaperQuestionsSection
               title="Multiple Choice Questions"
               sectionType="mcq"
-              questions={questions.mcq}
+              questions={paperData?.mcqs}
               marks={marks}
               mcqMarks={mcqMarks}
               startIndex={1}
@@ -107,30 +102,35 @@ const Template1: React.FC<DefaultTemplateProps> = ({
               onMCQOptionEdit={handleMCQOptionEdit}
               onMarksChange={handleMarksChange}
               onMcqMarksChange={setMcqMarks}
+              showAnswers={showAnswers}
             />
           </div>
+        <div className="w-full border border-gray-300 mb-6"></div>
         </div>
 
         {/* Short Questions Section */}
         <PaperQuestionsSection
           title="Short Questions"
           sectionType="short"
-          questions={questions.short}
+          questions={paperData?.shortQs}
           marks={marks}
-          startIndex={questions.mcq.length + 1}
+          startIndex={paperData?.mcqs.length + 1}
           onQuestionEdit={handleQuestionEdit}
           onMarksChange={handleMarksChange}
+          showAnswers={showAnswers}
         />
+        <div className="w-full border border-gray-300 mb-6"></div>
 
         {/* Long Questions Section */}
         <PaperQuestionsSection
           title="Long Questions"
           sectionType="long"
-          questions={questions.long}
+          questions={paperData?.longQs}
           marks={marks}
-          startIndex={questions.mcq.length + questions.short.length + 1}
+          startIndex={paperData?.mcqs.length + paperData?.shortQs.length + 1}
           onQuestionEdit={handleQuestionEdit}
           onMarksChange={handleMarksChange}
+          showAnswers={showAnswers}
         />
       </div>
 

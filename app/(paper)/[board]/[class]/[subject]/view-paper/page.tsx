@@ -145,7 +145,7 @@ export default function PreviewPaper() {
           {/* Paper Content */}
           {!isPaperLoading && !isLoadingQuestions && !paperError && (
             <>
-              {currentTemplate === 'default' && (
+              {currentTemplate === "default" && (
                 <DefaultTemplate
                   board={board}
                   classNumber={classNumber}
@@ -153,7 +153,6 @@ export default function PreviewPaper() {
                   paperName={paperName}
                   examTime={examTime}
                   calculatedTotalMarks={calculatedTotalMarks}
-                  questions={questions}
                   marks={marks}
                   mcqMarks={mcqMarks}
                   selectedLanguage={selectedLanguage}
@@ -163,12 +162,12 @@ export default function PreviewPaper() {
                   setMcqMarks={setMcqMarks}
                   setPaperName={setPaperName}
                   setExamTime={setExamTime}
-                  paperData={paperData}
+                  paperData={paperData?.data}
                   profileData={profileData?.user}
                 />
               )}
 
-              {currentTemplate === 'academic' && (
+              {currentTemplate === "academic" && (
                 <Template1
                   board={board}
                   classNumber={classNumber}
@@ -176,7 +175,6 @@ export default function PreviewPaper() {
                   paperName={paperName}
                   examTime={examTime}
                   calculatedTotalMarks={calculatedTotalMarks}
-                  questions={questions}
                   marks={marks}
                   mcqMarks={mcqMarks}
                   selectedLanguage={selectedLanguage}
@@ -186,7 +184,7 @@ export default function PreviewPaper() {
                   setMcqMarks={setMcqMarks}
                   setPaperName={setPaperName}
                   setExamTime={setExamTime}
-                  paperData={paperData}
+                  paperData={paperData?.data}
                   profileData={profileData?.user}
                 />
               )}
@@ -196,6 +194,16 @@ export default function PreviewPaper() {
       </div>
 
       {/* Paper Preview Modal */}
+      {/* <PaperPreviewModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        paperData={paperData?.data ? { ...paperData.data, examTime } : null}
+        board={board}
+        classNumber={classNumber}
+        subject={subject}
+      /> */}
+
+      {/* Paper Preview Modal */}
       <PaperPreviewModal
         isOpen={showPreviewModal}
         onClose={() => setShowPreviewModal(false)}
@@ -203,6 +211,14 @@ export default function PreviewPaper() {
         board={board}
         classNumber={classNumber}
         subject={subject}
+        currentTemplate={currentTemplate}
+        profileData={profileData?.user}
+        questions={questions}
+        marks={marks}
+        mcqMarks={mcqMarks}
+        paperName={paperName}
+        examTime={examTime}
+        calculatedTotalMarks={calculatedTotalMarks}
       />
     </PageTransition>
   );

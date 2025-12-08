@@ -31,10 +31,10 @@ export default function AdminDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
         <p className="text-muted-foreground">Welcome back, {session.user.name}</p>
-      </div>
+      </div> */}
       <DashboardOverview />
     </DashboardLayout>
   )

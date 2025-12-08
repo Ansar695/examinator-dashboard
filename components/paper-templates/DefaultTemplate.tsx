@@ -9,11 +9,6 @@ interface DefaultTemplateProps {
   paperName: string;
   examTime: string;
   calculatedTotalMarks: number;
-  questions: {
-    mcq: any[];
-    short: any[];
-    long: any[];
-  };
   marks: any;
   mcqMarks: any;
   selectedLanguage: string;
@@ -31,12 +26,10 @@ interface DefaultTemplateProps {
   setMcqMarks: (value: number | undefined) => void;
   setPaperName: (name: string) => void;
   setExamTime: (time: string) => void;
-  paperData?: {
-    data: {
-      totalMarks: number;
-    };
-  };
-    profileData?: any;
+  paperData: any;
+  profileData?: any;
+  isPreview?: boolean;
+  showAnswers?: boolean;
 }
 
 const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
@@ -46,7 +39,6 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
   paperName,
   examTime,
   calculatedTotalMarks,
-  questions,
   marks,
   mcqMarks,
   selectedLanguage,
@@ -57,8 +49,12 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
   setPaperName,
   setExamTime,
   paperData,
-  profileData
+  profileData,
+  isPreview = false,
+  showAnswers,
 }) => {
+  console.log("showAnswers:", showAnswers);
+  console.log("Rendering with paperData:", paperData);
   return (
     <div
       className="p-6"
@@ -68,16 +64,18 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
         fontFamily: "var(--paper-font-family, serif)",
       }}
     >
-      <PaperInfo
-        board={board}
-        classNumber={classNumber}
-        subject={subject}
-        paperName={paperName}
-        examTime={examTime}
-        totalMarks={calculatedTotalMarks || paperData?.data?.totalMarks || 0}
-        onPaperNameChange={setPaperName}
-        onExamTimeChange={setExamTime}
-      />
+      {/* {!isPreview && ( */}
+        <PaperInfo
+          board={board}
+          classNumber={classNumber}
+          subject={subject}
+          paperName={paperName}
+          examTime={examTime}
+          totalMarks={calculatedTotalMarks || paperData?.data?.totalMarks || 0}
+          onPaperNameChange={setPaperName}
+          onExamTimeChange={setExamTime}
+        />
+      {/* )} */}
 
       {selectedLanguage === "both" && (
         <p className="text-sm italic text-center mb-4">
@@ -89,7 +87,7 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
       <PaperQuestionsSection
         title="Multiple Choice Questions"
         sectionType="mcq"
-        questions={questions.mcq}
+        questions={paperData?.mcqs}
         marks={marks}
         mcqMarks={mcqMarks}
         startIndex={1}
@@ -97,28 +95,34 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
         onMCQOptionEdit={handleMCQOptionEdit}
         onMarksChange={handleMarksChange}
         onMcqMarksChange={setMcqMarks}
+        isPreview={isPreview}
+        showAnswers={showAnswers}
       />
+        <div className="w-full border border-gray-300 mb-6"></div>
 
       {/* Short Questions Section */}
       <PaperQuestionsSection
         title="Short Questions"
         sectionType="short"
-        questions={questions.short}
+        questions={paperData?.shortQs}
         marks={marks}
-        startIndex={questions.mcq.length + 1}
+        startIndex={paperData?.mcqs?.length + 1}
         onQuestionEdit={handleQuestionEdit}
         onMarksChange={handleMarksChange}
+        showAnswers={showAnswers}
       />
+        <div className="w-full border border-gray-300 mb-6"></div>
 
       {/* Long Questions Section */}
       <PaperQuestionsSection
         title="Long Questions"
         sectionType="long"
-        questions={questions.long}
+        questions={paperData?.longQs}
         marks={marks}
-        startIndex={questions.mcq.length + questions.short.length + 1}
+        startIndex={paperData?.mcqs?.length + paperData?.shortQs?.length + 1}
         onQuestionEdit={handleQuestionEdit}
         onMarksChange={handleMarksChange}
+        showAnswers={showAnswers}
       />
     </div>
   );

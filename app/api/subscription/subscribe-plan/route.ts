@@ -48,6 +48,19 @@ export const subscribePlan = async (userId: string, planType: PlanType) => {
     where: { userId: userId },
   });
 
+  const now = new Date();
+
+  if (
+    isPlanExists &&
+    isPlanExists.planType === "FREE" &&
+    planType === "FREE" &&
+    isPlanExists.renewalDate > now
+  ) {
+    throw new Error(
+      "Your FREE plan is already active. You can renew after it expires."
+    );
+  }
+
   const subscription = await prisma.subscription.upsert({
     where: { userId: userId },
     update: {
