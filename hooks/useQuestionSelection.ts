@@ -67,7 +67,7 @@ export const useQuestionSelection = ({
     {
       chapterIds: JSON.stringify(chapterIds),
       page: pages.mcq,
-      limit: 10,
+      limit: 20,
       search: searchTerms.mcq,
     },
     {
@@ -83,7 +83,7 @@ export const useQuestionSelection = ({
     {
       chapterIds: JSON.stringify(chapterIds),
       page: pages.short,
-      limit: 10,
+      limit: 20,
       search: searchTerms.short,
     },
     {
@@ -99,7 +99,7 @@ export const useQuestionSelection = ({
     {
       chapterIds: JSON.stringify(chapterIds),
       page: pages.long,
-      limit: 10,
+      limit: 20,
       search: searchTerms.long,
     },
     {
