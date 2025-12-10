@@ -9,7 +9,7 @@ export const usersApi = createApi({
   endpoints: (builder) => ({
     listUsers: builder.query<any, any | void>({
       query: (params) => ({
-        url: "/users",
+        url: "/admin/users",
         params,
       }),
       providesTags: (result) =>
@@ -22,7 +22,7 @@ export const usersApi = createApi({
     }),
     createUser: builder.mutation<any, any>({
       query: (body) => ({
-        url: "/users",
+        url: "/admin/users",
         method: "POST",
         body,
       }),
@@ -30,7 +30,7 @@ export const usersApi = createApi({
     }),
     updateUser: builder.mutation<any, { id: string; data: any }>({
       query: ({ id, data }) => ({
-        url: `/users/${id}`,
+        url: `/admin/users/${id}`,
         method: "PUT",
         body: data,
       }),
@@ -38,21 +38,21 @@ export const usersApi = createApi({
     }),
     approveUser: builder.mutation<any, { id: string }>({
       query: ({ id }) => ({
-        url: `/users/${id}/approve`,
+        url: `/admin/users/${id}/approve`,
         method: "POST",
       }),
       invalidatesTags: (_result, _error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
     }),
     suspendUser: builder.mutation<any, { id: string }>({
       query: ({ id }) => ({
-        url: `/users/${id}/suspend`,
+        url: `/admin/users/${id}/suspend`,
         method: "POST",
       }),
       invalidatesTags: (_result, _error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
     }),
     inactivateUser: builder.mutation<any, { id: string }>({
       query: ({ id }) => ({
-        url: `/users/${id}/inactivate`,
+        url: `/admin/users/${id}/inactivate`,
         method: "POST",
       }),
       invalidatesTags: (_result, _error, arg) => [{ type: "User", id: arg.id }, { type: "Users", id: "LIST" }],
