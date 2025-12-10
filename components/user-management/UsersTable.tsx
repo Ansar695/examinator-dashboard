@@ -21,6 +21,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StatusBadge, User } from "@/components/user-management/StatusBadge";
 import { RoleBadge } from "@/components/user-management/RoleBadge";
+import Link from "next/link";
 
 interface UsersTableProps {
   filteredUsers: User[];
@@ -31,8 +32,13 @@ interface UsersTableProps {
 }
 
 const UsersTable = (props: UsersTableProps) => {
-  const { filteredUsers, handleApprove, handleSuspend, handleInactivate, handleUserEdit } =
-    props;
+  const {
+    filteredUsers,
+    handleApprove,
+    handleSuspend,
+    handleInactivate,
+    handleUserEdit,
+  } = props;
   return (
     <Table>
       <TableHeader>
@@ -57,23 +63,28 @@ const UsersTable = (props: UsersTableProps) => {
           filteredUsers.map((user: User) => (
             <TableRow key={user.id}>
               <TableCell>
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage
-                      src={user.profilePicture || undefined}
-                      alt={user.name}
-                    />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white">
-                      {user.name?.charAt(0)?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium">{user.name}</div>
-                    <div className="text-sm text-gray-500">
-                      @{user.username}
+                <Link
+                  href={`/admin/users/${user.id}`}
+                  className="flex items-center gap-3"
+                >
+                  <div className="flex items-center gap-3 cursor-pointer">
+                    <Avatar>
+                      <AvatarImage
+                        src={user.profilePicture || undefined}
+                        alt={user.name}
+                      />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+                        {user.name?.charAt(0)?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{user.name}</div>
+                      <div className="text-sm text-gray-500">
+                        @{user.username}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               </TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>

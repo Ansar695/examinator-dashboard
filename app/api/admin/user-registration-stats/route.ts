@@ -77,76 +77,53 @@ async function getDaily() {
   const start = dayjs().startOf("isoWeek").toDate();
   const end = dayjs().endOf("isoWeek").toDate();
 
-  const res: any = await prisma.$runCommandRaw({
-    aggregate: "users",
-    pipeline: [
-      {
-        $match: {
-          createdAt: { $gte: start, $lte: end },
-        },
+  const users = await prisma.user.findMany({
+    where: {
+      createdAt: {
+        gte: start,
+        lte: end,
       },
-      {
-        $group: {
-          _id: {
-            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          },
-          count: { $sum: 1 },
-        },
-      },
-    ],
-    cursor: {},
+    },
+    select: { createdAt: true },
   });
 
-  const raw = res.cursor.firstBatch;
   const days = generateWeekDays();
 
-  raw.forEach((item: any) => {
-    const date = item._id.date;
-    const d = days.find((x) => x.date === date);
-    if (d) d.userRegistered = item.count;
+  users.forEach((user) => {
+    const date = dayjs(user.createdAt).format("YYYY-MM-DD");
+    const found = days.find((d) => d.date === date);
+    if (found) found.userRegistered += 1;
   });
 
   return days;
 }
 
 
+
 async function getWeekly() {
   const monthStart = dayjs().startOf("month").toDate();
   const monthEnd = dayjs().endOf("month").toDate();
 
-  const res: any = await prisma.$runCommandRaw({
-    aggregate: "users",
-    pipeline: [
-      {
-        $match: {
-          createdAt: { $gte: monthStart, $lte: monthEnd },
-        },
+  const users = await prisma.user.findMany({
+    where: {
+      createdAt: {
+        gte: monthStart,
+        lte: monthEnd,
       },
-      {
-        $group: {
-          _id: { week: { $week: "$createdAt" } },
-          count: { $sum: 1 },
-        },
-      },
-    ],
-    cursor: {},
+    },
+    select: { createdAt: true },
   });
 
-  const raw = res.cursor.firstBatch;
   const weeks = generateWeeksOfCurrentMonth();
 
-  raw.forEach((item: any) => {
-    // MongoDB week number (1–53)
-    const mongoWeek = item._id.week;
+  users.forEach((user) => {
+    const userWeek = dayjs(user.createdAt).isoWeek();
 
     const matchedWeek = weeks.find((w) => {
-      const startWeekNo = dayjs(w.startDate).week();
-      return startWeekNo === mongoWeek;
+      return dayjs(w.startDate).isoWeek() === userWeek;
     });
 
-    if (matchedWeek) {
-      matchedWeek.userRegistered = item.count;
-    }
+    if (matchedWeek) matchedWeek.userRegistered += 1;
   });
 
   return weeks;
@@ -154,40 +131,31 @@ async function getWeekly() {
 
 
 
+
 async function getMonthly() {
-  const year = dayjs().year();
+  const yearStart = dayjs().startOf("year").toDate();
+  const yearEnd = dayjs().endOf("year").toDate();
 
-  const yearStart = dayjs(`${year}-01-01`).toDate();
-  const yearEnd = dayjs(`${year}-12-31`).toDate();
-
-  const res: any = await prisma.$runCommandRaw({
-    aggregate: "users",
-    pipeline: [
-      {
-        $match: {
-          createdAt: { $gte: yearStart, $lte: yearEnd },
-        },
+  const users = await prisma.user.findMany({
+    where: {
+      createdAt: {
+        gte: yearStart,
+        lte: yearEnd,
       },
-      {
-        $group: {
-          _id: { month: { $month: "$createdAt" } },
-          count: { $sum: 1 },
-        },
-      },
-    ],
-    cursor: {},
+    },
+    select: { createdAt: true },
   });
 
-  const raw = res.cursor.firstBatch;
   const months = generateMonthsOfYear();
 
-  raw.forEach((item: any) => {
-    const index = item._id.month - 1;
-    months[index].userRegistered = item.count;
+  users.forEach((user) => {
+    const monthIndex = dayjs(user.createdAt).month(); // 0–11
+    months[monthIndex].userRegistered += 1;
   });
 
   return months;
 }
+
 
 
 export async function GET(request: Request) {

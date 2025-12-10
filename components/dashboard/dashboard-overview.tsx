@@ -56,6 +56,13 @@ export function DashboardOverview() {
   } = useGetUsersRegStatsQuery(`filter=${dataFilter ?? "daily"}`);
 
   const loading = isLoading || activityLoading || usersLoading;
+  const errorMessage = queryError
+    ? "Failed to load dashboard data."
+    : activityError
+    ? "Failed to load recent activities."
+    : usersError
+    ? "Failed to load users registration stats."
+    : null;
 
   const serviceData = useMemo(() => {
     const palette = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
@@ -63,14 +70,19 @@ export function DashboardOverview() {
     // Fallback static data
     return [
       {
-        name: "Students",
-        value: dashboardData?.data?.students,
+        name: "MCQs",
+        value: dashboardData?.data?.mcqs,
         color: palette[0],
       },
       {
-        name: "Teachers",
-        value: dashboardData?.data?.teachers,
+        name: "Short Questions",
+        value: dashboardData?.data?.shorts,
         color: palette[1],
+      },
+      {
+        name: "Long Questions",
+        value: dashboardData?.data?.longs,
+        color: palette[2],
       },
     ];
   }, []);
@@ -98,12 +110,12 @@ export function DashboardOverview() {
     }
   };
 
-  if (error) {
+  if (error || errorMessage) {
     return (
       <div className="flex items-center justify-center h-64">
         <Card className="p-6">
           <CardContent>
-            <p className="text-destructive">Error: {error}</p>
+            <p className="text-destructive">Error: {error ?? errorMessage}</p>
             <Button onClick={refetch} className="mt-4">
               Retry
             </Button>
