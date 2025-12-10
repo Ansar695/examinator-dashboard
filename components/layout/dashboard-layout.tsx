@@ -26,7 +26,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main content */}
-      <div className="lg:pl-72">
+      <div className="lg:pl-72 bg-gray-100">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="p-4 sm:p-6 lg:p-8">
           <div className="mx-auto max-w-7xl animate-slide-up">{children}</div>

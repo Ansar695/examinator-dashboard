@@ -1,18 +1,7 @@
 "use client";
 
 import { Menu, Bell, Search, LogOut } from "lucide-react";
-// import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuLabel,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu";
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { NotificationBell } from "../notifications/NotificationBell";
 import { useGetProfileQuery } from "@/lib/api/profileApi";
@@ -40,7 +29,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   //   }
   // }
   return (
-    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
       <button
         type="button"
         className="-m-2.5 p-2.5 text-muted-foreground hover:text-foreground lg:hidden transition-colors rounded-md hover:bg-muted"
