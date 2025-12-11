@@ -7,13 +7,21 @@ import {
   CardTitle,
 } from "../ui/card";
 import { formatDate } from "@/utils/transformers/dateYearFormatter";
-import { AlertCircle, Badge, CreditCard } from "lucide-react";
+import { CreditCard } from "lucide-react";
 import {
   getPlanColor,
   getPlanStatusColor,
 } from "@/utils/transformers/getConditionalColor";
+import { Badge } from "../ui/badge";
+import CustomPagination from "../common/Pagination";
 
-const SubscriptionHistoryCard = ({ subscriptionHistory }: any) => {
+const SubscriptionHistoryCard = ({
+  subscriptionHistory,
+  meta,
+  page,
+  setPage,
+  loading,
+}: any) => {
   return (
     <Card>
       <CardHeader>
@@ -24,7 +32,7 @@ const SubscriptionHistoryCard = ({ subscriptionHistory }: any) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {subscriptionHistory.length > 0 ? (
+        {subscriptionHistory?.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="border-b">
@@ -43,7 +51,7 @@ const SubscriptionHistoryCard = ({ subscriptionHistory }: any) => {
                 </tr>
               </thead>
               <tbody>
-                {subscriptionHistory.map((history: any, index: number) => (
+                {subscriptionHistory?.map((history: any, index: number) => (
                   <tr
                     key={history.id}
                     className={`border-b ${
@@ -51,39 +59,41 @@ const SubscriptionHistoryCard = ({ subscriptionHistory }: any) => {
                     }`}
                   >
                     <td className="py-3 px-4 font-medium">
-                      {new Date(0, history.month - 1).toLocaleString(
+                      {new Date(0, history?.month - 1).toLocaleString(
                         "default",
                         { month: "long" }
                       )}{" "}
-                      {history.year}
+                      {history?.year}
                     </td>
                     <td className="py-3 px-4">
                       <Badge className={getPlanColor(history.planType)}>
-                        {history.planType}
+                        {history?.planType}
                       </Badge>
                     </td>
                     <td className="py-3 px-4 text-center">
-                      PKR {history.pricePerMonth.toLocaleString()}
+                      PKR {history?.pricePerMonth?.toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className="font-semibold">
-                        {history.papersGenerated}
+                        {history?.papersGenerated}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-center">
-                      {history.monthlyLimit}
+                      {history?.monthlyLimit}
                     </td>
                     <td className="py-3 px-4">
-                      <Badge className={getPlanStatusColor(history.planStatus)}>
-                        {history.planStatus}
+                      <Badge
+                        className={getPlanStatusColor(history?.planStatus)}
+                      >
+                        {history?.planStatus}
                       </Badge>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-600">
-                      <div>{formatDate(history.cycleStart)}</div>
+                      <div>{formatDate(history?.cycleStart)}</div>
                       <div className="text-xs text-gray-400">
                         to{" "}
-                        {history.cycleEnd
-                          ? formatDate(history.cycleEnd)
+                        {history?.cycleEnd
+                          ? formatDate(history?.cycleEnd)
                           : "Present"}
                       </div>
                     </td>
@@ -100,6 +110,19 @@ const SubscriptionHistoryCard = ({ subscriptionHistory }: any) => {
               History will appear once subscriptions are created
             </p>
           </div>
+        )}
+
+        {/* Pagination */}
+        {meta?.totalPages > 1 && (
+          <CustomPagination
+            totalPages={meta?.totalPages}
+            currentUsers={subscriptionHistory?.length}
+            currentPage={page}
+            limit={meta?.limit}
+            total={meta?.total}
+            onPageChange={(p: number) => setPage(p)}
+            isLoading={loading}
+          />
         )}
       </CardContent>
     </Card>

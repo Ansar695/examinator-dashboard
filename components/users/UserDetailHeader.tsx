@@ -18,16 +18,16 @@ const UserDetailHeader = ({ userData }: any) => {
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-start gap-6">
         <Avatar className="h-24 w-24">
-          <AvatarImage src={userData.profilePicture || undefined} />
+          <AvatarImage src={userData?.institutionLogo || userData?.profilePicture || undefined} />
           <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-purple-500 text-white">
-            {getInitials(userData.name)}
+            {getInitials(userData?.name)}
           </AvatarFallback>
         </Avatar>
 
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold text-gray-900">
-              {userData.name}
+              {userData?.name}
             </h1>
             <Badge className={getStatusColor(userData.status)}>
               {userData.status}
@@ -40,34 +40,34 @@ const UserDetailHeader = ({ userData }: any) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             <div className="flex items-center gap-2 text-gray-600">
               <Mail className="h-4 w-4" />
-              <span className="text-sm">{userData.email}</span>
+              <span className="text-sm">{userData?.email}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-600">
               <User className="h-4 w-4" />
-              <span className="text-sm">@{userData.username}</span>
+              <span className="text-sm">@{userData?.username}</span>
             </div>
             {userData.phone && (
               <div className="flex items-center gap-2 text-gray-600">
                 <Phone className="h-4 w-4" />
-                <span className="text-sm">{userData.phone}</span>
+                <span className="text-sm">{userData?.phone ?? "N/A"}</span>
               </div>
             )}
             <div className="flex items-center gap-2 text-gray-600">
               <Calendar className="h-4 w-4" />
               <span className="text-sm">
-                Joined {formatDate(userData.createdAt)}
+                Joined {formatDate(userData?.createdAt)}
               </span>
             </div>
             {userData.institutionName && (
               <div className="flex items-center gap-2 text-gray-600">
                 <Award className="h-4 w-4" />
-                <span className="text-sm">{userData.institutionName}</span>
+                <span className="text-sm">{userData?.institutionName}</span>
               </div>
             )}
             {userData.age && (
               <div className="flex items-center gap-2 text-gray-600">
                 <User className="h-4 w-4" />
-                <span className="text-sm">Age: {userData.age}</span>
+                <span className="text-sm">Age: {userData.age} Years</span>
               </div>
             )}
           </div>

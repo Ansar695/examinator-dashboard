@@ -5,7 +5,7 @@ type Pagination = { page?: number; limit?: number; search?: string; status?: str
 export const usersApi = createApi({
   reducerPath: "usersApi",
   baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
-  tagTypes: ["Users", "User"],
+  tagTypes: ["Users", "User", "UserDetails"],
   endpoints: (builder) => ({
     listUsers: builder.query<any, any | void>({
       query: (params) => ({
@@ -19,6 +19,13 @@ export const usersApi = createApi({
               { type: "Users", id: "LIST" },
             ]
           : [{ type: "Users", id: "LIST" }],
+    }),
+    userDetails: builder.query<any, any | void>({
+      query: (params) => ({
+        url: `/admin/users/${params.id}`,
+        params,
+      }),
+      providesTags: ["UserDetails"],
     }),
     createUser: builder.mutation<any, any>({
       query: (body) => ({
@@ -62,6 +69,7 @@ export const usersApi = createApi({
 
 export const {
   useListUsersQuery,
+  useUserDetailsQuery,
   useCreateUserMutation,
   useUpdateUserMutation,
   useApproveUserMutation,

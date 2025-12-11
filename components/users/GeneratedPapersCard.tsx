@@ -10,8 +10,15 @@ import { Badge } from "../ui/badge";
 import { Clock, Download, Eye, FileText } from "lucide-react";
 import { formatDateTime } from "@/utils/transformers/dateYearFormatter";
 import { Button } from "../ui/button";
+import CustomPagination from "../common/Pagination";
 
-const GeneratedPapersCard = ({ generatedPapers }: any) => {
+const GeneratedPapersCard = ({
+  generatedPapers,
+  meta,
+  page,
+  setPage,
+  loading,
+}: any) => {
   return (
     <Card>
       <CardHeader>
@@ -21,7 +28,7 @@ const GeneratedPapersCard = ({ generatedPapers }: any) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {generatedPapers.length > 0 ? (
+        {generatedPapers?.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="border-b">
@@ -46,30 +53,36 @@ const GeneratedPapersCard = ({ generatedPapers }: any) => {
               <tbody>
                 {generatedPapers?.map((paper: any, index: number) => (
                   <tr
-                    key={paper.id}
+                    key={paper?.id}
                     className={`border-b ${
                       index % 2 === 0 ? "bg-gray-50" : "bg-white"
                     }`}
                   >
-                    <td className="py-3 px-4 font-medium">{paper.title}</td>
-                    <td className="py-3 px-4">{paper.subject}</td>
+                    <td className="py-3 px-4 font-medium capitalize">
+                      {paper?.title}
+                    </td>
+                    <td className="py-3 px-4">{paper?.subject?.name}</td>
                     <td className="py-3 px-4">
                       <div className="text-sm">
-                        <div className="font-medium">{paper.board}</div>
-                        <div className="text-gray-500">{paper.class}</div>
+                        <div className="font-medium capitalize">
+                          {paper?.board?.name}
+                        </div>
+                        <div className="text-gray-500 capitalize">
+                          {paper?.subject?.class?.name ?? ""}
+                        </div>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <Badge variant="outline">{paper.totalMarks}</Badge>
+                      <Badge variant="outline">{paper?.totalMarks}</Badge>
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Clock className="h-3 w-3" />
-                        <span className="text-sm">{paper.examTime}h</span>
+                        <span className="text-sm">{paper?.examTime}h</span>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-600">
-                      {formatDateTime(paper.createdAt)}
+                      {formatDateTime(paper?.createdAt)}
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex gap-2 justify-end">
@@ -92,6 +105,19 @@ const GeneratedPapersCard = ({ generatedPapers }: any) => {
             <p className="text-lg font-medium">No papers generated yet</p>
             <p className="text-sm mt-1">Papers will appear here once created</p>
           </div>
+        )}
+
+        {/* Pagination */}
+        {meta?.totalPages > 1 && (
+          <CustomPagination
+            totalPages={meta?.totalPages}
+            currentUsers={generatedPapers?.length}
+            currentPage={page}
+            limit={meta?.limit}
+            total={meta?.total}
+            onPageChange={(p: number) => setPage(p)}
+            isLoading={loading}
+          />
         )}
       </CardContent>
     </Card>

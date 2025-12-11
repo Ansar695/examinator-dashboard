@@ -4,7 +4,7 @@ import { Clock, CreditCard, FileText } from "lucide-react";
 import { formatDate } from "@/utils/transformers/dateYearFormatter";
 import { getPlanColor } from "@/utils/transformers/getConditionalColor";
 
-const UserDetailStatCard = ({ subscriptionData, generatedPapers }: any) => {
+const UserDetailStatCard = ({ subscriptionData, generatedPapers, totalPapersAllTime }: any) => {
   const usagePercentage = subscriptionData
     ? (subscriptionData.papersGenerated / subscriptionData.monthlyLimit) * 100
     : 0;
@@ -80,7 +80,7 @@ const UserDetailStatCard = ({ subscriptionData, generatedPapers }: any) => {
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">{generatedPapers.length}</div>
+              <div className="text-2xl font-bold">{totalPapersAllTime}</div>
               <p className="text-xs text-gray-500 mt-1">All time</p>
             </div>
             <div className="h-12 w-12 rounded-full bg-green-500 flex items-center justify-center">
@@ -101,10 +101,10 @@ const UserDetailStatCard = ({ subscriptionData, generatedPapers }: any) => {
             <div>
               <div className="text-lg font-bold">
                 {subscriptionData
-                  ? formatDate(subscriptionData.renewalDate)
+                  ? formatDate(subscriptionData?.renewalDate)
                   : "N/A"}
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 mt-1">
                 {subscriptionData?.isActive ? "Active" : "Inactive"}
               </p>
             </div>

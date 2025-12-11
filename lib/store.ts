@@ -13,6 +13,7 @@ import { paperBoardApi } from "./api/boardPapersApi"
 import { generatedPapersApi } from "./api/generatedPapers"
 import { contactUsApi } from "./api/contactUsApi"
 import { adminDashboardStatsApi } from "./api/adminDashboardAPI"
+import { activitiesApi } from "./api/activitiesApi"
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +30,7 @@ export const store = configureStore({
     [generatedPapersApi.reducerPath]: generatedPapersApi.reducer,
     [contactUsApi.reducerPath]: contactUsApi.reducer,
     [adminDashboardStatsApi.reducerPath]: adminDashboardStatsApi.reducer,
+    [activitiesApi.reducerPath]: activitiesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -44,7 +46,8 @@ export const store = configureStore({
       paperBoardApi.middleware,
       generatedPapersApi.middleware,
       contactUsApi.middleware,
-      adminDashboardStatsApi.middleware
+      adminDashboardStatsApi.middleware,
+      activitiesApi.middleware,
     ),
 })
 

@@ -44,6 +44,11 @@ import ProfileInformationCard from "@/components/users/ProfileInformationCard";
 import CurrentSubsCard from "@/components/users/CurrentSubsCard";
 import GeneratedPapersCard from "@/components/users/GeneratedPapersCard";
 import SubscriptionHistoryCard from "@/components/users/SubscriptionHistoryCard";
+import { useUserDetailsQuery } from "@/lib/api/usersApi";
+import { useParams, useSearchParams } from "next/navigation";
+import { useSubscriptionHistoryQuery } from "@/lib/api/plansApi";
+import { useGeneratedPapersQuery } from "@/lib/api/adminDashboardAPI";
+import CustomSpinner from "@/components/shared/CustomSpinner";
 
 // Mock data - replace with actual API data
 const userData = {
@@ -147,6 +152,27 @@ const subscriptionHistory = [
 
 const UserDetailsPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [page, setPage] = useState(1);
+  const [subHistoryPage, setSubHistoryPage] = useState(1);
+  const { id } = useParams();
+  const { data: userDetailsData, isLoading: isUserDetailsLoading } =
+    useUserDetailsQuery({ id });
+
+  const {
+    data: subscriptionHistoryData,
+    isLoading: isSubscriptionHistoryLoading,
+  } = useSubscriptionHistoryQuery({ id, page:subHistoryPage });
+
+  const { data: generatedPapersData, isLoading } = useGeneratedPapersQuery({
+    id, page
+  });
+
+  const loading =
+    isUserDetailsLoading || isSubscriptionHistoryLoading || isLoading;
+
+  console.log("consoleddata userDetailsData ", userDetailsData);
+  console.log("consoleddata subscriptionHistoryData ", subscriptionHistoryData);
+  console.log("consoleddata generatedPapersData ", generatedPapersData);
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -160,65 +186,84 @@ const UserDetailsPage = () => {
             Back to Users
           </Button>
         </Link>
-        {/* Header Section */}
-        <UserDetailHeader userData={userData} />
+        {loading ? (
+          <CustomSpinner />
+        ) : (
+          <>
+            {/* Header Section */}
+            <UserDetailHeader userData={userDetailsData?.data ?? null} />
 
-        {/* Stats Cards */}
-        <UserDetailStatCard
-          subscriptionData={subscriptionData}
-          generatedPapers={generatedPapers}
-        />
-
-        {/* Tabs Section */}
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
-          <TabsList className="bg-white p-1 border border-gray-300 h-12">
-            <TabsTrigger
-              value="overview"
-              className="px-6 py-3 data-[state=active]:bg-green-800 data-[state=active]:text-white h-10"
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger
-              value="papers"
-              className="px-6 py-3 data-[state=active]:bg-green-800 data-[state=active]:text-white"
-            >
-              Generated Papers
-            </TabsTrigger>
-            <TabsTrigger
-              value="subscription"
-              className="px-6 py-3 data-[state=active]:bg-green-800 data-[state=active]:text-white"
-            >
-              Subscription History
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Profile Information */}
-              <ProfileInformationCard userData={userData} />
-
-              {/* Current Subscription */}
-              <CurrentSubsCard subscriptionData={subscriptionData} />
-            </div>
-          </TabsContent>
-
-          {/* Generated Papers Tab */}
-          <TabsContent value="papers">
-            <GeneratedPapersCard generatedPapers={generatedPapers} />
-          </TabsContent>
-
-          {/* Subscription History Tab */}
-          <TabsContent value="subscription">
-            <SubscriptionHistoryCard
-              subscriptionHistory={subscriptionHistory}
+            {/* Stats Cards */}
+            <UserDetailStatCard
+              subscriptionData={userDetailsData?.currentPlan}
+              generatedPapers={generatedPapersData?.data ?? []}
+              totalPapersAllTime={userDetailsData?.totalGeneratedPapers || 0}
             />
-          </TabsContent>
-        </Tabs>
+
+            {/* Tabs Section */}
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="space-y-6"
+            >
+              <TabsList className="bg-white p-1 border border-gray-300 h-12">
+                <TabsTrigger
+                  value="overview"
+                  className="px-6 py-3 data-[state=active]:bg-green-800 data-[state=active]:text-white h-10"
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger
+                  value="papers"
+                  className="px-6 py-3 data-[state=active]:bg-green-800 data-[state=active]:text-white"
+                >
+                  Generated Papers
+                </TabsTrigger>
+                <TabsTrigger
+                  value="subscription"
+                  className="px-6 py-3 data-[state=active]:bg-green-800 data-[state=active]:text-white"
+                >
+                  Subscription History
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Profile Information */}
+                  <ProfileInformationCard userData={userDetailsData?.data} />
+
+                  {/* Current Subscription */}
+                  <CurrentSubsCard
+                    subscriptionData={userDetailsData?.currentPlan}
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Generated Papers Tab */}
+              <TabsContent value="papers">
+                <GeneratedPapersCard
+                  generatedPapers={generatedPapersData?.data ?? []}
+                  meta={generatedPapersData?.meta ?? {}}
+                  page={page}
+                  setPage={setPage}
+                  loading={isLoading}
+                />
+              </TabsContent>
+
+              {/* Subscription History Tab */}
+              <TabsContent value="subscription">
+                <SubscriptionHistoryCard
+                  subscriptionHistory={subscriptionHistoryData?.data ?? []}
+                  meta={subscriptionHistoryData?.meta ?? {}}
+                  page={subHistoryPage}
+                  setPage={setSubHistoryPage}
+                  loading={isSubscriptionHistoryLoading}
+                />
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
       </div>
     </div>
   );

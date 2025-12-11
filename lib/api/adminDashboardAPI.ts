@@ -19,6 +19,11 @@ export const adminDashboardStatsApi = createApi({
       query: (params) => `/admin/user-registration-stats?${params}`,
       providesTags: ["UserRegStat"],
     }),
+
+    generatedPapers: builder.query({
+      query: (params) => `/admin/generated-papers/${params.id}?page=${params?.page}&limit=${params?.limit ?? 10}`,
+      providesTags: ["UserRegStat"],
+    }),
   }),
 });
 
@@ -26,4 +31,5 @@ export const {
   useGetAdminDashboardStatsQuery,
   useGetRecentActivitiesQuery,
   useGetUsersRegStatsQuery,
+  useGeneratedPapersQuery
 } = adminDashboardStatsApi;
