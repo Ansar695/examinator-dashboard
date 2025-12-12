@@ -13,18 +13,19 @@ import {
 type QuestionType = "mcq" | "short" | "long";
 
 interface UseQuestionSelectionProps {
-  board: string;
-  classNumber: string;
-  subject: string;
-  subjectId: string | null;
+  boardSlug: string;
+  classSlug: string;
+  subjectSlug: string;
+  subjectName?: string;
+  // subjectId: string | null;
   paperId?: string | null;
 }
 
 export const useQuestionSelection = ({
-  board,
-  classNumber,
-  subject,
-  subjectId,
+  boardSlug,
+  classSlug,
+  subjectSlug,
+  subjectName,
   paperId,
 }: UseQuestionSelectionProps) => {
   const router = useRouter();
@@ -257,7 +258,7 @@ export const useQuestionSelection = ({
       return;
     }
 
-    if (!subjectId) {
+    if (!subjectSlug) {
       toast({
         title: "Subject not found",
         description: "Please go back and select a subject again.",
@@ -317,7 +318,7 @@ export const useQuestionSelection = ({
       const paperTitle =
         paperId && existingPaperData?.data?.title
           ? existingPaperData.data.title
-          : `${subject} Annual Exam ${new Date().getFullYear()}`;
+          : `${subjectName} Annual Exam ${new Date().getFullYear()}`;
 
       // Call the API to create or update the paper
       if (paperId) {
@@ -326,7 +327,7 @@ export const useQuestionSelection = ({
           id: paperId,
           data: {
             title: paperTitle,
-            subjectId,
+            subjectSlug,
             totalMarks,
             mcqs: mcqsPayload,
             shortQs: shortQsPayload,

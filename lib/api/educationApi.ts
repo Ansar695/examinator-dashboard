@@ -27,6 +27,7 @@ export interface Subject {
   id: string
   name: string
   slug: string
+  classSlug?: string;
   description?: string
   imageUrl?: string
   boardId: string
@@ -95,7 +96,7 @@ export const educationApi = createApi({
       providesTags: ["Class"],
     }),
     getClassesByBoard: builder.query<Class[], string>({
-      query: (boardId) => `/classes?boardId=${boardId}`,
+      query: (boardSlug: string) => `/classes?boardSlug=${boardSlug}`,
       providesTags: ["Class"],
     }),
     createClass: builder.mutation<Class, Partial<Class>>({
@@ -127,8 +128,8 @@ export const educationApi = createApi({
       query: () => "/subjects",
       providesTags: ["Subject"],
     }),
-    getSubjectsByClass: builder.query<Subject[], { boardId: string; classId: string }>({
-      query: ({ boardId, classId }) => `/subjects?boardId=${boardId}&classId=${classId}`,
+    getSubjectsByClass: builder.query<Subject[], { boardSlug: string; classSlug: string }>({
+      query: ({ boardSlug, classSlug }: any) => `/subjects?boardSlug=${boardSlug}&classSlug=${classSlug}`,
       providesTags: ["Subject"],
     }),
     createSubject: builder.mutation<Subject, Partial<Subject>>({
@@ -160,8 +161,8 @@ export const educationApi = createApi({
       query: () => "/chapters",
       providesTags: ["Chapter"],
     }),
-    getChaptersBySubject: builder.query<Chapter[], { subjectId: string }>({
-      query: ({ subjectId }) => `/chapters?&subjectId=${subjectId}`,
+    getChaptersBySubject: builder.query<Chapter[], { subjectSlug: string }>({
+      query: ({ subjectSlug }) => `/chapters?&subjectSlug=${subjectSlug}`,
       providesTags: ["Chapter"],
     }),
     createChapter: builder.mutation<Chapter, Partial<Chapter>>({

@@ -1,9 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, Loader2, X } from "lucide-react";
 import { PageTransition } from "@/components/shared/Transition";
 import { QuestionSelectionTab } from "@/components/questions/QuestionSelectionTab";
 import { QuestionSelectionHeader } from "@/components/questions/QuestionSelectionHeader";
@@ -13,12 +12,14 @@ import SelectedQuestions from "@/components/questions/SelectedQuestions";
 
 export default function SelectQuestions() {
   const params = useParams();
-  const searchParams = useSearchParams();
-  const board = params.board as string;
-  const classNumber = params.class as string;
-  const subject = params.subject as string;
-  const subjectId = searchParams.get("subjectId");
-  const paperId = searchParams.get("paperId");
+
+  const boardSlug = params.board as any;
+  const classSlug = params.class as string;
+  const subjectSlug = params.subject as string;
+
+  const boardName = boardSlug ? boardSlug.split("-").map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
+  const className = classSlug ? classSlug.split("-").map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
+  const subjectName = subjectSlug ? subjectSlug.split("-").map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
 
   const {
     questions,
@@ -39,11 +40,11 @@ export default function SelectQuestions() {
     getPaginationInfo,
     isEditMode,
   } = useQuestionSelection({
-    board,
-    classNumber,
-    subject,
-    subjectId,
-    paperId,
+    boardSlug,
+    classSlug,
+    subjectSlug,
+    paperId: null,
+    subjectName,
   });
 
   const allSelectedQuestions = [

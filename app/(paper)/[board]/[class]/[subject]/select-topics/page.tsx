@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -15,19 +15,21 @@ export default function SelectTopics() {
   const [chapterIds, setChapterIds] = useState<string[]>([]);
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const selectedChapters = JSON.parse(localStorage.getItem("selectedChapters") || "[]");
 
-  const board = params.board as any;
-  const classNumber = params.class as string;
-  const subject = params.subject as string;
-  const subjectId = searchParams.get("subjectId");
+  const boardSlug = params.board as any;
+  const classSlug = params.class as string;
+  const subjectSlug = params.subject as string;
+
+  const boardName = boardSlug ? boardSlug?.split("-").map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
+  const className = classSlug ? classSlug?.split("-").map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
+  const subjectName = subjectSlug ? subjectSlug?.split("-").map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
 
   const { data: chapters, isLoading: chaptersLoading } =
     useGetChaptersBySubjectQuery(
-      { subjectId: subjectId || "" },
+      { subjectSlug },
       {
-        skip: !subjectId,
+        skip: !subjectSlug,
       }
     );
 
@@ -35,7 +37,7 @@ export default function SelectTopics() {
     if (chapterIds.length === 0)  return
     localStorage.setItem("selectedChapters", JSON.stringify(chapterIds));
     router.push(
-      `/${board}/${classNumber}/${subject}/select-questions${subjectId ? `?subjectId=${subjectId}` : ''}`
+      `/${boardSlug}/${classSlug}/${subjectSlug}/select-questions`
     );
   };
 
@@ -49,7 +51,7 @@ export default function SelectTopics() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="mb-8">
-            <Link href={`/${board}/${classNumber}/select-subjects`}>
+            <Link href={`/${boardSlug}/${classSlug}/select-subjects`}>
               <Button
                 variant="ghost"
                 className="flex items-center text-blue-600 hover:text-blue-800"
@@ -69,7 +71,7 @@ export default function SelectTopics() {
               Select Topics for Your Paper
             </h1>
             <p className="text-xl text-gray-600 capitalize">
-              {board.replace("-", " ")} - Class {classNumber} - {subject}
+              {boardName} - {className} - {subjectName}
             </p>
           </motion.div>
 

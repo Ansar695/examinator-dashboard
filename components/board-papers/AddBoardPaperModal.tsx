@@ -19,18 +19,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/hooks/use-toast";
 import { FileUpload, SelectInput, TextInput } from "../common/form";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
-import {
-  useGetBoardsQuery,
-  useGetClassesByBoardQuery,
-} from "@/lib/api/educationApi";
-import SelectClass from "../common/SelectClass";
-import SelectBoard from "../common/SelectBoard";
-import { userTypeOptions } from "@/utils/static/userTypes";
-import {
-  Note,
-  useCreateNoteMutation,
-  useUpdateNoteMutation,
-} from "@/lib/api/notesApi";
 import CustomSpinner from "../shared/CustomSpinner";
 import {
   BoardPaper,

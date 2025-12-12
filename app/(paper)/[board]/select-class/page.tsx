@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, BookOpen, ChevronRight, ArrowLeft } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import CustomSpinner from "@/components/shared/CustomSpinner";
@@ -38,21 +38,21 @@ const classTypeIcons = [
 
 const ClassSelection = () => {
   const router = useRouter();
-  const { toast } = useToast();
   const pathname = usePathname();
   const currBoardSlug = pathname?.split("/")?.[1];
   const [categorizedClasses, setCategorizedClasses] = useState<any>([]);
 
   const searchParams = useSearchParams();
-  const boardId = searchParams.get('boardId') || "";
+  const params = useParams();
+  const boardSlug = params.board
 
   
   const {
     data: classes,
     isLoading,
     error,
-  } = useGetClassesByBoardQuery(boardId, {
-    skip: !boardId,
+  } = useGetClassesByBoardQuery(boardSlug as string, {
+    skip: !boardSlug,
   });
 
   const containerVariants = {
@@ -183,7 +183,7 @@ const ClassSelection = () => {
                                       className="w-full group-hover:bg-blue-600 active:bg-green-800 cursor-pointer transition-colors"
                                       onClick={() =>
                                         router.push(
-                                          `/${currBoardSlug}/${classInfo?.name}/select-subjects?&boardId=${boardId}&classId=${classInfo?.id}`
+                                          `/${currBoardSlug}/${classInfo?.slug}/select-subjects`
                                         )
                                       }
                                     >

@@ -5,10 +5,18 @@ import { generateSlug } from "@/lib/utils/slugify"
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const boardId = searchParams.get("boardId")
+    const boardSlug = searchParams.get("boardSlug")
+    if (!boardSlug) {
+      return NextResponse.json({ error: "boardSlug is required" }, { status: 400 })
+    }
+    const board = await prisma.board.findUnique({ where: { slug: boardSlug }, select: {id: true} })
+    if (!board) {
+      return NextResponse.json({ error: "Board not found" }, { status: 404 })
+    }
+    console.log("Fetched board:", board)
 
     const classes = await prisma.class.findMany({
-      where: boardId ? { boardId } : undefined,
+      where: board ? { boardId: board.id } : undefined,
       include: {
         board: true,
       },

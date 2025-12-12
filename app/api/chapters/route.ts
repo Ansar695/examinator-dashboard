@@ -5,12 +5,22 @@ import { generateSlug } from "@/lib/utils/slugify"
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const classId = searchParams.get("classId")
-    const subjectId = searchParams.get("subjectId")
+    const classSlug = searchParams.get("classSlug")
+    const subjectSlug = searchParams.get("subjectSlug")
+
+    if(!subjectSlug) {
+      return NextResponse.json({ error: "subjectSlug is required" }, { status: 400 })
+    }
+
+    const subject = await prisma.subject.findUnique({ where: { slug: subjectSlug }, select: {id: true} })
+    let classInfo = null
+    if (classSlug) {
+      classInfo = await prisma.class.findUnique({ where: { slug: classSlug }, select: {id: true} })
+    }
 
     const where: any = {}
-    if (classId) where.classId = classId
-    if (subjectId) where.subjectId = subjectId
+    if (classInfo) where.classId = classInfo?.id
+    if (subject) where.subjectId = subject?.id
 
     const chapters = await prisma.chapter.findMany({
       where,

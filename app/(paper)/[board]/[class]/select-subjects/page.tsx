@@ -1,17 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PageTransition } from "@/components/shared/Transition";
-import { useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
 import CustomSpinner from "@/components/shared/CustomSpinner";
 import { SubjectCard } from "@/components/subjects/SubjectCard";
-import { SubjectTypes } from "@/utils/types/board";
-import { useGetSubjectsMutation } from "@/lib/api/subjects";
 import { Subject, useGetSubjectsByClassQuery } from "@/lib/api/educationApi";
 
 // This would typically come from an API or database
@@ -20,30 +16,27 @@ export default function SelectSubject() {
   const params = useParams();
   const router = useRouter();
 
-  const board = params?.board as string;
-  const classNumber = params?.class as string;
-
-    const searchParams = useSearchParams();
-    const classId = searchParams.get('classId') || "";
-
+  const boardSlug = params?.board as string;
+  const classSlug = params?.class as string;
 
   const { data: subjects, isLoading: subjectsLoading } =
-    useGetSubjectsByClassQuery({ boardId: "", classId: classId });
+    useGetSubjectsByClassQuery({ boardSlug, classSlug });
 
-  const handleSubjectSelection = (slug: string, id: string) => {
+  const handleSubjectSelection = (slug: string) => {
     router.push(
-      `/${board}/${classNumber}/${slug}/select-topics?subjectId=${id}`
+      `/${boardSlug}/${classSlug}/${slug}/select-topics`
     );
   };
 
-  const boardName = board === "punjab-board" ? "Punjab Board" : "Federal Board";
+  const boardName = boardSlug ? boardSlug?.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
+  const className = classSlug ? classSlug?.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
 
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="mb-8">
-            <Link href={`/${board}/select-class`}>
+            <Link href={`/${boardSlug}/select-class`}>
               <Button
                 variant="ghost"
                 className="flex items-center text-blue-600 hover:text-blue-800"
@@ -61,8 +54,8 @@ export default function SelectSubject() {
             <h1 className="text-4xl font-bold text-center mb-4">
               Select Your Subject
             </h1>
-            <p className="text-xl text-gray-600 text-center mb-12">
-              {boardName} - Class {classNumber}
+            <p className="text-xl text-gray-600 text-center mb-12 capitalize">
+              {boardName} - {className}
             </p>
           </motion.div>
           {subjectsLoading ? (
@@ -79,7 +72,7 @@ export default function SelectSubject() {
                   <SubjectCard
                     subject={subject}
                     onSelect={() =>
-                      handleSubjectSelection(subject?.slug, subject?.id)
+                      handleSubjectSelection(subject?.slug)
                     }
                   />
                 </motion.div>

@@ -107,7 +107,7 @@ const BoardSelection = () => {
                           className="cursor-pointer w-full group-hover:bg-blue-600 active:bg-green-800 transition-colors"
                           onClick={() => {
                             router.push(
-                              `/${board?.slug}/select-class?boardId=${board?.id}`
+                              `/${board?.slug}/select-class`
                             );
                           }}
                         >
