@@ -8,8 +8,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PageTransition } from "@/components/shared/Transition";
-import { useToast } from "@/hooks/use-toast";
-import { Topic, topicsData } from "@/utils/static-data/topics";
 import { useGetChaptersBySubjectQuery } from "@/lib/api/educationApi";
 import { ChapterMultiSelect } from "@/components/subjects/ChaptersMultiSelect";
 

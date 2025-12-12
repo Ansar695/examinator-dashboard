@@ -5,6 +5,7 @@ import { EditableMcq } from "@/components/questions/EditableMcq";
 
 interface Question {
   id: string;
+  questionId: string;
   text: string;
   options?: string[];
   question: string;
@@ -79,7 +80,7 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
       return sum + (marks[q.id] || 0);
     }, 0);
   };
-
+  console.log("Calculating section marks:", showAnswers);
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-4">
@@ -125,7 +126,7 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                 onSave={(newText) =>
                   onQuestionEdit(
                     sectionType,
-                    question?.id,
+                    question?.questionId,
                     newText?.replace(/^\d+\.\s*/, "")
                   )
                 }
@@ -146,7 +147,11 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                           <EditableMcq
                             initialText={option}
                             onSave={(newText) =>
-                              onMCQOptionEdit(question.id, optionIndex, newText)
+                              onMCQOptionEdit(
+                                question.questionId,
+                                optionIndex,
+                                newText
+                              )
                             }
                           />
                         </div>
@@ -169,47 +174,52 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                 )}
 
               {/* Long Question Parts */}
-              {(sectionType === "long" && question?.parts)  && (
-                  <>
-                    <div className="pl-8 mt-2 space-y-2">
-                      {question?.parts?.map((part, partIndex) => (
-                        <div
-                          key={partIndex}
-                          className="flex justify-between items-start"
-                        >
-                          <EditableQuestion
-                            initialText={part}
-                            onSave={(newText) => {
-                              // Handle part editing if needed
-                            }}
-                          />
-                          <Input
-                            type="number"
-                            placeholder="Marks"
-                            className="w-20 ml-4"
-                            value={marks[`${question.id}-${partIndex}`] || ""}
-                            onChange={(e) =>
-                              onMarksChange(
-                                `${question.id}-${partIndex}`,
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    {showAnswers && (
-                      <div className="ml-6 mt-2 p-3 bg-green-50 border border-green-200 rounded">
-                        <p className="text-sm text-green-800">
-                          <strong>
-                            Answer:{" "}
-                          </strong>{" "}
-                          {question.answer}
-                        </p>
+              {sectionType === "long" && question?.parts && (
+                <>
+                  <div className="pl-8 mt-2 space-y-2">
+                    {question?.parts?.map((part, partIndex) => (
+                      <div
+                        key={partIndex}
+                        className="flex justify-between items-start"
+                      >
+                        <EditableQuestion
+                          initialText={part}
+                          onSave={(newText) => {
+                            // Handle part editing if needed
+                          }}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Marks"
+                          className="w-20 ml-4"
+                          value={marks[`${question.id}-${partIndex}`] || ""}
+                          onChange={(e) =>
+                            onMarksChange(
+                              `${question.questionId}-${partIndex}`,
+                              e.target.value
+                            )
+                          }
+                        />
                       </div>
-                    )}
-                  </>
-                )}
+                    ))}
+                  </div>
+                  {showAnswers && (
+                    <div className="ml-6 mt-2 p-3 bg-red-50 border border-red-200 rounded">
+                      <p className="text-sm text-red-800">
+                        Answer for long questions are not available.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {sectionType === "short" && showAnswers && (
+                <div className="ml-6 mt-2 p-3 bg-green-50 border border-green-200 rounded">
+                  <p className="text-sm text-green-800">
+                    <strong>Answer: </strong> {question?.answer}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Marks Input for Short and Long Questions */}
@@ -218,8 +228,10 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                 type="number"
                 placeholder="Marks"
                 className="w-20 ml-4"
-                value={marks[question?.id] || ""}
-                onChange={(e) => onMarksChange(question.id, e.target.value)}
+                value={marks[question?.questionId] || ""}
+                onChange={(e) =>
+                  onMarksChange(question.questionId, e.target.value)
+                }
               />
             )}
           </div>

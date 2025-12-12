@@ -139,7 +139,7 @@ export const usePaperManagement = ({
     // Check if paper name or exam time changed
     const nameChanged = paperName !== originalPaperData.title;
     const timeChanged = examTime !== (originalPaperData.examTime || '3:00');
-
+    console.log("questions changes =>>> ", questions)
     // Check if any question text changed
     const questionsChanged = 
       questions.mcq.some(q => {
@@ -178,6 +178,7 @@ export const usePaperManagement = ({
 
   // Handle question edit
   const handleQuestionEdit = (type: 'mcq' | 'short' | 'long', id: string, newText: string) => {
+    console.log("Editing question:", type, id, newText);
     setQuestions(prev => ({
       ...prev,
       [type]: prev[type].map(q => q.id === id ? { ...q, text: newText } : q)

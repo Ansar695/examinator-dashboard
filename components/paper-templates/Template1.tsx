@@ -76,7 +76,7 @@ const Template1: React.FC<DefaultTemplateProps> = ({
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-5xl mx-auto bg-white">
-        {/* Header Section */}
+
         <ExamHeader
           profileData={profileData}
           examDetails={examDetails}
@@ -84,7 +84,7 @@ const Template1: React.FC<DefaultTemplateProps> = ({
 
         <hr className="border-t-2 border-gray-800 my-6" />
 
-        {/* MCQ Section */}
+
         <div className="mb-8">
           <SectionHeader
             title="Multiple Choice Questions"
@@ -108,7 +108,7 @@ const Template1: React.FC<DefaultTemplateProps> = ({
         <div className="w-full border border-gray-300 mb-6"></div>
         </div>
 
-        {/* Short Questions Section */}
+
         <PaperQuestionsSection
           title="Short Questions"
           sectionType="short"
@@ -121,7 +121,7 @@ const Template1: React.FC<DefaultTemplateProps> = ({
         />
         <div className="w-full border border-gray-300 mb-6"></div>
 
-        {/* Long Questions Section */}
+
         <PaperQuestionsSection
           title="Long Questions"
           sectionType="long"
