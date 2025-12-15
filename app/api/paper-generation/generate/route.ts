@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     const auth = await requireAuth();
     if (!auth.ok) return auth.response;
     const planStatus = await currentPlanStatus();
-    console.log("Plan expired:", planStatus);
+
     if (!planStatus?.ok) {
       return NextResponse.json(
         {
@@ -114,12 +114,25 @@ export async function POST(request: Request) {
       );
 
     const body = await request.json();
-    const { subjectId, mcqs, shortQs, longQs, title, totalMarks, examTime } =
+    const { subjectSlug, mcqs, shortQs, longQs, title, totalMarks, examTime } =
       body;
 
-    if (!subjectId) {
+    if (!subjectSlug) {
       return NextResponse.json(
-        { success: false, message: "Subject ID is required", status: 422 },
+        { success: false, message: "Subject Slug is required", status: 422 },
+        { status: 422 }
+      );
+    }
+
+    const subject = await prisma.subject
+      .findUnique({
+        where: { slug: subjectSlug },
+        select: { id: true, boardId: true, classId: true },
+      })
+
+    if (!subject?.id) {
+      return NextResponse.json(
+        { success: false, message: "Subject Id is required", status: 422 },
         { status: 422 }
       );
     }
@@ -130,12 +143,6 @@ export async function POST(request: Request) {
         { status: 422 }
       );
     }
-
-    // Derive boardId and classId from subject
-    const subject = await prisma.subject.findUnique({
-      where: { id: subjectId },
-      select: { boardId: true, classId: true },
-    });
 
     if (!subject?.boardId || !subject?.classId) {
       return NextResponse.json(
@@ -150,7 +157,7 @@ export async function POST(request: Request) {
         totalMarks,
         examTime: examTime,
         userId,
-        subjectId,
+        subjectId: subject?.id,
         boardId: subject?.boardId,
         classId: subject?.classId,
         mcqs,

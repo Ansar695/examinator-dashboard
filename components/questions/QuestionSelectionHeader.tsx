@@ -56,7 +56,6 @@ interface QuestionSelectionHeaderProps {
   board: string;
   classNumber: string;
   subject: string;
-  subjectId: string | null;
   totalSelected: number;
   isEditMode?: boolean;
   paperId?: string | null;
@@ -66,13 +65,12 @@ export const QuestionSelectionHeader: React.FC<QuestionSelectionHeaderProps> = (
   board,
   classNumber,
   subject,
-  subjectId,
   isEditMode = false,
   paperId,
 }) => {
   const backUrl = isEditMode && paperId
-    ? `/${board}/${classNumber}/${subject}/view-paper?paperId=${paperId}&subjectId=${subjectId}`
-    : `/${board}/${classNumber}/${subject}/select-topics${subjectId ? `?subjectId=${subjectId}` : ''}`;
+    ? `/${board}/${classNumber}/${subject}/view-paper?paperId=${paperId}`
+    : `/${board}/${classNumber}/${subject}/select-topics`;
   
   const backText = isEditMode ? 'Back' : 'Back';
 

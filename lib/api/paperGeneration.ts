@@ -82,7 +82,8 @@ export interface LongQuestionPayload {
 
 export interface CreatePaperRequest {
   title: string;
-  subjectId: string;
+  subjectId?: string;
+  subjectSlug: string;
   totalMarks: number;
   examTime?: string;
   mcqs: McqPayload[];
@@ -97,6 +98,7 @@ export interface GeneratedPaper {
   examTime?: string;
   userId: string;
   subjectId: string;
+  subjectSlug: string;
   mcqs: McqPayload[];
   shortQs: ShortQuestionPayload[];
   longQs: LongQuestionPayload[];

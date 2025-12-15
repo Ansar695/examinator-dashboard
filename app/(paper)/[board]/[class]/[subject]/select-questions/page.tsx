@@ -17,9 +17,26 @@ export default function SelectQuestions() {
   const classSlug = params.class as string;
   const subjectSlug = params.subject as string;
 
-  const boardName = boardSlug ? boardSlug.split("-").map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
-  const className = classSlug ? classSlug.split("-").map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
-  const subjectName = subjectSlug ? subjectSlug.split("-").map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ") : "";
+  const boardName = boardSlug
+    ? boardSlug
+        .split("-")
+        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    : "";
+  const className = classSlug
+    ? classSlug
+        .split("-")
+        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    : "";
+  const subjectName = subjectSlug
+    ? subjectSlug
+        .split("-")
+        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    : "";
+
+  const paperId = null; // No paperId in selection mode
 
   const {
     questions,
@@ -43,7 +60,7 @@ export default function SelectQuestions() {
     boardSlug,
     classSlug,
     subjectSlug,
-    paperId: null,
+    paperId,
     subjectName,
   });
 
@@ -67,10 +84,9 @@ export default function SelectQuestions() {
         <div className="max-w-[1380px] mx-auto bg-white rounded-md p-3 md:p-5">
           {/* Compact Header */}
           <QuestionSelectionHeader
-            board={board}
-            classNumber={classNumber}
-            subject={subject}
-            subjectId={subjectId}
+            board={boardSlug}
+            classNumber={classSlug}
+            subject={subjectSlug}
             totalSelected={getTotalSelectedQuestions()}
             isEditMode={isEditMode}
             paperId={paperId}
@@ -90,7 +106,7 @@ export default function SelectQuestions() {
                   {isEditMode ? "Edit Paper Questions" : "Select Questions"}
                 </h1>
                 <p className="text-sm text-gray-600 mt-1 capitalize">
-                  {board.replace("-", " ")} • Class {classNumber} • {subject}
+                  {boardName} • {className} • {subjectName}
                 </p>
               </motion.div>
 
@@ -164,7 +180,7 @@ export default function SelectQuestions() {
             </div>
 
             {/* Right Sidebar - Selected Questions Review */}
-            <SelectedQuestions 
+            <SelectedQuestions
               getTotalSelectedQuestions={getTotalSelectedQuestions}
               getSelectedQuestionData={getSelectedQuestionData}
               allSelectedQuestions={allSelectedQuestions}

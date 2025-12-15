@@ -327,7 +327,6 @@ export const useQuestionSelection = ({
           id: paperId,
           data: {
             title: paperTitle,
-            subjectSlug,
             totalMarks,
             mcqs: mcqsPayload,
             shortQs: shortQsPayload,
@@ -343,14 +342,14 @@ export const useQuestionSelection = ({
 
           // Navigate to the view paper page
           router.push(
-            `/${board}/${classNumber}/${subject}/view-paper?paperId=${paperId}&subjectId=${subjectId}`
+            `/${boardSlug}/${classSlug}/${subjectSlug}/view-paper?paperId=${paperId}`
           );
         }
       } else {
         // Create new paper
         const response = await createPaper({
           title: paperTitle,
-          subjectId,
+          subjectSlug,
           totalMarks,
           mcqs: mcqsPayload,
           shortQs: shortQsPayload,
@@ -374,7 +373,7 @@ export const useQuestionSelection = ({
 
           // Navigate to the view paper page
           router.push(
-            `/${board}/${classNumber}/${subject}/view-paper?paperId=${response.data.id}&subjectId=${subjectId}`
+            `/${boardSlug}/${classSlug}/${subjectSlug}/view-paper?paperId=${response.data.id}`
           );
         }
       }
@@ -405,12 +404,11 @@ export const useQuestionSelection = ({
   useEffect(() => {
     if (chapterIds.length === 0) {
       router.push(
-        `/${board}/${classNumber}/${subject}/select-topics${
-          subjectId ? `?subjectId=${subjectId}` : ""
+        `/${boardSlug}/${classSlug}/${subjectSlug}/select-topics
         }`
       );
     }
-  }, [chapterIds, router, board, classNumber, subject, subjectId]);
+  }, [chapterIds, router, boardSlug, classSlug, subjectSlug]);
 
   return {
     selectedQuestions,
