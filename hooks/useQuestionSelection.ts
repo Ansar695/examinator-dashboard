@@ -33,7 +33,7 @@ export const useQuestionSelection = ({
   const [currentQuestionType, setCurrentQuestionType] =
     useState<QuestionType>("mcq");
   const [selectedQuestions, setSelectedQuestions] = useState<
-    Record<QuestionType, string[]>
+    Record<QuestionType, any[]>
   >({
     mcq: [],
     short: [],
@@ -125,19 +125,28 @@ export const useQuestionSelection = ({
       const paper = existingPaperData.data;
 
       // Extract question IDs from the paper
-      const mcqIds = paper.mcqs.map((q) => q.questionId);
-      const shortIds = paper.shortQs.map((q) => q.questionId);
-      const longIds = paper.longQs.map((q) => q.questionId);
+      const mcqQs = paper?.mcqs?.map((q) => {
+        return {
+          ...q,
+          type: "mcq"
+        };
+      });
+      const shortQs = paper?.shortQs?.map((q) => {
+        return { ...q, type: "short" };
+      });
+      const longQs = paper?.longQs?.map((q) => {
+        return { ...q, type: "long" };
+      });
 
       setSelectedQuestions({
-        mcq: mcqIds,
-        short: shortIds,
-        long: longIds,
+        mcq: mcqQs,
+        short: shortQs,
+        long: longQs,
       });
 
       // Also need to set the chapters in localStorage for the queries to work
       // Extract unique chapter IDs from all questions
-      const allQuestionIds = [...mcqIds, ...shortIds, ...longIds];
+      const allQuestionIds = [...mcqQs, ...shortQs, ...longQs];
       // Note: We might need to fetch the questions to get their chapter IDs
       // For now, we'll assume the chapters are already set from the previous flow
     }
@@ -183,14 +192,14 @@ export const useQuestionSelection = ({
   // Handle question selection
   const handleQuestionSelect = (
     type: QuestionType,
-    id: string,
+    question: any,
     selected: boolean
   ) => {
     setSelectedQuestions((prev) => ({
       ...prev,
       [type]: selected
-        ? [...prev[type], id]
-        : prev[type].filter((qId) => qId !== id),
+        ? [...prev[type], { ...question, type }]
+        : prev[type].filter((q) => q.id !== question?.id),
     }));
   };
 
@@ -201,7 +210,7 @@ export const useQuestionSelection = ({
 
     const selectedCount = Math.min(3, allQuestions.length);
     const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, selectedCount).map((q: any) => q.id);
+    const selected = shuffled.slice(0, selectedCount).map((q: any) => ({...q, type }));
 
     setSelectedQuestions((prev) => ({
       ...prev,
@@ -270,21 +279,21 @@ export const useQuestionSelection = ({
     try {
       // Get selected questions with their details
       const selectedMcqDetails = questions.mcq.filter((q) =>
-        selectedQuestions.mcq.includes(q.id)
+        selectedQuestions?.mcq?.includes(q)
       );
       const selectedShortDetails = questions.short.filter((q) =>
-        selectedQuestions.short.includes(q.id)
+        selectedQuestions?.short?.includes(q)
       );
       const selectedLongDetails = questions.long.filter((q) =>
-        selectedQuestions.long.includes(q.id)
+        selectedQuestions?.long?.includes(q)
       );
 
       // Prepare MCQs payload
-      const mcqsPayload = selectedMcqDetails.map((q) => ({
-        questionId: q.id,
-        question: q.question,
-        options: q.options || [],
-        correctAnswer: q.correctAnswer,
+      const mcqsPayload = selectedQuestions?.mcq?.map((q) => ({
+        questionId: q?.questionId,
+        question: q?.question,
+        options: q?.options || [],
+        correctAnswer: q?.correctAnswer,
         marks: 1, // 1 mark per MCQ
       }));
 
@@ -356,8 +365,6 @@ export const useQuestionSelection = ({
           longQs: longQsPayload,
         }).unwrap();
 
-        console.log("response =>>> ", response);
-
         if (response.success && response.data) {
           // Save the generated paper ID and selected questions to localStorage
           localStorage.setItem("generatedPaperId", response.data.id);
@@ -378,7 +385,6 @@ export const useQuestionSelection = ({
         }
       }
     } catch (error: any) {
-      console.log("Error creating paper:", error);
       if (error?.status === 402) {
         toast({
           title: "Error creating paper",
@@ -389,7 +395,7 @@ export const useQuestionSelection = ({
         setTimeout(() => {
           router.push("/plans");
         }, 4000);
-      }else{
+      } else {
         toast({
           title: "Error creating paper",
           description:

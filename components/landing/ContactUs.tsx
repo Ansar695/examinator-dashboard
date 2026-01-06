@@ -33,7 +33,6 @@ const Contact = () => {
   const onSubmit = async (data: ContactFormData) => {
     try {
       await submitContactForm(data).unwrap();
-      console.log("message sent");
       toast({
         title: "Success",
         description: "Message sent successfully.",
@@ -44,7 +43,6 @@ const Contact = () => {
         description: "Failed to send your message. Please try again later.",
         variant: "destructive",
       });
-      console.error("Failed to submit contact form:", error);
     }
   };
 

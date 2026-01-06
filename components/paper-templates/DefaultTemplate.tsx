@@ -53,8 +53,6 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
   isPreview = false,
   showAnswers,
 }) => {
-  console.log("showAnswers:", showAnswers);
-  console.log("Rendering with paperData:", paperData);
   return (
     <div
       className="p-6"

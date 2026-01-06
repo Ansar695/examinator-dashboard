@@ -12,6 +12,8 @@ const SelectedQuestions = ({
   isCreatingPaper,
   isEditMode,
 }: any) => {
+
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -30,35 +32,32 @@ const SelectedQuestions = ({
           </div>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {allSelectedQuestions.map((id: any) => {
-              const qData: any = getSelectedQuestionData(id);
-              if (!qData) return null;
-
+            {allSelectedQuestions?.map((q: any) => {
               const allTypeLabel: any = {
                 mcq: "📋",
                 short: "✏️",
                 long: "📄",
               };
 
-              const typeLabel = allTypeLabel[qData?.type] || "❓";
+              const typeLabel = allTypeLabel[q?.type] || "❓";
 
               return (
                 <motion.div
-                  key={id}
+                  key={q.questionId}
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   className="bg-white rounded-lg p-3 flex items-start justify-between group hover:shadow-sm transition-shadow"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-gray-500 mb-1">
-                      {typeLabel} {qData.type.toUpperCase()}
+                      {typeLabel} {q?.type?.toUpperCase()}
                     </p>
                     <p className="text-sm text-gray-800 line-clamp-2">
-                      {qData.question || "Question"}
+                      {q?.question || "Question"}
                     </p>
                   </div>
                   <button
-                    onClick={() => handleQuestionSelect(qData.type, id, false)}
+                    onClick={() => handleQuestionSelect(q?.type, q, false)}
                     className="ml-2 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
                     aria-label="Remove question"
                   >
