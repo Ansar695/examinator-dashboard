@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { Shuffle, Loader2 } from "lucide-react";
@@ -7,13 +7,13 @@ import { QuestionItem } from "@/components/questions/QuestionItem";
 import { QuestionPagination } from "@/components/questions/QuestionPagination";
 
 interface QuestionSelectionTabProps {
-  type: 'mcq' | 'short' | 'long';
+  type: "mcq" | "short" | "long";
   questions: any[];
   isLoading: boolean;
   error: any;
   onRandomSelect: () => void;
-  onQuestionSelect: (id: string, selected: boolean) => void;
-  selectedQuestions?: string[];
+  onQuestionSelect: (question: any, selected: boolean) => void;
+  selectedQuestions?: any[];
   searchTerm: string;
   onSearchChange: (value: string) => void;
   currentPage: number;
@@ -37,16 +37,21 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
 }) => {
   const getTitle = () => {
     switch (type) {
-      case 'mcq':
-        return 'Multiple Choice Questions';
-      case 'short':
-        return 'Short Questions';
-      case 'long':
-        return 'Long Questions';
+      case "mcq":
+        return "Multiple Choice Questions";
+      case "short":
+        return "Short Questions";
+      case "long":
+        return "Long Questions";
       default:
-        return 'Questions';
+        return "Questions";
     }
   };
+
+  const selectedQuestion = questions.filter((q) =>
+    selectedQuestions.includes(q)
+  );
+
 
   return (
     <TabsContent value={type}>
@@ -69,9 +74,7 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
       {isLoading && (
         <div className="flex justify-center items-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <span className="ml-3 text-gray-600">
-            Loading questions...
-          </span>
+          <span className="ml-3 text-gray-600">Loading questions...</span>
         </div>
       )}
 
@@ -95,15 +98,18 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
 
       {/* Questions List */}
       {!isLoading && !error && questions.length > 0 && (
-        <div className='bg-gray-100 p-2 md:p-5 rounded-md'>
-          {questions.map((question: any) => (
-            <QuestionItem
-              key={question.id}
-              question={question}
-              onSelect={onQuestionSelect}
-              initialSelected={selectedQuestions.includes(question.id)}
-            />
-          ))}
+        <div className="bg-gray-100 p-2 md:p-5 rounded-md">
+          {questions?.map((question: any) => {
+            const isSelected = selectedQuestions?.find((qs) => qs.id === question.id);
+            return (
+              <QuestionItem
+                key={question.id}
+                question={question}
+                onSelect={onQuestionSelect}
+                initialSelected={isSelected ? true : false}
+              />
+            );
+          })}
         </div>
       )}
 

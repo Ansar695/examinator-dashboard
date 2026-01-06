@@ -6,10 +6,11 @@ const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
+    const { planType } = await req.json();
     const auth = await requireAuth();
+
     if (!auth.ok || !auth?.userId) return auth.response;
 
-    const { planType } = await req.json();
     if (planType !== "FREE")
       return Response.json(
         {

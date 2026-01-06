@@ -18,7 +18,6 @@ export default function Plans() {
   const handleSubscribe = async (planType: PlanType) => {
       try {
         const response = await subscribePlan({ planType }).unwrap();
-        console.log("Subscription response:", response);
         if (response.success) {
           toast({
             title: `Congratulations!`,
@@ -34,6 +33,7 @@ export default function Plans() {
         }
       } catch (err) {
         console.error("Subscription failed:", err);
+          router.push(`/login`);
         toast({
           title: "Error",
           description:

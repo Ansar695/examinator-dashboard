@@ -470,8 +470,6 @@ export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
     setExamTime: () => {},
   };
 
-  console.log("PaperPreviewModal questions:", questions);
-
   // Prepare questions with answers if showAnswers is true
   const processedQuestions = showAnswers ? {
     mcq: questions.mcq.map(q => ({

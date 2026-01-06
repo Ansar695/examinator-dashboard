@@ -9,88 +9,42 @@ import { QuestionSelectionHeader } from "@/components/questions/QuestionSelectio
 import { useQuestionSelection } from "@/hooks/useQuestionSelection";
 import { QuestionSearch } from "@/components/questions/QuestionSearch";
 import SelectedQuestions from "@/components/questions/SelectedQuestions";
+import { boardNameFromSlug, classNameFromSlug, subjectNameFromSlug } from "@/utils/slugHanler";
 import { questionTypeTabs } from "@/utils/static/questionTabs";
+import { useState } from "react";
+import { QuestionType } from "@/utils/types/questions.type";
 
-export default function SelectQuestions() {
-  const params = useParams();
-  const searchParams = useSearchParams();
+const SelectPaperQuestions = () => {
+    const params = useParams();
+    const searchParams = useSearchParams()
+    const [currentQuestionType, setCurrentQuestionType] = useState<QuestionType>('mcq');
 
-  const boardSlug = params.board as any;
-  const classSlug = params.class as string;
-  const subjectSlug = params.subject as string;
-  const paperId = searchParams.get("paperId");
+    const isEditMode = false
+    const boardSlug = params.board as any;
+    const classSlug = params.class as string;
+    const subjectSlug = params.subject as string;
+    const paperId = searchParams.get("paperId");
 
-  const boardName = boardSlug
-    ? boardSlug
-        .split("-")
-        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
-    : "";
-  const className = classSlug
-    ? classSlug
-        .split("-")
-        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
-    : "";
-  const subjectName = subjectSlug
-    ? subjectSlug
-        .split("-")
-        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
-    : "";
+    const boardName = boardNameFromSlug(boardSlug);
+    const className = classNameFromSlug(classSlug);
+    const subjectName = subjectNameFromSlug(subjectSlug);
 
-  const {
-    questions,
-    selectedQuestions,
-    isLoading,
-    error,
-    isCreatingPaper,
-    currentQuestionType,
-    pages,
-    searchTerms,
-    handleQuestionSelect,
-    handleRandomSelection,
-    handleTabChange,
-    handleContinue,
-    handlePageChange,
-    handleSearchChange,
-    getTotalSelectedQuestions,
-    getPaginationInfo,
-    isEditMode,
-  } = useQuestionSelection({
-    boardSlug,
-    classSlug,
-    subjectSlug,
-    paperId,
-    subjectName,
-  });
+    const handleTabChange = (value: string) => {
+        setCurrentQuestionType(value as QuestionType);
+    };
 
-  const allSelectedQuestions = [
-    ...(selectedQuestions?.mcq || []),
-    ...(selectedQuestions?.short || []),
-    ...(selectedQuestions?.long || []),
-  ];
-
-  const getSelectedQuestionData = (id: string) => {
-    for (const type of ["mcq", "short", "long"] as const) {
-      const q = allSelectedQuestions?.find(
-        (q: any) => q.questionId === id && q.type === type
-      );
-      if (q) return { ...q, type };
-    }
-    return null;
-  };
 
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-100 p-2 md:p-6">
-        <div className="max-w-[1380px] mx-auto bg-white rounded-md p-2 md:p-4">
+        <div className="max-w-[1380px] mx-auto bg-white rounded-md p-3 md:p-5">
           {/* Compact Header */}
           <QuestionSelectionHeader
             board={boardSlug}
             classNumber={classSlug}
             subject={subjectSlug}
-            totalSelected={getTotalSelectedQuestions()}
+            totalSelected={0}
+            // totalSelected={getTotalSelectedQuestions()}
             isEditMode={isEditMode}
             paperId={paperId}
           />
@@ -105,9 +59,12 @@ export default function SelectQuestions() {
                 transition={{ duration: 0.4 }}
                 className="mb-6"
               >
-                <h1 className="text-2xl md:text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                   {isEditMode ? "Edit Paper Questions" : "Select Questions"}
                 </h1>
+                <p className="text-sm text-gray-600 mt-1 capitalize">
+                  {boardName} • {className} • {subjectName}
+                </p>
               </motion.div>
 
               {/* Tabs - Modern Design */}
@@ -132,13 +89,13 @@ export default function SelectQuestions() {
 
                   <TabsList className="grid w-[50%] md:w-110 grid-cols-3 h-11 bg-gray-100 p-1 rounded-lg mb-6">
                     {questionTypeTabs?.map((tab) => (
-                      <TabsTrigger
-                        key={tab?.value}
-                        value={tab?.value}
-                        className="cursor-pointer text-sm font-medium rounded-md transition-all data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
-                      >
-                        {tab?.label}
-                      </TabsTrigger>
+                    <TabsTrigger
+                      key={tab?.value}
+                      value={tab?.value}
+                      className="cursor-pointer text-sm font-medium rounded-md transition-all data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                    >
+                      {tab?.label}
+                    </TabsTrigger>
                     ))}
                   </TabsList>
                 </div>
@@ -184,5 +141,7 @@ export default function SelectQuestions() {
         </div>
       </div>
     </PageTransition>
-  );
+  )
 }
+
+export default SelectPaperQuestions

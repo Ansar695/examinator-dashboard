@@ -75,11 +75,11 @@ export const QuestionSelectionHeader: React.FC<QuestionSelectionHeaderProps> = (
   const backText = isEditMode ? 'Back' : 'Back';
 
   return (
-    <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+    <div className="flex justify-between items-center pb-2 border-b border-gray-200">
       <Link href={backUrl}>
         <Button
           variant="ghost"
-          className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 cursor-pointer bg-gray-200 px-10 py-4"
+          className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 cursor-pointer bg-gray-200 px-10 py-2"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           {backText}
