@@ -170,10 +170,6 @@ const UserDetailsPage = () => {
   const loading =
     isUserDetailsLoading || isSubscriptionHistoryLoading || isLoading;
 
-  console.log("consoleddata userDetailsData ", userDetailsData);
-  console.log("consoleddata subscriptionHistoryData ", subscriptionHistoryData);
-  console.log("consoleddata generatedPapersData ", generatedPapersData);
-
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto space-y-6">

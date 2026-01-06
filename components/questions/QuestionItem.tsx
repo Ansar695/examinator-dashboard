@@ -16,11 +16,11 @@ export function QuestionItem({ question, onSelect, initialSelected = false }: Qu
   // Update selected state when initialSelected prop changes
   useEffect(() => {
     setIsSelected(initialSelected)
-  }, [initialSelected])
+  }, [initialSelected]) 
 
   const handleToggle = () => {
     setIsSelected(!isSelected)
-    onSelect(question?.id, !isSelected)
+    onSelect(question, !isSelected)
   }
 
   return (

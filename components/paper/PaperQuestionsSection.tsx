@@ -53,7 +53,6 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
   isPreview = false,
   showAnswers = false,
 }) => {
-  console.log("PaperQuestionsSection questions:", questions);
   if (questions?.length === 0) return null;
 
   const getSectionTitle = () => {
@@ -80,7 +79,7 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
       return sum + (marks[q.id] || 0);
     }, 0);
   };
-  console.log("Calculating section marks:", showAnswers);
+
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-4">

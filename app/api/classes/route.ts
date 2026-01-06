@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
     if (!board) {
       return NextResponse.json({ error: "Board not found" }, { status: 404 })
     }
-    console.log("Fetched board:", board)
 
     const classes = await prisma.class.findMany({
       where: board ? { boardId: board.id } : undefined,
