@@ -19,9 +19,14 @@ import { ChapterForm } from "@/components/chapters/chapter-form"
 import { SavedQuestionsList } from "@/components/chapters/saved-questions-list"
 import { Question, QuestionGenerationModal } from "@/components/chapters/questions-generation-modal"
 import CustomDropdownMenu from "@/components/common/CustomDropdownMenu"
-import { LongQuestion, MCQs, ShortQuestion, PaginatedResponse, useGetLongQuestionQuery, useGetMCQsQuestionQuery, useGetShortQuestionQuery, useSaveLongQuestionMutation, useSaveMCQsMutation, useSaveShortQuestionMutation, useGetPaperMCQsQuery } from "@/lib/api/saveQuestionsApi"
+import { LongQuestion, MCQs, ShortQuestion, PaginatedResponse, useGetLongQuestionQuery, useGetMCQsQuestionQuery, useGetShortQuestionQuery, useSaveLongQuestionMutation, useSaveMCQsMutation, useSaveShortQuestionMutation, useGetPaperMCQsQuery, useGetSubTopicCountsQuery, SubTopicCounts } from "@/lib/api/saveQuestionsApi"
 import { useToast } from "@/components/common/CustomToast"
 import { payloadFormat } from "@/utils/saveQuestionsPayloadFormat"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { QuestionEditor } from "@/components/chapters/question-editor"
 
 
 // const dummyQuestions = [
@@ -174,11 +179,14 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
   const [selectedQuestionType, setSelectedQuestionType] = useState<string>("mcqs")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(10)
+  const [subTopicModalOpen, setSubTopicModalOpen] = useState(false)
+  const [activeSubTopic, setActiveSubTopic] = useState<string | null>(null)
+  const [subTopicTab, setSubTopicTab] = useState<"mcqs" | "short" | "long">("mcqs")
   const { showSuccess, showError, ToastComponent } = useToast();
 
-  const [saveMCQs, { isLoading: isSaving }] = useSaveMCQsMutation()
-  const [saveShortQuestion] = useSaveShortQuestionMutation()
-  const [saveLongQuestion] = useSaveLongQuestionMutation()
+  const [saveMCQs, { isLoading: isSavingMCQs }] = useSaveMCQsMutation()
+  const [saveShortQuestion, { isLoading: isSavingShort }] = useSaveShortQuestionMutation()
+  const [saveLongQuestion, { isLoading: isSavingLong }] = useSaveLongQuestionMutation()
 
   const { data: mcqsResponse, isLoading: mcqsLoading, error: mcqsError, refetch: refetchMCQs } = useGetMCQsQuestionQuery({
     chapterId: params.id,
@@ -196,6 +204,32 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
     limit: pageSize
   })
 
+  const { data: mcqsSubTopicResponse, isLoading: mcqsSubTopicLoading, error: mcqsSubTopicError } = useGetMCQsQuestionQuery({
+    chapterId: params.id,
+    page: 1,
+    limit: 50,
+    subTopic: activeSubTopic ?? undefined,
+  }, { skip: !activeSubTopic })
+
+  const { data: shortSubTopicResponse, isLoading: shortSubTopicLoading, error: shortSubTopicError } = useGetShortQuestionQuery({
+    chapterId: params.id,
+    page: 1,
+    limit: 50,
+    subTopic: activeSubTopic ?? undefined,
+  }, { skip: !activeSubTopic })
+
+  const { data: longSubTopicResponse, isLoading: longSubTopicLoading, error: longSubTopicError } = useGetLongQuestionQuery({
+    chapterId: params.id,
+    page: 1,
+    limit: 50,
+    subTopic: activeSubTopic ?? undefined,
+  }, { skip: !activeSubTopic })
+
+  const { data: subTopicCountsResponse, isLoading: subTopicCountsLoading, error: subTopicCountsError } = useGetSubTopicCountsQuery(
+    { chapterId: params.id },
+    { skip: !params?.id }
+  )
+
   const { data: chapters = [], isLoading, error } = useGetChaptersQuery()
   const chapterData = chapters.find((c) => c.id === params.id)
 
@@ -209,15 +243,17 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
     document.body.removeChild(link)
   }
 
-  const handleSaveQuestions = async(questions: Question[], qType: string) => {
+  const handleSaveQuestions = async(questions: Question[], qType: string, subTopic?: string) => {
     if(!params?.id) {
-      showError("Chapter ID not found")
-      return
+      return { success: false, message: "Chapter ID not found" }
     }
     setQType(qType)
     
     try {
-      const payload = payloadFormat(questions, qType, params?.id)
+      if (!["mcqs", "short", "long"].includes(qType)) {
+        return { success: false, message: "Unsupported question type. Please select MCQs, Short, or Long." }
+      }
+      const payload = payloadFormat(questions, qType, params?.id, subTopic)
       let response;
       if(qType === "mcqs") {
         response = await saveMCQs(payload as Partial<MCQs>[]).unwrap()
@@ -229,9 +265,7 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
         response = await saveLongQuestion(payload as Partial<LongQuestion>[]).unwrap()
       }
       
-      // Show success message
       const insertedCount = response?.insertedCount || payload.length
-      showSuccess(`Successfully saved ${insertedCount} questions`)
       
       // Refetch the appropriate questions based on type
       if(qType === "mcqs") {
@@ -242,14 +276,12 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
         refetchLongQs()
       }
       
-      // Close the modal after successful save
-      setShowQuestionModal(false)
+      return { success: true, message: `Successfully saved ${insertedCount} questions` }
     } catch (error: any) {
       console.error("Error saving questions:", error)
       
-      // Show appropriate error message
       const errorMessage = error?.data?.message || error?.message || "Failed to save questions. Please try again."
-      showError(errorMessage)
+      return { success: false, message: errorMessage }
     }
   }
 
@@ -293,6 +325,20 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
 
   // Check for any errors
   const questionsError = mcqsError || shortError || longError
+
+  const subTopicCountsMap = (subTopicCountsResponse?.data || []).reduce((acc, item) => {
+    acc[item.subTopic] = item
+    return acc
+  }, {} as Record<string, SubTopicCounts>)
+
+  const subTopicLoading = mcqsSubTopicLoading || shortSubTopicLoading || longSubTopicLoading
+  const subTopicError = mcqsSubTopicError || shortSubTopicError || longSubTopicError
+
+  const handleOpenSubTopic = (topic: string) => {
+    setActiveSubTopic(topic)
+    setSubTopicTab("mcqs")
+    setSubTopicModalOpen(true)
+  }
 
   if (isLoading) {
     return (
@@ -402,6 +448,46 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
           </CardHeader>
         </Card>
 
+        {/* Subtopics Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Subtopics</CardTitle>
+            <CardDescription>
+              {chapterData.subTopics?.length
+                ? subTopicCountsLoading
+                  ? "Subtopics detected for this chapter. Loading question counts..."
+                  : subTopicCountsError
+                    ? "Subtopics detected for this chapter. Question counts unavailable."
+                    : "Subtopics detected for this chapter."
+                : "No subtopics found for this chapter."}
+            </CardDescription>
+            {chapterData.subTopics?.length ? (
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {chapterData.subTopics.map((t) => (
+                  <button
+                    key={`${chapterData.id}::${t}`}
+                    onClick={() => handleOpenSubTopic(t)}
+                    className="rounded-md border bg-white p-3 text-left text-sm text-slate-700 transition hover:border-blue-200 hover:bg-blue-50/30"
+                  >
+                    <div className="font-medium text-slate-900">{t}</div>
+                    <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-700">
+                      <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">
+                        MCQs: {subTopicCountsMap[t]?.mcqs ?? 0}
+                      </span>
+                      <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-700">
+                        Short: {subTopicCountsMap[t]?.short ?? 0}
+                      </span>
+                      <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">
+                        Long: {subTopicCountsMap[t]?.long ?? 0}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </CardHeader>
+        </Card>
+
         <SavedQuestionsList
           mcqsResponse={mcqsResponse}
           shortResponse={shortResponse}
@@ -424,8 +510,126 @@ export default function ChapterDetailPage({ params }: { params: { id: string } }
           onSaveQuestions={handleSaveQuestions}
           classNumber={chapterData.class?.name ?? null}
           chapterName={chapterData.name}
-          isSaving={isSaving}
+          subTopics={chapterData.subTopics || []}
+          isSaving={isSavingMCQs || isSavingShort || isSavingLong}
         />
+
+        <Dialog open={subTopicModalOpen} onOpenChange={(nextOpen) => setSubTopicModalOpen(nextOpen)}>
+          <DialogContent className="min-w-[75%] max-w-[1100px] h-[85vh] max-h-[90vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Subtopic Questions</DialogTitle>
+              <DialogDescription>
+                {activeSubTopic ? `Showing questions for "${activeSubTopic}".` : "Select a subtopic to view questions."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <Tabs value={subTopicTab} onValueChange={(v) => setSubTopicTab(v as "mcqs" | "short" | "long")} className="flex-1 min-h-0">
+              <TabsList>
+                <TabsTrigger value="mcqs">MCQs</TabsTrigger>
+                <TabsTrigger value="short">Short</TabsTrigger>
+                <TabsTrigger value="long">Long</TabsTrigger>
+              </TabsList>
+
+              <div className="flex-1 min-h-0">
+                {subTopicLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center text-slate-600">Loading questions...</div>
+                  </div>
+                ) : subTopicError ? (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertDescription>
+                      {subTopicError?.data?.message || subTopicError?.message || "Failed to load subtopic questions."}
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <>
+                    <TabsContent value="mcqs" className="flex-1 min-h-0">
+                      <ScrollArea className="h-[60vh] pr-3">
+                        <div className="space-y-4">
+                          {(mcqsSubTopicResponse?.data || []).map((mcq, index) => (
+                            <QuestionEditor
+                              key={mcq.id}
+                              question={{
+                                id: mcq.id,
+                                question: mcq.question,
+                                difficulty: mcq.difficulty,
+                                options: mcq.options,
+                                answer_index: mcq.correctAnswer.toString(),
+                                questionType: "mcqs",
+                              }}
+                              index={index}
+                              onUpdate={() => {}}
+                              onDelete={() => {}}
+                              showActions={false}
+                              qType="mcqs"
+                            />
+                          ))}
+                          {(mcqsSubTopicResponse?.data || []).length === 0 ? (
+                            <p className="text-sm text-slate-500 text-center py-8">No MCQs found for this subtopic.</p>
+                          ) : null}
+                        </div>
+                      </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="short" className="flex-1 min-h-0">
+                      <ScrollArea className="h-[60vh] pr-3">
+                        <div className="space-y-4">
+                          {(shortSubTopicResponse?.data || []).map((sq, index) => (
+                            <QuestionEditor
+                              key={sq.id}
+                              question={{
+                                id: sq.id,
+                                question: sq.question,
+                                difficulty: sq.difficulty,
+                                answer: sq.answer,
+                                questionType: "short",
+                              }}
+                              index={index}
+                              onUpdate={() => {}}
+                              onDelete={() => {}}
+                              showActions={false}
+                              qType="short"
+                            />
+                          ))}
+                          {(shortSubTopicResponse?.data || []).length === 0 ? (
+                            <p className="text-sm text-slate-500 text-center py-8">No short questions found for this subtopic.</p>
+                          ) : null}
+                        </div>
+                      </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="long" className="flex-1 min-h-0">
+                      <ScrollArea className="h-[60vh] pr-3">
+                        <div className="space-y-4">
+                          {(longSubTopicResponse?.data || []).map((lq, index) => (
+                            <QuestionEditor
+                              key={lq.id}
+                              question={{
+                                id: lq.id,
+                                question: lq.question,
+                                difficulty: lq.difficulty,
+                                answer: lq.answer,
+                                questionType: "long",
+                              }}
+                              index={index}
+                              onUpdate={() => {}}
+                              onDelete={() => {}}
+                              showActions={false}
+                              qType="long"
+                            />
+                          ))}
+                          {(longSubTopicResponse?.data || []).length === 0 ? (
+                            <p className="text-sm text-slate-500 text-center py-8">No long questions found for this subtopic.</p>
+                          ) : null}
+                        </div>
+                      </ScrollArea>
+                    </TabsContent>
+                  </>
+                )}
+              </div>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Form Modal */}
         <ChapterForm chapterData={chapterData} open={showEditForm} onClose={() => setShowEditForm(false)} />

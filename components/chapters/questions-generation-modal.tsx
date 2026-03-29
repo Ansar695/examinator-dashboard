@@ -27,18 +27,28 @@ export interface Question {
   answer_index?: string
   questionType: string
   answer?: string;
+  subTopic?: string;
 }
 
 interface QuestionGenerationModalProps {
   open: boolean
   onClose: () => void
-  onSaveQuestions: (questions: Question[], qType: string) => void
+  onSaveQuestions: (questions: Question[], qType: string, subTopic?: string) => Promise<{ success: boolean; message: string }>
   classNumber: string | null
   chapterName: string
+  subTopics?: string[]
   isSaving: boolean;
 }
 
-export function QuestionGenerationModal({ classNumber, chapterName, open, onClose, onSaveQuestions, isSaving }: QuestionGenerationModalProps) {
+export function QuestionGenerationModal({
+  classNumber,
+  chapterName,
+  subTopics = [],
+  open,
+  onClose,
+  onSaveQuestions,
+  isSaving,
+}: QuestionGenerationModalProps) {
   const [questionType, setQuestionType] = useState("")
   const [totalQuestions, setTotalQuestions] = useState("")
   const [marksPerQuestion, setMarksPerQuestion] = useState("")
@@ -46,11 +56,42 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
   const [qType, setQType] = useState<string>("mcqs")
   const [isGenerating, setIsGenerating] = useState(false)
   const [showGenerated, setShowGenerated] = useState(false)
+  const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([])
+  const [isSavingLocal, setIsSavingLocal] = useState(false)
   
-  const { showSuccess, showError, ToastComponent } = useToast();
+  const { showSuccess, showError, showWarning, ToastComponent } = useToast();
+  const isSavingQuestions = isSaving || isSavingLocal;
+
+  const runWithConcurrency = async <T,>(
+    tasks: Array<() => Promise<T>>,
+    limit: number
+  ): Promise<T[]> => {
+    const results: T[] = new Array(tasks.length)
+    let nextIndex = 0
+
+    const worker = async () => {
+      while (nextIndex < tasks.length) {
+        const current = nextIndex
+        nextIndex += 1
+        results[current] = await tasks[current]()
+      }
+    }
+
+    const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => worker())
+    await Promise.all(workers)
+    return results
+  }
 
   const handleGenerateQuestions = async () => {
     if (!questionType || !totalQuestions || !marksPerQuestion) return
+    if (questionType === "essay") {
+      showError("Essay question generation is not available yet.")
+      return
+    }
+    if (subTopics.length && selectedSubtopics.length === 0) {
+      showError("Please select at least one subtopic to generate questions.")
+      return
+    }
 
     setIsGenerating(true)
     
@@ -67,32 +108,63 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
 
         if(!urlType) showSuccess("Unable to access this feature, please check network connection.")
 
-        const formData = new FormData();
-        formData.append("subject", 'Periodic Table and Periodic Properties');
-        formData.append("book", classNumber as string);
-        formData.append("chapter", 'Periodic Table and Periodic Properties');
-        formData.append("n", totalQuestions);
-        setIsGenerating(true);
+        const topicsToGenerate = subTopics.length ? selectedSubtopics : [""]
 
-        const genResponse = await fetch(
-          urlType,
-          {
-            method: "POST",
-            body: formData,
+        const tasks = topicsToGenerate.map((topic) => async () => {
+            const formData = new FormData()
+            formData.append("subject", chapterName)
+            formData.append("book", classNumber as string)
+            formData.append("chapter", chapterName)
+            formData.append("n", totalQuestions)
+            if (topic) {
+              formData.append("subtopics", topic)
+            }
+
+            const genResponse = await fetch(urlType, {
+              method: "POST",
+              body: formData,
+            })
+            const parsedResp = await genResponse.json()
+            if (!genResponse?.ok || !parsedResp?.success) {
+              return {
+                ok: false,
+                topic,
+                error: parsedResp?.details ?? "Something went wrong, please try again later",
+              }
+            }
+
+            const questionsWithTopic = (parsedResp?.questions ?? []).map((q: Question) => ({
+              ...q,
+              subTopic: topic || undefined,
+            }))
+
+            return {
+              ok: true,
+              topic,
+              questions: questionsWithTopic,
+            }
           }
-        );
-        setIsGenerating(false);
-        const parsedResp = await genResponse.json();
-        if (!genResponse?.ok) {
-          showError(parsedResp?.details ?? "Failed to create embeddings.");
-        } else {
-          if (parsedResp.success) {
-            setGeneratedQuestions(parsedResp?.questions ?? [])
-            setQType(parsedResp?.questionType)
-            showSuccess("Questions generated successfully");
-          }else{
-            showError(parsedResp?.details ?? "Something went wrong, please try again lator")
-          }
+        )
+
+        const results = await runWithConcurrency(tasks, 3)
+
+        const successful = results.filter((r) => r.ok) as Array<{ ok: true; topic: string; questions: Question[] }>
+        const failed = results.filter((r) => !r.ok) as Array<{ ok: false; topic: string; error: string }>
+
+        const combinedQuestions = successful.flatMap((r) => r.questions)
+
+        if (combinedQuestions.length === 0) {
+          showError(failed[0]?.error || "Failed to generate questions.")
+          setIsGenerating(false)
+          return
+        }
+
+        setGeneratedQuestions(combinedQuestions)
+        setQType(questionType)
+        showSuccess(`Generated ${combinedQuestions.length} questions`)
+        if (failed.length > 0) {
+          const failedTopics = failed.map((f) => (f.topic ? `"${f.topic}"` : "General")).join(", ")
+          showWarning(`Some topics failed to generate: ${failedTopics}`)
         }
       } catch (error) {
         console.log("error", error);
@@ -114,13 +186,32 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
     setGeneratedQuestions((prev) => prev.filter((q) => q.id !== id))
   }
 
-  const handleSaveAllQuestions = () => {
-    onSaveQuestions(generatedQuestions, qType)
-    setGeneratedQuestions([])
-    setShowGenerated(false)
-    setTotalQuestions("")
-    setMarksPerQuestion("")
-    setQuestionType("")
+  const handleSaveAllQuestions = async () => {
+    if (generatedQuestions.length === 0) {
+      showError("No questions to save.")
+      return
+    }
+    setIsSavingLocal(true)
+    try {
+      const result = await onSaveQuestions(generatedQuestions, qType, undefined)
+      if (result?.success) {
+        showSuccess(result.message || "Questions saved successfully")
+        setGeneratedQuestions([])
+        setShowGenerated(false)
+        setTotalQuestions("")
+        setMarksPerQuestion("")
+        setQuestionType("")
+        setSelectedSubtopics([])
+        onClose()
+      } else {
+        showError(result?.message || "Failed to save questions. Please try again.")
+      }
+    } catch (error) {
+      console.error("Save questions error:", error)
+      showError("Failed to save questions. Please try again.")
+    } finally {
+      setIsSavingLocal(false)
+    }
   }
 
   const handleClose = () => {
@@ -130,11 +221,35 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
     setShowGenerated(false)
     setGeneratedQuestions([])
     setIsGenerating(false)
+    setSelectedSubtopics([])
     onClose()
   }
 
+  const toggleSubtopic = (topic: string) => {
+    setSelectedSubtopics((prev) =>
+      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]
+    )
+  }
+
+  const isAllSelected = subTopics.length > 0 && selectedSubtopics.length === subTopics.length
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedSubtopics([])
+    } else {
+      setSelectedSubtopics([...subTopics])
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && !isSavingQuestions) {
+          handleClose()
+        }
+      }}
+    >
       <DialogContent className="min-w-[75%] max-w-[1000px] h-[85vh] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -194,6 +309,41 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
                 />
               </div>
             </div>
+            {subTopics.length ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Select Subtopics *</Label>
+                  <button
+                    type="button"
+                    onClick={handleSelectAll}
+                    className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                  >
+                    {isAllSelected ? "Clear All" : "Select All"}
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {subTopics.map((t) => {
+                    const checked = selectedSubtopics.includes(t)
+                    return (
+                      <label
+                        key={`${chapterName}::${t}`}
+                        className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+                          checked ? "border-blue-200 bg-blue-50/50" : "border-gray-200"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleSubtopic(t)}
+                          className="h-4 w-4 accent-blue-600"
+                        />
+                        <span className="text-slate-700">{t}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="flex-1 min-h-0">
@@ -202,7 +352,7 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
                 Generated {generatedQuestions?.length} questions • Total marks:{" "}
                 {generatedQuestions?.reduce((sum, q) => sum + q.marks, 0)}
               </p> */}
-              <Button variant="outline" size="sm" onClick={() => setShowGenerated(false)}>
+              <Button variant="outline" size="sm" onClick={() => setShowGenerated(false)} disabled={isSavingQuestions}>
                 Back to Settings
               </Button>
             </div>
@@ -225,7 +375,7 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
         )}
 
         <DialogFooter className="flex-shrink-0">
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isSavingQuestions}>
             Cancel
           </Button>
           {!showGenerated ? (
@@ -249,10 +399,17 @@ export function QuestionGenerationModal({ classNumber, chapterName, open, onClos
           ) : (
             <Button
               onClick={handleSaveAllQuestions}
-              disabled={generatedQuestions.length === 0 || isSaving}
+              disabled={generatedQuestions.length === 0 || isSavingQuestions}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              {isSaving ? 'Saving...' : `Save ${generatedQuestions.length} Questions`}
+              {isSavingQuestions ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                `Save ${generatedQuestions.length} Questions`
+              )}
             </Button>
           )}
         </DialogFooter>

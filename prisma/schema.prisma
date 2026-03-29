@@ -95,6 +95,7 @@ model Chapter {
   chapterNumber    Int
   classId   String   @db.ObjectId
   subjectId String   @db.ObjectId
+  subTopics String[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -118,6 +119,7 @@ model MCQQuestion {
   
   // Hierarchical reference
   chapterId     String       @db.ObjectId
+  subTopic      String?
   
   isActive      Boolean      @default(true)
   createdAt     DateTime     @default(now())
@@ -126,6 +128,7 @@ model MCQQuestion {
   chapter       Chapter      @relation(fields: [chapterId], references: [id])
   
   @@index([chapterId])
+  @@index([chapterId, subTopic])
   @@map("mcq_questions")
 }
 
@@ -138,6 +141,7 @@ model ShortQuestion {
   
   // Hierarchical reference
   chapterId     String       @db.ObjectId
+  subTopic      String?
   
   isActive      Boolean      @default(true)
   createdAt     DateTime     @default(now())
@@ -147,6 +151,7 @@ model ShortQuestion {
   chapter       Chapter      @relation(fields: [chapterId], references: [id])
   
   @@index([chapterId])
+  @@index([chapterId, subTopic])
   @@map("short_questions")
 }
 
@@ -160,6 +165,7 @@ model LongQuestion {
   
   // Hierarchical reference
   chapterId     String       @db.ObjectId
+  subTopic      String?
   
   isActive      Boolean      @default(true)
   createdAt     DateTime     @default(now())
@@ -169,6 +175,7 @@ model LongQuestion {
   chapter       Chapter      @relation(fields: [chapterId], references: [id])
   
   @@index([chapterId])
+  @@index([chapterId, subTopic])
   @@map("long_questions")
 }
 

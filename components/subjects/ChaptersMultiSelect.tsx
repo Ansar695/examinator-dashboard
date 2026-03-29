@@ -25,14 +25,16 @@ export function ChapterMultiSelect({
       : [...values, id];
     onChange(next);
   };
-  const allIds = chapters.map((c) => c.id);
-  const allSelected = allIds.length > 0 && values.length === allIds.length;
-  const selectAll = () => onChange(allIds);
+  const allTopicKeys = chapters.flatMap((c) =>
+    (c.subTopics || []).map((t) => `${c.id}::${t}`)
+  );
+  const allSelected = allTopicKeys.length > 0 && values.length === allTopicKeys.length;
+  const selectAll = () => onChange(allTopicKeys);
   const clearAll = () => onChange([]);
 
   return (
     <div className="flex flex-col gap-4">
-      <Label className="text-sm">Select Chapters</Label>
+      <Label className="text-sm">Select Chapters & Subtopics</Label>
       <div className="flex items-center gap-2">
         <Button
           size="lg"
@@ -61,22 +63,56 @@ export function ChapterMultiSelect({
           <CustomSpinner />
         ) : chapters.length ? (
           chapters.map((ch) => (
-            <label
+            <div
               key={ch.id}
-              className="flex items-center justify-between gap-3 rounded-md border p-3 bg-white h-16"
+              className="flex flex-col gap-3 rounded-md border p-3 bg-white"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-16 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                  Ch: {ch?.chapterNumber}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                    Ch: {ch?.chapterNumber}
+                  </div>
+                  <span className="text-lg">{ch?.name}</span>
                 </div>
-                <span className="text-lg">{ch?.name}</span>
+                <Checkbox
+                  checked={
+                    (ch.subTopics?.length || 0) > 0 &&
+                    ch.subTopics?.every((t) => values.includes(`${ch.id}::${t}`))
+                  }
+                  onCheckedChange={() => {
+                    const topicKeys = (ch.subTopics || []).map((t) => `${ch.id}::${t}`);
+                    if (!topicKeys.length) return;
+                    const allSelected = topicKeys.every((k) => values.includes(k));
+                    const next = allSelected
+                      ? values.filter((v) => !topicKeys.includes(v))
+                      : Array.from(new Set([...values, ...topicKeys]));
+                    onChange(next);
+                  }}
+                  className="border border-gray-800 w-6 h-6"
+                />
               </div>
-              <Checkbox
-                checked={values.includes(ch.id)}
-                onCheckedChange={() => toggle(ch?.id)}
-                className="border border-gray-800 w-6 h-6"
-              />
-            </label>
+              <div className="flex flex-col gap-2 pl-2">
+                {ch.subTopics?.length ? (
+                  ch.subTopics.map((t) => (
+                    <label
+                      key={`${ch.id}::${t}`}
+                      className="flex items-center justify-between gap-3 rounded-md border p-2 bg-gray-50"
+                    >
+                      <span className="text-sm">{t}</span>
+                      <Checkbox
+                        checked={values.includes(`${ch.id}::${t}`)}
+                        onCheckedChange={() => toggle(`${ch.id}::${t}`)}
+                        className="border border-gray-800 w-5 h-5"
+                      />
+                    </label>
+                  ))
+                ) : (
+                  <div className="text-xs text-muted-foreground">
+                    No subtopics found for this chapter.
+                  </div>
+                )}
+              </div>
+            </div>
           ))
         ) : (
           <div className="text-muted-foreground">No chapters found.</div>

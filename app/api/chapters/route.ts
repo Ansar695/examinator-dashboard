@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(chapters)
   } catch (error) {
+    console.error("Failed to fetch chapters:", error)
     return NextResponse.json({ error: "Failed to fetch chapters" }, { status: 500 })
   }
 }
@@ -30,9 +31,21 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, pdfUrl, classId, subjectId, slug: customSlug, chapterNumber } = body
+    const {
+      name,
+      pdfUrl,
+      classId,
+      subjectId,
+      slug: customSlug,
+      chapterNumber,
+      subtopics = [],
+    } = body
 
     const slug = customSlug || generateSlug(name)
+
+    const subTopics = Array.isArray(subtopics)
+      ? subtopics.filter((t: any) => typeof t === "string" && t.trim().length > 0).map((t: string) => t.trim())
+      : []
 
     const chapter = await prisma.chapter.create({
       data: {
@@ -42,6 +55,7 @@ export async function POST(request: NextRequest) {
         chapterNumber,
         classId,
         subjectId,
+        subTopics,
       },
       include: {
         class: true,

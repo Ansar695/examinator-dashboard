@@ -12,10 +12,11 @@ import { useGetChaptersBySubjectQuery } from "@/lib/api/educationApi";
 import { ChapterMultiSelect } from "@/components/subjects/ChaptersMultiSelect";
 
 export default function SelectTopics() {
-  const [chapterIds, setChapterIds] = useState<string[]>([]);
+  const [topicKeys, setTopicKeys] = useState<string[]>([]);
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const selectedTopics = JSON.parse(localStorage.getItem("selectedTopics") || "[]");
   const selectedChapters = JSON.parse(localStorage.getItem("selectedChapters") || "[]");
 
   const board = params.board as any;
@@ -32,18 +33,46 @@ export default function SelectTopics() {
     );
 
   const handleSubmit = () => {
-    if (chapterIds.length === 0)  return
-    localStorage.setItem("selectedChapters", JSON.stringify(chapterIds));
+    if (topicKeys.length === 0) return;
+
+    const chapterIdSet = new Set<string>();
+    const selectedTopicTitles: Record<string, string[]> = {};
+    (chapters || []).forEach((ch) => {
+      const subTopics = ch.subTopics || [];
+      const selectedForChapter = subTopics.filter((t) =>
+        topicKeys.includes(`${ch.id}::${t}`)
+      );
+      if (selectedForChapter.length) {
+        chapterIdSet.add(ch.id);
+        selectedTopicTitles[ch.id] = selectedForChapter;
+      }
+    });
+
+    localStorage.setItem("selectedTopics", JSON.stringify(topicKeys));
+    localStorage.setItem("selectedSubTopicsByChapter", JSON.stringify(selectedTopicTitles));
+    localStorage.setItem("selectedChapters", JSON.stringify([...chapterIdSet]));
     router.push(
       `/${board}/${classNumber}/${subject}/select-questions${subjectId ? `?subjectId=${subjectId}` : ''}`
     );
   };
 
   useEffect(() => {
-    if(selectedChapters.length) {
-      setChapterIds(selectedChapters)
+    if (selectedTopics.length) {
+      setTopicKeys(selectedTopics);
+      return;
     }
-  }, [])
+
+    if (selectedChapters.length && (chapters || []).length) {
+      const topicKeysFromChapters = (chapters || []).flatMap((ch) =>
+        selectedChapters.includes(ch.id)
+          ? (ch.subTopics || []).map((t) => `${ch.id}::${t}`)
+          : []
+      );
+      if (topicKeysFromChapters.length) {
+        setTopicKeys(topicKeysFromChapters);
+      }
+    }
+  }, [selectedTopics.length, selectedChapters.length, chapters])
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -76,8 +105,8 @@ export default function SelectTopics() {
           <ChapterMultiSelect
             chapters={chapters || []}
             loading={chaptersLoading}
-            values={chapterIds}
-            onChange={setChapterIds}
+            values={topicKeys}
+            onChange={setTopicKeys}
             onSubmit={() => handleSubmit()}
           />
         </div>

@@ -47,6 +47,7 @@ export interface Chapter {
   chapterNumber: number
   class?: Class
   subject?: Subject
+  subTopics?: string[]
   createdAt: string
   updatedAt: string
 }
