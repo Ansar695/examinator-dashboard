@@ -14,6 +14,7 @@ interface QuestionSelectionTabProps {
   onRandomSelect: () => void;
   onQuestionSelect: (id: string, selected: boolean) => void;
   selectedQuestions?: string[];
+  maxSelectable?: number | null;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   currentPage: number;
@@ -29,6 +30,7 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
   onRandomSelect,
   onQuestionSelect,
   selectedQuestions = [],
+  maxSelectable = null,
   searchTerm,
   onSearchChange,
   currentPage,
@@ -102,6 +104,12 @@ export const QuestionSelectionTab: React.FC<QuestionSelectionTabProps> = ({
               question={question}
               onSelect={onQuestionSelect}
               initialSelected={selectedQuestions.includes(question.id)}
+              disabled={
+                typeof maxSelectable === "number" &&
+                maxSelectable >= 0 &&
+                selectedQuestions.length >= maxSelectable &&
+                !selectedQuestions.includes(question.id)
+              }
             />
           ))}
         </div>

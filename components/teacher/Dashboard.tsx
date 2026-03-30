@@ -25,7 +25,7 @@ export default function Dashboard(props: DashboardProps) {
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Dashboard</h1>
         </div>
-        <Link href="/select-board">
+        <Link href="/teacher/paper-builder">
         <Button
           className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 w-full md:w-auto"
         >

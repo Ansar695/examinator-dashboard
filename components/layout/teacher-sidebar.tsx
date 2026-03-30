@@ -23,9 +23,16 @@ import { signOut } from "next-auth/react";
 interface SidebarProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
+export default function TeacherSidebar({
+  isOpen,
+  setIsOpen,
+  collapsed = false,
+  onToggleCollapse,
+}: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { data: profileData, isLoading, error, refetch } = useGetProfileQuery();
@@ -35,6 +42,12 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3, href: "/teacher" },
+    {
+      id: "paper-builder",
+      label: "Paper Builder",
+      icon: Plus,
+      href: "/teacher/paper-builder",
+    },
     {
       id: "generated-papers",
       label: "Generated Papers",
@@ -93,9 +106,9 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed w-[300px] h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-out z-40 ${
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
+        className={`fixed h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-out z-40 ${
+          collapsed ? "w-20" : "w-[300px]"
+        } ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
         <div className="flex flex-col h-full">
           {/* Logo Section */}
@@ -123,12 +136,16 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
                   )}
                 </div>
                 <div>
-                  <h1 className="font-bold text-lg">
-                    {profileData?.user?.institutionName ?? "EduPaper"}
-                  </h1>
-                  <p className="text-xs text-sidebar-foreground/60">
-                    Institution
-                  </p>
+                  {!collapsed && (
+                    <>
+                      <h1 className="font-bold text-lg">
+                        {profileData?.user?.institutionName ?? "EduPaper"}
+                      </h1>
+                      <p className="text-xs text-sidebar-foreground/60">
+                        Institution
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -152,7 +169,7 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
                   }`}
                 >
                   <Icon size={20} />
-                  <span className="font-medium">{item.label}</span>
+                  {!collapsed && <span className="font-medium">{item.label}</span>}
                 </Link>
               );
             })}
@@ -160,6 +177,15 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
 
           {/* Footer */}
           <div className="p-4 border-t border-sidebar-border space-y-2 animate-slide-in-up">
+            {onToggleCollapse && (
+              <button
+                className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+                onClick={onToggleCollapse}
+              >
+                <Menu size={20} />
+                {!collapsed && <span className="font-medium">Toggle Sidebar</span>}
+              </button>
+            )}
             <Link href="/teacher/profile">
               <button
                 className={`group w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
@@ -169,9 +195,11 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
                 }`}
               >
                 <Settings size={20} className=" group-hover:text-white" />
-                <span className="font-medium group-hover:text-white">
-                  Profile
-                </span>
+                {!collapsed && (
+                  <span className="font-medium group-hover:text-white">
+                    Profile
+                  </span>
+                )}
               </button>
             </Link>
             <button
@@ -179,7 +207,7 @@ export default function TeacherSidebar({ isOpen, setIsOpen }: SidebarProps) {
               onClick={handleLogout}
             >
               <LogOut size={20} />
-              <span className="font-medium">Logout</span>
+              {!collapsed && <span className="font-medium">Logout</span>}
             </button>
           </div>
         </div>
