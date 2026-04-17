@@ -20,10 +20,10 @@ export default function ViewModeToggle({ value, onChange }: ViewModeToggleProps)
       }}
       className="justify-start"
     >
-      <ToggleGroupItem value="grid" aria-label="Grid view" className="h-11 w-11">
+      <ToggleGroupItem value="grid" aria-label="Grid view" className="h-12 w-12 border border-gray-300">
         <Grid3x3 className="h-5 w-5" />
       </ToggleGroupItem>
-      <ToggleGroupItem value="list" aria-label="List view" className="h-11 w-11">
+      <ToggleGroupItem value="list" aria-label="List view" className="h-12 w-12 border border-gray-300">
         <List className="h-5 w-5" />
       </ToggleGroupItem>
     </ToggleGroup>

@@ -52,14 +52,14 @@ export default function PapersToolbar({
               placeholder="Search by title..."
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 h-11"
+              className="pl-10 h-12 border border-gray-300 hover:border-gray-400 transition-colors"
               inputMode="search"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-3">
             <Select value={subjectId} onValueChange={onSubjectChange} disabled={subjectsLoading}>
-              <SelectTrigger className="h-11 w-full lg:w-[240px]">
+              <SelectTrigger className="!h-12 w-full lg:w-[240px] border border-gray-300 hover:border-gray-400 transition-colors">
                 <SlidersHorizontal className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="All subjects" />
               </SelectTrigger>
@@ -77,7 +77,7 @@ export default function PapersToolbar({
               value={`${sortBy}:${sortOrder}`}
               onValueChange={(value) => onSortChange(value as `${GeneratedPapersSortBy}:${GeneratedPapersSortOrder}`)}
             >
-              <SelectTrigger className="h-11 w-full lg:w-[240px]">
+              <SelectTrigger className="!h-12 w-full lg:w-[240px] border border-gray-300 hover:border-gray-400 transition-colors">
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
               <SelectContent>

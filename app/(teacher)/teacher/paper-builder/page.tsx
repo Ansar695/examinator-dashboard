@@ -94,6 +94,46 @@ export default function TeacherPaperBuilder() {
     );
 
   useEffect(() => {
+    if (typeof window === "undefined" || boardsLoading || !boards?.length) return;
+    const params = new URLSearchParams(window.location.search);
+    const initBoardId = params.get("boardId");
+    if (initBoardId && !selectedBoard) {
+      const b = boards.find((b) => b.id === initBoardId);
+      if (b) setSelectedBoard(b);
+    }
+  }, [boardsLoading, boards, selectedBoard]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || classesLoading || !classes?.length) return;
+    const params = new URLSearchParams(window.location.search);
+    const initClassId = params.get("classId");
+    if (initClassId && !selectedClass) {
+      const c = classes.find((c) => c.id === initClassId);
+      if (c) setSelectedClass(c);
+    }
+  }, [classesLoading, classes, selectedClass]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || subjectsLoading || !subjects?.length) return;
+    const params = new URLSearchParams(window.location.search);
+    const initSubjectId = params.get("subjectId");
+    const initStep = params.get("step");
+    if (initSubjectId && !selectedSubject) {
+      const s = subjects.find((s) => s.id === initSubjectId);
+      if (s) {
+        setSelectedSubject(s);
+        if (initStep && step === 0) {
+          setStep(Number(initStep));
+        }
+      }
+    }
+  }, [subjectsLoading, subjects, selectedSubject, step]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (!selectedBoard || params.get("boardId") === selectedBoard.id) return;
+    
     setSelectedClass(null);
     setSelectedSubject(null);
     setTopicKeys([]);
@@ -101,12 +141,20 @@ export default function TeacherPaperBuilder() {
   }, [selectedBoard?.id]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (!selectedClass || params.get("classId") === selectedClass.id) return;
+
     setSelectedSubject(null);
     setTopicKeys([]);
     setActivePaperId(null);
   }, [selectedClass?.id]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (!selectedSubject || params.get("subjectId") === selectedSubject.id) return;
+
     setTopicKeys([]);
     setActivePaperId(null);
   }, [selectedSubject?.id]);

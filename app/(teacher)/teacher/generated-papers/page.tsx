@@ -92,8 +92,11 @@ const Papers = () => {
   };
 
   const handleRecreate = (paper: GeneratedPaper) => {
+    localStorage.removeItem("selectedTopics");
+    localStorage.removeItem("selectedChapters");
+    localStorage.removeItem("selectedSubTopicsByChapter");
     router.push(
-      `/${paper.board.slug}/${paper.class.name}/${paper.subject.slug}/select-questions?subjectId=${paper.subjectId}&paperId=${paper.id}`
+      `/teacher/paper-builder?boardId=${paper.boardId}&classId=${paper.classId}&subjectId=${paper.subjectId}&step=3`
     );
   };
 
