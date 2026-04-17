@@ -231,7 +231,7 @@ export default function TeacherPaperBuilder() {
 
     persistSelections(chapters);
 
-    setStep(6);
+    setStep(5);
   };
 
   const stepTitles = [
@@ -240,7 +240,6 @@ export default function TeacherPaperBuilder() {
     "Subject",
     "Topics",
     "Number of questions",
-    "Review",
     "Questions",
     "Paper Preview",
   ];
@@ -257,7 +256,7 @@ export default function TeacherPaperBuilder() {
 
   const nextStep = () => {
     if (!canContinue()) return;
-    setStep((prev) => Math.min(prev + 1, 7));
+    setStep((prev) => Math.min(prev + 1, 6));
   };
 
   const prevStep = () => {
@@ -300,10 +299,9 @@ export default function TeacherPaperBuilder() {
                   (index === 1 && !!selectedClass) ||
                   (index === 2 && !!selectedSubject) ||
                   (index === 3 && totalSelectedTopics > 0) ||
-                  index === 4 ||
-                  (index === 5 && isReadyToContinue) ||
-                  (index === 6 && step >= 6) ||
-                  (index === 7 && step === 7);
+                  (index === 4 && step >= 4) ||
+                  (index === 5 && step >= 5) ||
+                  (index === 6 && step >= 6);
                 const isActive = index === step;
                 return (
                   <div
@@ -331,7 +329,7 @@ export default function TeacherPaperBuilder() {
 
         <div
           className={`grid gap-8 ${
-            step >= 6 ? "grid-cols-1" : "lg:grid-cols-[1.6fr_0.4fr]"
+            step >= 5 ? "grid-cols-1" : "lg:grid-cols-[1.6fr_0.4fr]"
           }`}
         >
           <div className="space-y-8">
@@ -339,7 +337,7 @@ export default function TeacherPaperBuilder() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-500">
-                    Step {step + 1} of 8
+                    Step {step + 1} of {stepTitles.length}
                   </p>
                   <h2 className="text-2xl font-semibold text-slate-900">
                     {stepTitles[step]}
@@ -349,7 +347,7 @@ export default function TeacherPaperBuilder() {
               </div>
 
               <AnimatePresence mode="wait">
-                {step === 6 && (
+                {step === 5 && (
                   <motion.div
                     key="step-questions"
                     initial={{ opacity: 0, y: 12 }}
@@ -364,11 +362,12 @@ export default function TeacherPaperBuilder() {
                         classNumber={selectedClass.name}
                         subject={selectedSubject.slug}
                         subjectId={selectedSubject.id}
+                        paperId={activePaperId}
                         showHeader={false}
                         disableRedirect
                         onComplete={(paperId) => {
                           setActivePaperId(paperId);
-                          setStep(7);
+                          setStep(6);
                         }}
                         onSaveDraft={(paperId) => {
                           setActivePaperId(paperId);
@@ -377,7 +376,7 @@ export default function TeacherPaperBuilder() {
                     ) : null}
                   </motion.div>
                 )}
-                {step === 7 && activePaperId && selectedBoard && selectedClass && selectedSubject && (
+                {step === 6 && activePaperId && selectedBoard && selectedClass && selectedSubject && (
                   <motion.div
                     key="step-preview"
                     initial={{ opacity: 0, y: 12 }}
@@ -392,6 +391,7 @@ export default function TeacherPaperBuilder() {
                       subject={selectedSubject.slug}
                       paperId={activePaperId}
                       subjectId={selectedSubject.id}
+                      onBackToSelection={() => setStep(5)}
                     />
                   </motion.div>
                 )}
@@ -434,7 +434,7 @@ export default function TeacherPaperBuilder() {
                               </div>
                               <div className="flex-1">
                                 <p className="text-base font-semibold text-slate-900">
-                                  {board.name}
+                                  {slugToTitle(board.name)}
                                 </p>
                                 <p className="text-xs text-slate-500">
                                   {board.description || "Curriculum ready"}
@@ -475,13 +475,13 @@ export default function TeacherPaperBuilder() {
                         <CustomSpinner />
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-5">
                         {classGroups.map((group) => (
                           <div key={group.type}>
                             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
                               {group.type.replace(/_/g, " ")}
                             </p>
-                            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                               {group.classes.map((classItem: Class) => {
                                 const isActive =
                                   selectedClass?.id === classItem.id;
@@ -490,18 +490,38 @@ export default function TeacherPaperBuilder() {
                                     key={classItem.id}
                                     type="button"
                                     onClick={() => setSelectedClass(classItem)}
-                                    className={`rounded-xl border px-4 py-3 text-left transition ${
+                                    className={`group relative overflow-hidden rounded-2xl border px-4 py-4 text-left transition ${
                                       isActive
-                                        ? "border-[color:var(--accent)] bg-[rgba(14,165,233,0.12)] shadow-md"
+                                        ? "border-[color:var(--accent)] bg-[rgba(14,165,233,0.12)] shadow-lg shadow-slate-200/70"
                                         : "border-slate-200 bg-white hover:border-[color:var(--accent)] hover:bg-slate-50"
                                     }`}
                                   >
-                                    <p className="text-lg font-semibold text-slate-900">
-                                      Class {classItem.name}
-                                    </p>
-                                    <p className="text-xs text-slate-500">
-                                      {classItem.type.replace(/_/g, " ")}
-                                    </p>
+                                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 opacity-0 transition-opacity group-hover:opacity-100" />
+                                    <div className="flex items-center justify-between gap-3">
+                                      <div>
+                                        <p className="text-lg font-semibold text-slate-900">
+                                          Class {classItem.name}
+                                        </p>
+                                        <p className="text-xs uppercase tracking-wide text-slate-400">
+                                          {classItem.type.replace(/_/g, " ")}
+                                        </p>
+                                      </div>
+                                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-lg font-semibold text-slate-700">
+                                        {classItem.name}
+                                      </div>
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                                      <span>Curriculum ready</span>
+                                      <span
+                                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                          isActive
+                                            ? "bg-[color:var(--accent)] text-white"
+                                            : "bg-slate-100 text-slate-500"
+                                        }`}
+                                      >
+                                        {isActive ? "Selected" : "Pick"}
+                                      </span>
+                                    </div>
                                   </button>
                                 );
                               })}
@@ -611,6 +631,7 @@ export default function TeacherPaperBuilder() {
                             values={topicKeys}
                             onChange={setTopicKeys}
                             onSubmit={nextStep}
+                            showSubmitButton={false}
                           />
                         </div>
                       </div>
@@ -661,7 +682,7 @@ export default function TeacherPaperBuilder() {
                                     e.target.value
                                   )
                                 }
-                                className="h-11 text-base"
+                                className="h-11 text-base border border-slate-300"
                               />
                             </div>
                             <div className="space-y-2">
@@ -679,7 +700,7 @@ export default function TeacherPaperBuilder() {
                                     e.target.value
                                   )
                                 }
-                                className="h-11 text-base"
+                                className="h-11 text-base border border-slate-300"
                               />
                             </div>
                           </div>
@@ -710,7 +731,7 @@ export default function TeacherPaperBuilder() {
                                     e.target.value
                                   )
                                 }
-                                className="h-11 text-base"
+                                className="h-11 text-base border border-slate-300"
                               />
                             </div>
                             <div className="space-y-2">
@@ -728,7 +749,7 @@ export default function TeacherPaperBuilder() {
                                     e.target.value
                                   )
                                 }
-                                className="h-11 text-base"
+                                className="h-11 text-base border border-slate-300"
                               />
                             </div>
                             <div className="space-y-2">
@@ -746,7 +767,7 @@ export default function TeacherPaperBuilder() {
                                     e.target.value
                                   )
                                 }
-                                className="h-11 text-base"
+                                className="h-11 text-base border border-slate-300"
                               />
                             </div>
                           </div>
@@ -777,7 +798,7 @@ export default function TeacherPaperBuilder() {
                                     e.target.value
                                   )
                                 }
-                                className="h-11 text-base"
+                                className="h-11 text-base border border-slate-300"
                               />
                             </div>
                             <div className="space-y-2">
@@ -795,7 +816,7 @@ export default function TeacherPaperBuilder() {
                                     e.target.value
                                   )
                                 }
-                                className="h-11 text-base"
+                                className="h-11 text-base border border-slate-300"
                               />
                             </div>
                             <div className="space-y-2">
@@ -813,7 +834,7 @@ export default function TeacherPaperBuilder() {
                                     e.target.value
                                   )
                                 }
-                                className="h-11 text-base"
+                                className="h-11 text-base border border-slate-300"
                               />
                             </div>
                           </div>
@@ -823,71 +844,10 @@ export default function TeacherPaperBuilder() {
                   </motion.div>
                 )}
 
-                {step === 5 && (
-                  <motion.div
-                    key="step-review"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.3 }}
-                    className="mt-6"
-                  >
-                    <div className="rounded-2xl border border-slate-200 bg-white p-6">
-                      <h3 className="text-lg font-semibold text-slate-900">
-                        Review & launch
-                      </h3>
-                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                        <div className="rounded-xl bg-slate-50 p-4">
-                          <p className="text-xs uppercase tracking-widest text-slate-400">
-                            Context
-                          </p>
-                          <p className="mt-2 text-sm font-semibold text-slate-900">
-                            {selectedBoard ? boardLabel : "Board"}
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            Class {selectedClass?.name ?? "Class"}
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {selectedSubject?.name ?? "Subject"}
-                          </p>
-                        </div>
-                        <div className="rounded-xl bg-slate-50 p-4">
-                          <p className="text-xs uppercase tracking-widest text-slate-400">
-                            Question mix
-                          </p>
-                          <div className="mt-2 space-y-2 text-sm">
-                          <div className="flex items-center justify-between">
-                            <span>MCQs</span>
-                            <span className="font-semibold text-slate-900">
-                              {questionSettings.mcqCount}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span>Short</span>
-                            <span className="font-semibold text-slate-900">
-                              {questionSettings.shortCount}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span>Long</span>
-                            <span className="font-semibold text-slate-900">
-                              {questionSettings.longCount}
-                            </span>
-                          </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700">
-                        {totalSelectedTopics} topic selections will be used to
-                        fetch the best question sets.
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
               </AnimatePresence>
             </Card>
 
-            {step < 6 ? (
+            {step < 5 ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <Button
                   variant="outline"
@@ -898,7 +858,7 @@ export default function TeacherPaperBuilder() {
                 <ChevronLeft className="h-4 w-4" />
                 Back
               </Button>
-              {step < 5 ? (
+              {step < 4 ? (
                 <Button
                   className="gap-2 bg-[color:var(--accent)] text-white hover:bg-[color:var(--accent-strong)]"
                   onClick={nextStep}
@@ -921,7 +881,7 @@ export default function TeacherPaperBuilder() {
             ) : null}
           </div>
 
-            {step < 6 ? (
+            {step < 5 ? (
           <div className="space-y-6">
             <Card className="sticky top-6 border border-slate-200/80 bg-white/95 p-6 shadow-xl shadow-slate-200/60 max-w-sm ml-auto">
               <h3 className="text-xl font-semibold text-slate-900">

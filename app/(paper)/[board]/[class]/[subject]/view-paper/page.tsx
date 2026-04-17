@@ -12,6 +12,7 @@ export default function ViewPaper() {
   const subject = params.subject as string
   const paperId = searchParams.get('paperId')
   const subjectId = searchParams.get('subjectId')
+  const embedded = searchParams.get('embed') === '1'
 
   return (
     <PageTransition>
@@ -21,6 +22,7 @@ export default function ViewPaper() {
         subject={subject}
         paperId={paperId}
         subjectId={subjectId}
+        embedded={embedded}
       />
     </PageTransition>
   )

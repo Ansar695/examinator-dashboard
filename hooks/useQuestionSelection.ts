@@ -84,6 +84,20 @@ export const useQuestionSelection = ({
   const chapterIds = JSON.parse(
     localStorage.getItem("selectedChapters") || "[]"
   );
+  const subTopicsByChapter = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("selectedSubTopicsByChapter");
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }, []);
+  const hasSubtopicFilter =
+    Object.values(subTopicsByChapter).some(
+      (value) => Array.isArray(value) && value.length > 0
+    );
 
   // Fetch questions with pagination and search
   const {
@@ -93,6 +107,9 @@ export const useQuestionSelection = ({
   } = useGetPaperMCQsQuery(
     {
       chapterIds: JSON.stringify(chapterIds),
+      ...(hasSubtopicFilter
+        ? { subTopicsByChapter: JSON.stringify(subTopicsByChapter) }
+        : {}),
       page: pages.mcq,
       limit: 20,
       search: searchTerms.mcq,
@@ -109,6 +126,9 @@ export const useQuestionSelection = ({
   } = useGetPaperShortQsQuery(
     {
       chapterIds: JSON.stringify(chapterIds),
+      ...(hasSubtopicFilter
+        ? { subTopicsByChapter: JSON.stringify(subTopicsByChapter) }
+        : {}),
       page: pages.short,
       limit: 20,
       search: searchTerms.short,
@@ -125,6 +145,9 @@ export const useQuestionSelection = ({
   } = useGetPaperLongQsQuery(
     {
       chapterIds: JSON.stringify(chapterIds),
+      ...(hasSubtopicFilter
+        ? { subTopicsByChapter: JSON.stringify(subTopicsByChapter) }
+        : {}),
       page: pages.long,
       limit: 20,
       search: searchTerms.long,
@@ -220,6 +243,31 @@ export const useQuestionSelection = ({
       long: longResponse?.data || [],
     };
   }, [mcqsResponse, shortResponse, longResponse]);
+
+  const selectedQuestionDetails = useMemo(() => {
+    const paper = existingPaperData?.data;
+    if (!paper) {
+      return { mcq: [], short: [], long: [] };
+    }
+
+    return {
+      mcq: (paper.mcqs || []).map((q: any) => ({
+        ...q,
+        id: q.questionId,
+        question: q.question ?? q.text ?? "",
+      })),
+      short: (paper.shortQs || []).map((q: any) => ({
+        ...q,
+        id: q.questionId,
+        question: q.question ?? q.text ?? "",
+      })),
+      long: (paper.longQs || []).map((q: any) => ({
+        ...q,
+        id: q.questionId,
+        question: q.question ?? q.text ?? "",
+      })),
+    };
+  }, [existingPaperData]);
 
   // Check loading state
   const isLoading = useMemo(() => {
@@ -603,7 +651,7 @@ export const useQuestionSelection = ({
 
   // Redirect if no chapters selected
   useEffect(() => {
-    if (chapterIds.length === 0) {
+    if (chapterIds.length === 0 && !disableRedirect) {
       router.push(
         `/${board}/${classNumber}/${subject}/select-topics${
           subjectId ? `?subjectId=${subjectId}` : ""
@@ -614,6 +662,7 @@ export const useQuestionSelection = ({
 
   return {
     selectedQuestions,
+    selectedQuestionDetails,
     questions,
     isLoading,
     error,

@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { PaperTemplateSelector } from "@/components/questions/PaperTemplates";
+import { useState } from "react";
+import { PaperTemplateSelector, paperTemplates } from "@/components/questions/PaperTemplates";
 import { LanguageSelector } from "@/components/questions/LanguageSelector";
 import { PaperPreviewModal } from "@/components/questions/PaperPreviewModal";
 import { PaperHeader } from "@/components/paper/PaperHeader";
@@ -10,6 +10,7 @@ import { PaperQuestionsSection } from "@/components/paper/PaperQuestionsSection"
 import { usePaperManagement } from "@/hooks/usePaperManagement";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { useGetProfileQuery } from "@/lib/api/profileApi";
 
 interface PaperWorkspaceProps {
   board: string;
@@ -17,6 +18,8 @@ interface PaperWorkspaceProps {
   subject: string;
   paperId: string | null;
   subjectId?: string | null;
+  onBackToSelection?: () => void;
+  embedded?: boolean;
 }
 
 export default function PaperWorkspace({
@@ -25,6 +28,8 @@ export default function PaperWorkspace({
   subject,
   paperId,
   subjectId,
+  onBackToSelection,
+  embedded = false,
 }: PaperWorkspaceProps) {
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     "punjab-board-standard"
@@ -59,6 +64,10 @@ export default function PaperWorkspace({
     classNumber,
     subject,
   });
+  const { data: profileData } = useGetProfileQuery();
+  const institutionLogo = profileData?.user?.institutionLogo || null;
+  const institutionName = profileData?.user?.institutionName || null;
+  const handleEditAction = onBackToSelection ?? handleEdit;
 
   const handleTemplateSelect = (template: any) => {
     setSelectedTemplateId(template.id);
@@ -75,33 +84,12 @@ export default function PaperWorkspace({
       template.styles.fontFamily
     );
   };
-
-  const questionSettings = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("questionSettings");
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch {
-      return null;
+  const handleTemplateChangeById = (templateId: string) => {
+    const match = paperTemplates.find((t) => t.id === templateId);
+    if (match) {
+      handleTemplateSelect(match);
     }
-  }, []);
-
-  const shortSectionTotal =
-    questionSettings && Number.isFinite(questionSettings.shortCount)
-      ? Math.max(
-          0,
-          Number(questionSettings.shortCount || 0) -
-            Number(questionSettings.shortOptional || 0)
-        ) * Number(questionSettings.shortMarks || 0)
-      : undefined;
-  const longSectionTotal =
-    questionSettings && Number.isFinite(questionSettings.longCount)
-      ? Math.max(
-          0,
-          Number(questionSettings.longCount || 0) -
-            Number(questionSettings.longOptional || 0)
-        ) * Number(questionSettings.longMarks || 0)
-      : undefined;
+  };
 
   return (
     <>
@@ -114,18 +102,37 @@ export default function PaperWorkspace({
           }
         }
       `}</style>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
-        <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+      <div
+        className={
+          embedded
+            ? "min-h-screen bg-transparent p-0"
+            : "min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6"
+        }
+      >
+        <div
+          className={
+            embedded
+              ? "w-full h-full bg-white shadow-none rounded-none overflow-hidden"
+              : "max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden"
+          }
+        >
           <PaperHeader
             board={board}
             classNumber={classNumber}
             subject={subject}
-            subjectId={subjectId}
+            subjectId={subjectId ?? null}
             hasChanges={hasChanges}
             isUpdating={isUpdating}
             onSaveChanges={handleSaveChanges}
-            onEdit={handleEdit}
+            onEdit={handleEditAction}
             onPreview={() => setShowPreviewModal(true)}
+            onBackToSelection={onBackToSelection}
+            hideBackToSelection={embedded}
+            hideEditPaper={embedded}
+            currentTemplate={selectedTemplateId}
+            onTemplateChange={handleTemplateChangeById}
+            institutionLogo={institutionLogo}
+            institutionName={institutionName}
           />
 
           <div className="p-6 bg-gray-100 border-b">
@@ -176,6 +183,8 @@ export default function PaperWorkspace({
                 totalMarks={
                   calculatedTotalMarks || paperData?.data?.totalMarks || 0
                 }
+                institutionLogo={institutionLogo}
+                institutionName={institutionName}
                 onPaperNameChange={setPaperName}
                 onExamTimeChange={setExamTime}
               />
@@ -204,7 +213,6 @@ export default function PaperWorkspace({
                 sectionType="short"
                 questions={questions.short}
                 marks={marks}
-                totalMarksOverride={shortSectionTotal}
                 startIndex={questions.mcq.length + 1}
                 onQuestionEdit={handleQuestionEdit}
                 onMarksChange={handleMarksChange}
@@ -215,7 +223,6 @@ export default function PaperWorkspace({
                 sectionType="long"
                 questions={questions.long}
                 marks={marks}
-                totalMarksOverride={longSectionTotal}
                 startIndex={questions.mcq.length + questions.short.length + 1}
                 onQuestionEdit={handleQuestionEdit}
                 onMarksChange={handleMarksChange}

@@ -45,6 +45,7 @@ export interface PaginatedResponse<T> {
 
 export interface QueryParams {
   chapterIds?: any;
+  subTopicsByChapter?: any;
   page?: number;
   limit?: number;
   search?: string;
@@ -110,25 +111,43 @@ export const paperGenerationApi = createApi({
   tagTypes: ["MCQs", "Short", "Long", "GeneratedPaper"],
   endpoints: (builder) => ({
     getPaperMCQs: builder.query<PaginatedResponse<MCQs>, QueryParams>({
-      query: ({ chapterIds, page = 1, limit = 10, search }) => ({
+      query: ({ chapterIds, subTopicsByChapter, page = 1, limit = 10, search }) => ({
         url: `/paper-generation/mcqs`,
-        params: { chapterIds, page, limit, ...(search && { search }) }
+        params: {
+          chapterIds,
+          ...(subTopicsByChapter && { subTopicsByChapter }),
+          page,
+          limit,
+          ...(search && { search }),
+        },
       }),
       providesTags: ["MCQs"],
     }),
 
     getPaperShortQs: builder.query<PaginatedResponse<ShortQuestion>, QueryParams>({
-      query: ({ chapterIds, page = 1, limit = 10, search }) => ({
+      query: ({ chapterIds, subTopicsByChapter, page = 1, limit = 10, search }) => ({
         url: `/paper-generation/short-questions`,
-        params: { chapterIds, page, limit, ...(search && { search }) }
+        params: {
+          chapterIds,
+          ...(subTopicsByChapter && { subTopicsByChapter }),
+          page,
+          limit,
+          ...(search && { search }),
+        },
       }),
       providesTags: ["Short"],
     }),
 
     getPaperLongQs: builder.query<PaginatedResponse<LongQuestion>, QueryParams>({
-      query: ({ chapterIds, page = 1, limit = 10, search }) => ({
+      query: ({ chapterIds, subTopicsByChapter, page = 1, limit = 10, search }) => ({
         url: `/paper-generation/long-questions`,
-        params: { chapterIds, page, limit, ...(search && { search }) }
+        params: {
+          chapterIds,
+          ...(subTopicsByChapter && { subTopicsByChapter }),
+          page,
+          limit,
+          ...(search && { search }),
+        },
       }),
       providesTags: ["Long"],
     }),

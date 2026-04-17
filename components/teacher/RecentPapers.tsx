@@ -1,26 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { RotateCcw, Download, Eye } from "lucide-react";
+import { Download, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GeneratePaperSkeleton } from "../skeletons/GeneratePaperSkeleton";
 import { Skeleton } from "../ui/skeleton";
 import { useRouter } from "next/navigation";
+import type { TeacherRecentPaper } from "@/types/teacher-dashboard";
 
 
 interface RecentPapersProps {
   isLoading: boolean;
-  papers: any;
+  papers?: TeacherRecentPaper[];
 }
 
 export default function RecentPapers(props: RecentPapersProps) {
   const { isLoading, papers } = props;
   const router = useRouter();
-  const [generatingId, setGeneratingId] = useState<string | null>(null);
   
-  const handleGenerateAgain = (paper: any) => {
+  const handleGenerateAgain = (paper: TeacherRecentPaper) => {
     router.push(
-      `/${paper?.board?.name}/${paper?.subject?.class?.name}/${paper?.subject?.slug}/select-topics?subjectId=${paper?.subject?.id}`
+      `/${paper.board.slug}/${paper.subject.class.name}/${paper.subject.slug}/select-topics?subjectId=${paper.subject.id}`
     );
   };
 
@@ -41,9 +40,9 @@ export default function RecentPapers(props: RecentPapersProps) {
         {isLoading ? (
           <GeneratePaperSkeleton />
         ) : (
-          papers?.map((paper: any, index: number) => (
+          papers && papers.length > 0 ? papers.map((paper, index: number) => (
             <div
-              key={paper?._id}
+              key={paper.id}
               className="group bg-card border border-border rounded-xl p-5 hover:border-primary/50 hover:shadow-lg transition-all duration-300 animate-fade-in"
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -103,18 +102,19 @@ export default function RecentPapers(props: RecentPapersProps) {
                 <Button
                   size="sm"
                   onClick={() => handleGenerateAgain(paper)}
-                  disabled={generatingId === paper.id}
                   className="flex-1 h-8 text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-70"
                 >
                   <span className="hidden sm:inline">
-                    {generatingId === paper.id
-                      ? "Creating..."
-                      : "Create Paper"}
+                    Create Paper
                   </span>
                 </Button>
               </div>
             </div>
-          ))
+          )) : (
+            <div className="col-span-full border border-dashed border-border rounded-xl p-8 text-center text-muted-foreground">
+              No papers generated yet. Create your first paper to see activity here.
+            </div>
+          )
         )}
       </div>
     </div>

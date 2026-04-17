@@ -1,39 +1,37 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, TrendingUp, FileText, Zap } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useMemo } from "react"
 import StatCard from "./StatCard"
 import RecentPapers from "./RecentPapers"
-import CreatePaperModal from "./CreatePaperModal"
 import { DashboardCardsSkeleton } from "../skeletons/DashboardSkeleton"
-import Link from "next/link"
+import type { TeacherDashboardData } from "@/types/teacher-dashboard"
+import DashboardHeader from "./dashboard/DashboardHeader"
+import DashboardAlerts from "./dashboard/DashboardAlerts"
+import DashboardInsights from "./dashboard/DashboardInsights"
+import DashboardCharts from "./dashboard/DashboardCharts"
+import { useTeacherDashboardCards } from "@/hooks/useTeacherDashboardCards"
 
 interface DashboardProps {
   isLoading: boolean;
-  statsData: any;
+  statsData?: TeacherDashboardData;
 }
 
 export default function Dashboard(props: DashboardProps) {
   const { isLoading, statsData } = props;
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  const cards = useTeacherDashboardCards(statsData);
+  const cardDelays = useMemo(() => cards.map((_, i) => i * 80), [cards]);
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-slide-in-up">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Dashboard</h1>
-        </div>
-        <Link href="/teacher/paper-builder">
-        <Button
-          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 w-full md:w-auto"
-        >
-          <Plus size={20} />
-          Create New Paper
-        </Button>
-        </Link>
-      </div>
+      <DashboardHeader
+        title="Dashboard"
+        subtitle="Track your paper generation, quota health, and question bank coverage."
+        primaryActionHref="/teacher/paper-builder"
+        primaryActionLabel="Create New Paper"
+      />
+
+      <DashboardAlerts alerts={statsData?.alerts} isLoading={isLoading} />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -43,44 +41,34 @@ export default function Dashboard(props: DashboardProps) {
         <DashboardCardsSkeleton />
         <DashboardCardsSkeleton />
         <DashboardCardsSkeleton />
+        <DashboardCardsSkeleton />
+        <DashboardCardsSkeleton />
         </>
         : 
         <>
-        <StatCard
-          title="Total Papers"
-          value={statsData?.stats?.totalPaper ?? 0}
-          icon={FileText}
-          trend="+3 this month"
-          color="from-blue-500 to-blue-600"
-          delay={0}
-        />
-        <StatCard
-          title="Papers Generated"
-          value={statsData?.stats?.usedPaper ?? 0}
-          icon={TrendingUp}
-          trend={`${statsData?.stats?.usedPercentage ?? 0}% of monthly quota`}
-          color="from-purple-500 to-purple-600"
-          delay={100}
-        />
-        <StatCard
-          title="Remaining"
-          value={statsData?.stats?.remainingPaper ?? 0}
-          icon={Zap}
-          trend="Resets on Nov 1"
-          color="from-green-500 to-green-600"
-          delay={200}
-        />
-        <StatCard
-          title="Plan Type"
-          value={statsData?.stats?.currentPlan?.toLowerCase() ?? 'free'}
-          icon={FileText}
-          trend="Expires Dec 15"
-          color="from-orange-500 to-orange-600"
-          delay={300}
-        />
+        {cards.map((card, index) => (
+          <StatCard
+            key={card.key}
+            title={card.title}
+            value={card.value}
+            icon={card.icon}
+            trend={card.trend}
+            color={card.color}
+            delay={cardDelays[index] ?? 0}
+          />
+        ))}
         </>
         }
       </div>
+
+      <DashboardInsights
+        isLoading={isLoading}
+        stats={statsData?.stats}
+        overview={statsData?.overview}
+        bank={statsData?.bank}
+      />
+
+      <DashboardCharts isLoading={isLoading} charts={statsData?.charts} />
 
       <RecentPapers isLoading={isLoading} papers={statsData?.papers} />
 
@@ -115,8 +103,6 @@ export default function Dashboard(props: DashboardProps) {
         </div>
       </div> */}
 
-      {/* Create Paper Modal */}
-      {showCreateModal && <CreatePaperModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }

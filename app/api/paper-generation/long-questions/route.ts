@@ -78,8 +78,22 @@ export async function GET(request: NextRequest) {
     // Chapter IDs
     const chapterIdsRaw = searchParams.get("chapterIds");
     const chapterIds: string[] = chapterIdsRaw ? JSON.parse(chapterIdsRaw) : [];
+    const subTopicsRaw = searchParams.get("subTopicsByChapter");
+    const subTopicsByChapter: Record<string, string[]> = subTopicsRaw
+      ? JSON.parse(subTopicsRaw)
+      : {};
+    const hasSubtopicFilter = Object.values(subTopicsByChapter).some(
+      (value) => Array.isArray(value) && value.length > 0
+    );
+    const chapterPool = hasSubtopicFilter
+      ? chapterIds.filter(
+          (id) =>
+            Array.isArray(subTopicsByChapter[id]) &&
+            subTopicsByChapter[id].length > 0
+        )
+      : chapterIds;
 
-    if (!chapterIds.length) {
+    if (!chapterPool.length) {
       return NextResponse.json(
         { error: "chapterIds are required" },
         { status: 400 }
@@ -90,20 +104,27 @@ export async function GET(request: NextRequest) {
     const questionType = searchParams.get("questionType")?.toUpperCase();
 
     // Balanced distribution
-    const perChapterLimit = Math.floor(limit / chapterIds.length);
-    const remainder = limit % chapterIds.length;
+    const perChapterLimit = Math.floor(limit / chapterPool.length);
+    const remainder = limit % chapterPool.length;
 
     let finalQuestions: any[] = [];
 
-    for (let i = 0; i < chapterIds.length; i++) {
-      const chapterId = chapterIds[i];
+    for (let i = 0; i < chapterPool.length; i++) {
+      const chapterId = chapterPool[i];
       const chapterLimit = i < remainder ? perChapterLimit + 1 : perChapterLimit;
-      const chapterSkip = skip <= 0 ? 0 : Math.floor(skip / chapterIds.length);
+      const chapterSkip = skip <= 0 ? 0 : Math.floor(skip / chapterPool.length);
+      const chapterSubtopics = Array.isArray(subTopicsByChapter[chapterId])
+        ? subTopicsByChapter[chapterId]
+        : [];
 
       const questions = await prisma.longQuestion.findMany({
         where: {
           isActive: true,
           chapterId: chapterId,
+          ...(questionType ? { questionType } : {}),
+          ...(chapterSubtopics.length
+            ? { subTopic: { in: chapterSubtopics } }
+            : {}),
         },
         orderBy: [
           { usageCount: "asc" }, // least used first
@@ -145,11 +166,28 @@ export async function GET(request: NextRequest) {
     }
 
     // Total count
+    const filteredChapters = chapterPool.filter(
+      (id) =>
+        !hasSubtopicFilter ||
+        (Array.isArray(subTopicsByChapter[id]) &&
+          subTopicsByChapter[id].length > 0)
+    );
+    const totalWhere = hasSubtopicFilter
+      ? {
+          isActive: true,
+          ...(questionType ? { questionType } : {}),
+          OR: filteredChapters.map((id) => ({
+            chapterId: id,
+            subTopic: { in: subTopicsByChapter[id] },
+          })),
+        }
+      : {
+          isActive: true,
+          ...(questionType ? { questionType } : {}),
+          chapterId: { in: chapterIds },
+        };
     const total = await prisma.longQuestion.count({
-      where: {
-        isActive: true,
-        chapterId: { in: chapterIds },
-      },
+      where: totalWhere,
     });
 
     // Increment usage count in background

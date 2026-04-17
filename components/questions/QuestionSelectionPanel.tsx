@@ -50,6 +50,7 @@ export default function QuestionSelectionPanel({
     getPaginationInfo,
     getQuestionLimit,
     isEditMode,
+    selectedQuestionDetails,
     saveDraft,
     isSavingDraft,
   } = useQuestionSelection({
@@ -73,6 +74,10 @@ export default function QuestionSelectionPanel({
     for (const type of ["mcq", "short", "long"] as const) {
       const q = questions[type]?.find((q: any) => q.id === id);
       if (q) return { ...q, type };
+      const fallback = selectedQuestionDetails?.[type]?.find(
+        (q: any) => q.id === id
+      );
+      if (fallback) return { ...fallback, type };
     }
     return null;
   };

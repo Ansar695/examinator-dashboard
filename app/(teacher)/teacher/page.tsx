@@ -1,14 +1,12 @@
 "use client"
 
-import { TeacherDashboardLayout } from "@/components/layout/teacher-layout"
 import Dashboard from "@/components/teacher/Dashboard"
-import { useGeDashboardStatsQuery } from "@/lib/api/dashboardApi";
-import { useState } from "react"
+import { useGetTeacherDashboardQuery } from "@/lib/api/dashboardApi";
 
 export default function Home() {
 //   const { data: session, status } = useSession()
 //   const router = useRouter()
-const { data, isLoading, error } = useGeDashboardStatsQuery('');
+  const { data, isLoading } = useGetTeacherDashboardQuery();
 
 //   useEffect(() => {
 //     if (status === "loading") return

@@ -14,12 +14,14 @@ export function ChapterMultiSelect({
   loading,
   onChange,
   onSubmit,
+  showSubmitButton = true,
 }: {
   chapters: Chapter[];
   values: string[];
   loading?: boolean;
   onChange: (ids: string[]) => void;
   onSubmit: () => void;
+  showSubmitButton?: boolean;
 }) {
   const [search, setSearch] = useState("");
 
@@ -156,15 +158,17 @@ export function ChapterMultiSelect({
           </div>
         )}
       </div>
-      <div className="w-full flex items-end justify-end mt-6">
-        <Button
-          className="w-48 h-12 cursor-pointer active:bg-green-800"
-          onClick={onSubmit}
-          disabled={!values.length}
-        >
-          Continue
-        </Button>
-      </div>
+      {showSubmitButton ? (
+        <div className="w-full flex items-end justify-end mt-6">
+          <Button
+            className="w-48 h-12 cursor-pointer active:bg-green-800"
+            onClick={onSubmit}
+            disabled={!values.length}
+          >
+            Continue
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

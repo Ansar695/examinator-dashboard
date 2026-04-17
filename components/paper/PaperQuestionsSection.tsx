@@ -44,7 +44,7 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
   title,
   sectionType,
   questions,
-  marks,
+  marks = {},
   mcqMarks,
   totalMarksOverride,
   startIndex,
@@ -228,6 +228,17 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
             </div>
 
             {/* Marks Input for Short and Long Questions */}
+            {sectionType === "short" && (
+              <Input
+                type="number"
+                placeholder="Marks"
+                className="w-20 ml-4"
+                value={marks[question?.questionId || question?.id] || ""}
+                onChange={(e) =>
+                  onMarksChange(question.questionId || question.id, e.target.value)
+                }
+              />
+            )}
             {sectionType === "long" && (
               <Input
                 type="number"
