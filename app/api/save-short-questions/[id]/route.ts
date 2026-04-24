@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { generateSlug } from "@/lib/utils/slugify"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -14,12 +13,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
+    const subTopic = searchParams.get("subTopic")
 
     // Get total count for pagination
     const totalCount = await prisma.shortQuestion.count({
       where: {
         chapterId: params.id,
-        isActive: true
+        isActive: true,
+        ...(subTopic ? { subTopic } : {}),
       }
     })
 
@@ -27,7 +28,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const shortQuestions = await prisma.shortQuestion.findMany({
       where: {
         chapterId: params.id,
-        isActive: true
+        isActive: true,
+        ...(subTopic ? { subTopic } : {}),
       },
       include: {
         chapter: true,

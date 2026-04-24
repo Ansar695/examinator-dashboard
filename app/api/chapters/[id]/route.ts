@@ -5,7 +5,7 @@ import { generateSlug } from "@/lib/utils/slugify"
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await request.json()
-    const { name, pdfUrl, classId, subjectId, slug: customSlug } = body
+    const { name, chapterNumber, pdfUrl, classId, subjectId, slug: customSlug } = body
 
     const slug = customSlug || generateSlug(name)
 
@@ -13,6 +13,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       where: { id: params.id },
       data: {
         name,
+        chapterNumber,
         slug,
         pdfUrl,
         classId,

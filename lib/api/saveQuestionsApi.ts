@@ -7,6 +7,7 @@ export interface MCQs {
   correctAnswer: number;
   difficulty: string;
   chapterId: string;
+  subTopic?: string;
   isActive: boolean;
 }
 
@@ -16,6 +17,7 @@ export interface ShortQuestion {
   answer: string;
   difficulty: string;
   chapterId: string;
+  subTopic?: string;
   isActive: boolean;
 }
 
@@ -26,6 +28,7 @@ export interface LongQuestion {
   answer: string;
   difficulty: string;
   chapterId: string;
+  subTopic?: string;
   isActive: boolean;
 }
 
@@ -43,11 +46,19 @@ export interface PaginatedResponse<T> {
   pagination: PaginationInfo;
 }
 
+export interface SubTopicCounts {
+  subTopic: string;
+  mcqs: number;
+  short: number;
+  long: number;
+}
+
 export interface QueryParams {
   chapterId?: string;
   chapterIds?: string[];
   page?: number;
   limit?: number;
+  subTopic?: string;
 }
 
 export const questionsApi = createApi({
@@ -92,25 +103,25 @@ export const questionsApi = createApi({
     }),
 
     getMCQsQuestion: builder.query<PaginatedResponse<MCQs>, QueryParams>({
-      query: ({ chapterId, page = 1, limit = 10 }) => ({
+      query: ({ chapterId, page = 1, limit = 10, subTopic }) => ({
         url: `/save-mcqs/${chapterId}`,
-        params: { page, limit }
+        params: { page, limit, subTopic }
       }),
       providesTags: ["MCQs"],
     }),
 
     getShortQuestion: builder.query<PaginatedResponse<ShortQuestion>, QueryParams>({
-      query: ({ chapterId, page = 1, limit = 10 }) => ({
+      query: ({ chapterId, page = 1, limit = 10, subTopic }) => ({
         url: `/save-short-questions/${chapterId}`,
-        params: { page, limit }
+        params: { page, limit, subTopic }
       }),
       providesTags: ["Short"],
     }),
 
     getLongQuestion: builder.query<PaginatedResponse<LongQuestion>, QueryParams>({
-      query: ({ chapterId, page = 1, limit = 10 }) => ({
+      query: ({ chapterId, page = 1, limit = 10, subTopic }) => ({
         url: `/save-long-questions/${chapterId}`,
-        params: { page, limit }
+        params: { page, limit, subTopic }
       }),
       providesTags: ["Long"],
     }),
@@ -121,6 +132,12 @@ export const questionsApi = createApi({
         params: { chapterIds, page, limit }
       }),
       providesTags: ["Long"],
+    }),
+
+    getSubTopicCounts: builder.query<{ data: SubTopicCounts[] }, { chapterId: string }>({
+      query: ({ chapterId }) => ({
+        url: `/questions/subtopic-counts/${chapterId}`,
+      }),
     }),
   }),
 });
@@ -133,4 +150,5 @@ export const {
   useGetShortQuestionQuery,
   useGetLongQuestionQuery,
   useGetPaperMCQsQuery,
+  useGetSubTopicCountsQuery,
 } = questionsApi;

@@ -1,6 +1,11 @@
 import { Question } from "@/components/chapters/questions-generation-modal";
 
-export const payloadFormat = (questions: Question[], qType: string, chapterId: string) => {
+export const payloadFormat = (
+  questions: Question[],
+  qType: string,
+  chapterId: string,
+  subTopic?: string
+) => {
     let payload: any = []
     if(qType === "mcqs") {
       payload  = questions?.map((q: any) => ({
@@ -10,6 +15,7 @@ export const payloadFormat = (questions: Question[], qType: string, chapterId: s
         correctAnswer: q.answer_index,
         difficulty: (q.difficulty || "medium").toUpperCase(), // Convert to uppercase to match Prisma enum
         chapterId,
+        subTopic: subTopic ?? q.subTopic ?? null,
         isActive: q.isActive ?? true,
       }));
     }
@@ -20,6 +26,7 @@ export const payloadFormat = (questions: Question[], qType: string, chapterId: s
         answer: q.answer,
         difficulty: (q.difficulty || "medium").toUpperCase(),
         chapterId,
+        subTopic: subTopic ?? q.subTopic ?? null,
         isActive: q.isActive ?? true,
       }));
     }
@@ -31,6 +38,7 @@ export const payloadFormat = (questions: Question[], qType: string, chapterId: s
         answer: q.answer,
         difficulty: (q.difficulty || "medium").toUpperCase(),
         chapterId,
+        subTopic: subTopic ?? q.subTopic ?? null,
         isActive: q.isActive ?? true,
       }));
     }

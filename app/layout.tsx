@@ -8,6 +8,7 @@ import { ReduxProvider } from "@/components/providers/redux-provider"
 import { AuthSessionProvider } from "@/components/providers/session-provider"
 import { Suspense } from "react"
 import "./globals.css"
+import { Toaster } from "@/components/ui/toaster"
 
 const geistSans = GeistSans.variable
 const geistMono = GeistMono.variable
@@ -26,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans} ${geistMono} antialiased`}>
+        <Toaster />
         <AuthSessionProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <Suspense fallback={null}>

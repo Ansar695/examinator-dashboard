@@ -5,6 +5,7 @@
 
 :root {
   /* Updated color palette to match design brief with emerald primary colors */
+  --bg-main: rgb(71, 129, 71);
   --background: oklch(1 0 0);
   --foreground: oklch(0.278 0 0);
   --card: oklch(0.988 0 0);
@@ -32,7 +33,7 @@
   --radius: 0.5rem;
   --sidebar: oklch(0.988 0 0);
   --sidebar-foreground: oklch(0.278 0 0);
-  --sidebar-primary: oklch(0.507 0.176 162.68);
+  --sidebar-primary: oklch(41.866% 0.09922 155.36);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.627 0.142 162.68);
   --sidebar-accent-foreground: oklch(1 0 0);
@@ -151,6 +152,14 @@
     animation: slideUp 0.3s ease-out;
   }
 
+  .animate-scale-in {
+    animation: scaleIn 0.5s ease-out;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -169,5 +178,33 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Grid pattern background */
+  .bg-grid-pattern {
+    background-image:
+      linear-gradient(to right, rgb(0 0 0 / 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(0 0 0 / 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
   }
 }

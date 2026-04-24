@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: "desc" },
     })
-
     return NextResponse.json(subjects)
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch subjects" }, { status: 500 })

@@ -1,3 +1,139 @@
+// import { type NextRequest, NextResponse } from "next/server";
+// import { prisma } from "@/lib/prisma";
+
+// export async function GET(request: NextRequest) {
+//   try {
+//     const { searchParams } = new URL(request.url);
+
+//     // Pagination params
+//     const page = parseInt(searchParams.get("page") || "1", 10);
+//     const limit = parseInt(searchParams.get("limit") || "10", 10);
+//     const skip = (page - 1) * limit;
+
+//     const chapterIds = searchParams.getAll("chapterIds");
+//     const parsedIds = JSON.parse(chapterIds as any);
+
+//     // Build dynamic filter
+//     const where: any = {
+//       isActive: true // Only get active questions
+//     };
+
+//     // Multiple chapters filter
+//     if (parsedIds.length > 0) {
+//       where.chapterId = { in: parsedIds };
+//     }
+
+//     // Optimized query using aggregation pipeline for better performance
+//     // First, get questions grouped by usage count with limited fields
+//     const questionsWithUsage = await prisma.shortQuestion.findMany({
+//       where,
+//       select: {
+//         id: true,
+//         usageCount: true,
+//       } as any,
+//       orderBy: [
+//         { usageCount: "asc" } as any,
+//         { createdAt: "desc" }
+//       ],
+//     });
+
+//     // Group by usage count for efficient shuffling
+//     const groupedByUsage = questionsWithUsage.reduce((acc, q) => {
+//       const count = (q as any).usageCount || 0;
+//       if (!acc[count]) {
+//         acc[count] = [];
+//       }
+//       acc[count].push(q.id);
+//       return acc;
+//     }, {} as Record<number, string[]>);
+
+//     // Shuffle within each usage group and flatten
+//     const shuffledIds: string[] = [];
+//     Object.keys(groupedByUsage)
+//       .sort((a, b) => Number(a) - Number(b))
+//       .forEach(usageCount => {
+//         const ids = groupedByUsage[Number(usageCount)];
+//         // Fisher-Yates shuffle
+//         for (let i = ids.length - 1; i > 0; i--) {
+//           const j = Math.floor(Math.random() * (i + 1));
+//           [ids[i], ids[j]] = [ids[j], ids[i]];
+//         }
+//         shuffledIds.push(...ids);
+//       });
+
+//     // Get paginated IDs
+//     const paginatedIds = shuffledIds.slice(skip, skip + limit);
+//     const total = shuffledIds.length;
+
+//     // Fetch full question data only for the paginated results
+//     const questions = await prisma.shortQuestion.findMany({
+//       where: {
+//         id: { in: paginatedIds }
+//       },
+//       include: {
+//         chapter: {
+//           select: {
+//             id: true,
+//             name: true,
+//             chapterNumber: true,
+//             subject: {
+//               select: {
+//                 id: true,
+//                 name: true,
+//                 class: {
+//                   select: {
+//                     id: true,
+//                     name: true,
+//                   }
+//                 }
+//               }
+//             }
+//           }
+//         }
+//       }
+//     });
+
+//     // Sort questions according to shuffled order
+//     const questionMap = new Map(questions.map(q => [q.id, q]));
+//     const sortedQuestions = paginatedIds
+//       .map(id => questionMap.get(id))
+//       .filter(Boolean);
+
+//     // Increment usage count for fetched questions (async, don't wait)
+//     if (paginatedIds.length > 0) {
+//       prisma.shortQuestion.updateMany({
+//         where: {
+//           id: { in: paginatedIds }
+//         },
+//         data: {
+//           usageCount: { increment: 1 }
+//         } as any
+//       }).catch(error => {
+//         console.error("Error updating usage count:", error);
+//       });
+//     }
+
+//     return NextResponse.json({
+//       data: sortedQuestions,
+//       pagination: {
+//         page,
+//         limit,
+//         total,
+//         totalPages: Math.ceil(total / limit),
+//       },
+//       metadata: {
+//         algorithm: "usage-based-random",
+//         usageTracked: true
+//       }
+//     });
+//   } catch (error) {
+//     return NextResponse.json(
+//       { error: "Failed to fetch short questions for paper generation" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -5,130 +141,136 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    // Pagination params
+    // Pagination
     const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
     const skip = (page - 1) * limit;
 
-    // Filters
-    // const chapterId = searchParams.get("chapterId");
-    const chapterIds = searchParams.getAll("chapterIds");
+    // Chapter IDs
+    const chapterIdsRaw = searchParams.get("chapterIds");
+    const chapterIds: string[] = chapterIdsRaw ? JSON.parse(chapterIdsRaw) : [];
+    const subTopicsRaw = searchParams.get("subTopicsByChapter");
+    const subTopicsByChapter: Record<string, string[]> = subTopicsRaw
+      ? JSON.parse(subTopicsRaw)
+      : {};
+    const hasSubtopicFilter = Object.values(subTopicsByChapter).some(
+      (value) => Array.isArray(value) && value.length > 0
+    );
+    const chapterPool = hasSubtopicFilter
+      ? chapterIds.filter(
+          (id) =>
+            Array.isArray(subTopicsByChapter[id]) &&
+            subTopicsByChapter[id].length > 0
+        )
+      : chapterIds;
 
-    // Build dynamic filter
-    const where: any = {
-      isActive: true // Only get active questions
-    };
-
-    // Multiple chapters filter
-    if (chapterIds.length > 0) {
-      where.chapterId = { in: chapterIds };
+    if (!chapterPool.length) {
+      return NextResponse.json(
+        { error: "chapterIds are required" },
+        { status: 400 }
+      );
     }
 
-    // Optimized query using aggregation pipeline for better performance
-    // First, get questions grouped by usage count with limited fields
-    const questionsWithUsage = await prisma.shortQuestion.findMany({
-      where,
-      select: {
-        id: true,
-        usageCount: true,
-      } as any,
-      orderBy: [
-        { usageCount: "asc" } as any,
-        { createdAt: "desc" }
-      ],
-    });
+    // Balanced distribution
+    const perChapterLimit = Math.floor(limit / chapterPool.length);
+    const remainder = limit % chapterPool.length;
 
-    // Group by usage count for efficient shuffling
-    const groupedByUsage = questionsWithUsage.reduce((acc, q) => {
-      const count = (q as any).usageCount || 0;
-      if (!acc[count]) {
-        acc[count] = [];
-      }
-      acc[count].push(q.id);
-      return acc;
-    }, {} as Record<number, string[]>);
+    let finalQuestions: any[] = [];
 
-    // Shuffle within each usage group and flatten
-    const shuffledIds: string[] = [];
-    Object.keys(groupedByUsage)
-      .sort((a, b) => Number(a) - Number(b))
-      .forEach(usageCount => {
-        const ids = groupedByUsage[Number(usageCount)];
-        // Fisher-Yates shuffle
-        for (let i = ids.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [ids[i], ids[j]] = [ids[j], ids[i]];
-        }
-        shuffledIds.push(...ids);
+    // Fetch per chapter
+    for (let i = 0; i < chapterPool.length; i++) {
+      const chapterId = chapterPool[i];
+
+      const chapterLimit =
+        i < remainder ? perChapterLimit + 1 : perChapterLimit;
+
+      const chapterSkip = skip <= 0 ? 0 : Math.floor(skip / chapterPool.length);
+      const chapterSubtopics = Array.isArray(subTopicsByChapter[chapterId])
+        ? subTopicsByChapter[chapterId]
+        : [];
+
+      const questions = await prisma.shortQuestion.findMany({
+        where: {
+          isActive: true,
+          chapterId: chapterId, // Prisma auto converts to ObjectId if needed
+          ...(chapterSubtopics.length
+            ? { subTopic: { in: chapterSubtopics } }
+            : {}),
+        },
+        orderBy: [
+          { usageCount: "asc" }, // least used first
+          { createdAt: "desc" }  // tie-breaker
+        ],
+        skip: chapterSkip,
+        take: chapterLimit
       });
 
-    // Get paginated IDs
-    const paginatedIds = shuffledIds.slice(skip, skip + limit);
-    const total = shuffledIds.length;
-
-    // Fetch full question data only for the paginated results
-    const questions = await prisma.shortQuestion.findMany({
-      where: {
-        id: { in: paginatedIds }
-      },
-      include: {
-        chapter: {
-          select: {
-            id: true,
-            name: true,
-            chapterNumber: true,
-            subject: {
-              select: {
-                id: true,
-                name: true,
-                class: {
-                  select: {
-                    id: true,
-                    name: true,
-                  }
-                }
-              }
-            }
-          }
-        }
+      // Shuffle inside chapter
+      for (let i = questions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [questions[i], questions[j]] = [questions[j], questions[i]];
       }
+
+      finalQuestions.push(...questions);
+    }
+
+    // Shuffle across chapters
+    for (let i = finalQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [finalQuestions[i], finalQuestions[j]] = [finalQuestions[j], finalQuestions[i]];
+    }
+
+    // Total count
+    const filteredChapters = chapterPool.filter(
+      (id) =>
+        !hasSubtopicFilter ||
+        (Array.isArray(subTopicsByChapter[id]) &&
+          subTopicsByChapter[id].length > 0)
+    );
+    const totalWhere = hasSubtopicFilter
+      ? {
+          isActive: true,
+          OR: filteredChapters.map((id) => ({
+            chapterId: id,
+            subTopic: { in: subTopicsByChapter[id] },
+          })),
+        }
+      : {
+          isActive: true,
+          chapterId: { in: chapterIds },
+        };
+    const total = await prisma.shortQuestion.count({
+      where: totalWhere,
     });
 
-    // Sort questions according to shuffled order
-    const questionMap = new Map(questions.map(q => [q.id, q]));
-    const sortedQuestions = paginatedIds
-      .map(id => questionMap.get(id))
-      .filter(Boolean);
-
-    // Increment usage count for fetched questions (async, don't wait)
-    if (paginatedIds.length > 0) {
+    // Increment usage count in background
+    if (finalQuestions.length > 0) {
       prisma.shortQuestion.updateMany({
         where: {
-          id: { in: paginatedIds }
+          id: { in: finalQuestions.map(q => q.id) }
         },
         data: {
           usageCount: { increment: 1 }
-        } as any
-      }).catch(error => {
-        console.error("Error updating usage count:", error);
-      });
+        }
+      }).catch(console.error);
     }
 
     return NextResponse.json({
-      data: sortedQuestions,
+      data: finalQuestions,
       pagination: {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit)
       },
       metadata: {
-        algorithm: "usage-based-random",
+        algorithm: "balanced-chapter-usage-random",
         usageTracked: true
       }
     });
+
   } catch (error) {
-    console.error("Error fetching short questions for paper generation:", error);
+    console.error("Balanced Short Question Fetch Error:", error);
     return NextResponse.json(
       { error: "Failed to fetch short questions for paper generation" },
       { status: 500 }

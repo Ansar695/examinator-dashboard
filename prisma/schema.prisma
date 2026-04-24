@@ -8,15 +8,46 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  email     String   @unique
-  password  String
-  name      String?
-  role      UserRole @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  email           String   @unique
+  username        String   @unique
+  password        String
+  name            String
+  role            UserRole @default(STUDENT)
+  status          UserStatus? @default(PENDING)
+  age             Int?
+  phone           String?
+  profilePicture  String?
+  institutionName String?
+  institutionLogo String?
+  approvedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   
   @@map("users")
+  GeneratedPaper  GeneratedPaper[]
+  Subscription    Subscription[]
+  SubscriptionHistory SubscriptionHistory[]
+  Notification    Notification[]
+}
+
+model Notification {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String           @db.ObjectId
+  type      NotificationType @default(INFO)
+  title     String
+  message   String
+  href      String?
+  metadata  Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@map("notifications")
 }
 
 model Board {
@@ -33,6 +64,8 @@ model Board {
   subjects    Subject[]
   
   @@map("boards")
+  GeneratedPaper GeneratedPaper[]
+  ImportantNotes ImportantNotes[]
 }
 
 model Class {
@@ -50,6 +83,8 @@ model Class {
   chapters  Chapter[]
   
   @@map("classes")
+  GeneratedPaper GeneratedPaper[]
+  ImportantNotes ImportantNotes[]
 }
 
 model Subject {
@@ -69,6 +104,7 @@ model Subject {
   chapters    Chapter[]
   
   @@map("subjects")
+  GeneratedPaper GeneratedPaper[]
 }
 
 model Chapter {
@@ -79,6 +115,7 @@ model Chapter {
   chapterNumber    Int
   classId   String   @db.ObjectId
   subjectId String   @db.ObjectId
+  subTopics String[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -102,6 +139,7 @@ model MCQQuestion {
   
   // Hierarchical reference
   chapterId     String       @db.ObjectId
+  subTopic      String?
   
   isActive      Boolean      @default(true)
   createdAt     DateTime     @default(now())
@@ -110,6 +148,7 @@ model MCQQuestion {
   chapter       Chapter      @relation(fields: [chapterId], references: [id])
   
   @@index([chapterId])
+  @@index([chapterId, subTopic])
   @@map("mcq_questions")
 }
 
@@ -122,6 +161,7 @@ model ShortQuestion {
   
   // Hierarchical reference
   chapterId     String       @db.ObjectId
+  subTopic      String?
   
   isActive      Boolean      @default(true)
   createdAt     DateTime     @default(now())
@@ -131,6 +171,7 @@ model ShortQuestion {
   chapter       Chapter      @relation(fields: [chapterId], references: [id])
   
   @@index([chapterId])
+  @@index([chapterId, subTopic])
   @@map("short_questions")
 }
 
@@ -144,6 +185,7 @@ model LongQuestion {
   
   // Hierarchical reference
   chapterId     String       @db.ObjectId
+  subTopic      String?
   
   isActive      Boolean      @default(true)
   createdAt     DateTime     @default(now())
@@ -153,7 +195,161 @@ model LongQuestion {
   chapter       Chapter      @relation(fields: [chapterId], references: [id])
   
   @@index([chapterId])
+  @@index([chapterId, subTopic])
   @@map("long_questions")
+}
+
+model GeneratedPaper {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  totalMarks  Int
+  examTime    String?  @default("2:30") // Format: "H:MM" e.g., "3:00" for 3 hours
+  userId      String   @db.ObjectId
+  subjectId   String   @db.ObjectId
+  boardId     String   @db.ObjectId
+  classId     String   @db.ObjectId
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  // Embedded question sets
+  mcqs        MCQEntry[]
+  shortQs     ShortEntry[]
+  longQs      LongEntry[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("generated_papers")
+}
+
+model Subscription {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @unique @db.ObjectId
+  planType        PlanType @default(FREE)
+  monthlyLimit    Int      @default(3)      // 3 for FREE, 45 for PRO, 100 for PREMIUM
+  papersGenerated Int      @default(0)      // Count in current month
+  pricePerMonth   Int      @default(0)      // 0 for FREE, 2000 for PRO, 4000 for PREMIUM (in PKR)
+  renewalDate     DateTime                   // Next renewal date
+  isActive        Boolean  @default(true)
+  stripeCustomerId String?                  // For future payment integration
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("subscriptions")
+}
+
+model SubscriptionHistory {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String    @db.ObjectId
+  // Billing period
+  month            Int
+  year             Int
+  // Plan info for that cycle
+  planType         PlanType
+  monthlyLimit     Int
+  pricePerMonth    Int
+  planStatus       String    // "ACTIVE", "EXPIRED", "UPGRADED", "DOWNGRADED"
+  
+  // Usage info
+  papersGenerated  Int       @default(0)
+  
+  cycleStart       DateTime
+  cycleEnd         DateTime?
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+  @@index([userId, month, year])
+  @@map("subscription_history")
+}
+
+model ImportantNotes {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userType        UserRole @default(STUDENT)
+  notesTitle      String
+  classId         String   @db.ObjectId
+  boardId         String   @db.ObjectId
+  file            String
+  fileSize        Int?     // Size in bytes
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  class           Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  board           Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+    
+  @@map("important_notes")
+}
+
+model BoardPapers {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  boardName       String
+  boardYear       String
+  paperFile       String
+  fileSize        Int?     // Size in bytes
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+    
+  @@map("board_papers")
+}
+
+model ContactUs {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  email       String
+  subject       String
+  message      String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+    
+  @@map("contact_us")
+}
+
+enum PlanType {
+  FREE
+  STANDARD
+  PREMIUM
+}
+
+/// Embedded document for MCQs in a generated paper
+type MCQEntry {
+  questionId    String    @db.ObjectId
+  question      String
+  options       String[]  // Array of options
+  correctAnswer Int?      // Index of correct option (optional)
+  marks         Int
+}
+
+/// Embedded document for Short Questions in a generated paper
+type ShortEntry {
+  questionId String  @db.ObjectId
+  question   String
+  answer     String? // Optional answer
+  marks      Int
+}
+
+/// Embedded document for Long Questions (can have multiple parts)
+type LongEntry {
+  questionId String    @db.ObjectId
+  question   String
+  answer     String?   // Optional answer for the main question
+  totalMarks Int
+  parts      LongPart[]
+}
+
+/// Sub-parts of a long question (optional)
+type LongPart {
+  partLabel  String  // e.g. "a", "b"
+  question   String
+  answer     String? // Optional answer for the part
+  marks      Int
 }
 
 enum ClassType {
@@ -177,6 +373,21 @@ enum Difficulty {
 }
 
 enum UserRole {
-  USER
+  STUDENT
+  TEACHER
   ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum NotificationType {
+  SUCCESS
+  INFO
+  WARNING
+  ERROR
 }

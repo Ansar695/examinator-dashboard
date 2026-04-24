@@ -17,6 +17,7 @@ interface SelectBoardProps {
 
 const SelectBoard = (props: SelectBoardProps) => {
   const { allBoards, watch, setValue, errors } = props;
+
   return (
     <div className="space-y-2">
       <Label htmlFor="boardId">Board *</Label>

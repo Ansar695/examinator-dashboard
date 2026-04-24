@@ -8,6 +8,8 @@ export interface Board {
   logoUrl?: string
   createdAt: string
   updatedAt: string
+  classes?: any[]
+  subjects?: any[]
 }
 
 export interface Class {
@@ -45,6 +47,7 @@ export interface Chapter {
   chapterNumber: number
   class?: Class
   subject?: Subject
+  subTopics?: string[]
   createdAt: string
   updatedAt: string
 }
@@ -158,8 +161,8 @@ export const educationApi = createApi({
       query: () => "/chapters",
       providesTags: ["Chapter"],
     }),
-    getChaptersBySubject: builder.query<Chapter[], { classId: string; subjectId: string }>({
-      query: ({ classId, subjectId }) => `/chapters?classId=${classId}&subjectId=${subjectId}`,
+    getChaptersBySubject: builder.query<Chapter[], { subjectId: string }>({
+      query: ({ subjectId }) => `/chapters?&subjectId=${subjectId}`,
       providesTags: ["Chapter"],
     }),
     createChapter: builder.mutation<Chapter, Partial<Chapter>>({

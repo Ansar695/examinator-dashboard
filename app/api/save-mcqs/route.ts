@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || null;
     const chapterId = searchParams.get("chapterId");
     const chapterIds = searchParams.getAll("chapterIds"); // multiple chapterIds like ?chapterIds=1&chapterIds=2
+    const subTopic = searchParams.get("subTopic");
 
     // Build dynamic filter
     const where: any = {};
@@ -34,6 +35,10 @@ export async function GET(request: NextRequest) {
     // Multiple chapters filter
     if (chapterIds.length > 0) {
       where.chapterId = { in: chapterIds };
+    }
+
+    if (subTopic) {
+      where.subTopic = subTopic;
     }
 
     // Fetch paginated results
@@ -134,6 +139,7 @@ export async function POST(request: NextRequest) {
       correctAnswer: q.correctAnswer,
       difficulty: (q.difficulty || "medium").toUpperCase(),
       chapterId: q.chapterId,
+      subTopic: q.subTopic || null,
       isActive: q.isActive ?? true,
       usageCount: 0,
     }));
@@ -142,9 +148,6 @@ export async function POST(request: NextRequest) {
     const created = await prisma.mCQQuestion.createMany({
       data: data,
     });
-
-    console.log("created ", created);
-
     return NextResponse.json(
       {
         success: true,

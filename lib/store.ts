@@ -2,14 +2,56 @@ import { configureStore } from "@reduxjs/toolkit"
 import { setupListeners } from "@reduxjs/toolkit/query"
 import { educationApi } from "./api/educationApi"
 import { questionsApi } from "./api/saveQuestionsApi"
+import { paperGenerationApi } from "./api/paperGeneration"
+import { authApi } from "./api/authApi"
+import { profileApi } from "./api/profileApi"
+import { dashboardStatsApi } from "./api/dashboardApi"
+import { plansApi } from "./api/plansApi"
+import { usersApi } from "./api/usersApi"
+import { notesApi } from "./api/notesApi"
+import { paperBoardApi } from "./api/boardPapersApi"
+import { generatedPapersApi } from "./api/generatedPapers"
+import { contactUsApi } from "./api/contactUsApi"
+import { adminDashboardStatsApi } from "./api/adminDashboardAPI"
+import { activitiesApi } from "./api/activitiesApi"
+import { notificationsApi } from "./api/notificationsApi"
 
 export const store = configureStore({
   reducer: {
     [educationApi.reducerPath]: educationApi.reducer,
     [questionsApi.reducerPath]: questionsApi.reducer,
+    [paperGenerationApi.reducerPath]: paperGenerationApi.reducer,
+    [authApi.reducerPath]: authApi.reducer,
+    [profileApi.reducerPath]: profileApi.reducer,
+    [dashboardStatsApi.reducerPath]: dashboardStatsApi.reducer,
+    [plansApi.reducerPath]: plansApi.reducer,
+    [usersApi.reducerPath]: usersApi.reducer,
+    [notesApi.reducerPath]: notesApi.reducer,
+    [paperBoardApi.reducerPath]: paperBoardApi.reducer,
+    [generatedPapersApi.reducerPath]: generatedPapersApi.reducer,
+    [contactUsApi.reducerPath]: contactUsApi.reducer,
+    [adminDashboardStatsApi.reducerPath]: adminDashboardStatsApi.reducer,
+    [activitiesApi.reducerPath]: activitiesApi.reducer,
+    [notificationsApi.reducerPath]: notificationsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(educationApi.middleware, questionsApi.middleware),
+    getDefaultMiddleware().concat(
+      educationApi.middleware,
+      questionsApi.middleware,
+      paperGenerationApi.middleware,
+      authApi.middleware,
+      profileApi.middleware,
+      dashboardStatsApi.middleware,
+      plansApi.middleware,
+      usersApi.middleware,  
+      notesApi.middleware,
+      paperBoardApi.middleware,
+      generatedPapersApi.middleware,
+      contactUsApi.middleware,
+      adminDashboardStatsApi.middleware,
+      activitiesApi.middleware,
+      notificationsApi.middleware,
+    ),
 })
 
 setupListeners(store.dispatch)

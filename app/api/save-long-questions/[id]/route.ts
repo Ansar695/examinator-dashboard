@@ -14,12 +14,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
+    const subTopic = searchParams.get("subTopic")
 
     // Get total count for pagination
     const totalCount = await prisma.longQuestion.count({
       where: {
         chapterId: params.id,
-        isActive: true
+        isActive: true,
+        ...(subTopic ? { subTopic } : {}),
       }
     })
 
@@ -27,7 +29,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const longQuestions = await prisma.longQuestion.findMany({
       where: {
         chapterId: params.id,
-        isActive: true
+        isActive: true,
+        ...(subTopic ? { subTopic } : {}),
       },
       include: {
         chapter: true,

@@ -5,11 +5,10 @@ async function main() {
   try {
     // Check if demo user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: "demo@example.com" }
+      where: { email: "admin@super.com" }
     })
 
     if (existingUser) {
-      console.log("Demo user already exists")
       return
     }
 
@@ -25,12 +24,6 @@ async function main() {
       }
     })
 
-    console.log("Demo user created successfully:", {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role
-    })
   } catch (error) {
     console.error("Error creating demo user:", error)
   } finally {

@@ -60,7 +60,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [embeddingsLoader, setEmbeddingLoader] = useState(false);
-  console.log("chapterData =>>> ", chapterData)
+
   const [createChapter, { isLoading: isCreating }] = useCreateChapterMutation();
   const [updateChapter, { isLoading: isUpdating }] = useUpdateChapterMutation();
   const { data: classes, isLoading: classesLoading } = useGetClassesQuery();
@@ -201,7 +201,7 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
       formData.append("pdf_url", data?.pdfUrl);
       setEmbeddingLoader(true);
       const embeddingsResponse = await fetch(
-        `${EMBEDDINGS_BASE_URL}/admin/upload_chapter`,
+        `${EMBEDDINGS_BASE_URL}/admin/upload_chapter_pdf_with_subtopics`,
         {
           method: "POST",
           body: formData,
@@ -215,7 +215,13 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
         if (parsedResp.success) {
           showSuccess("Embeddings created successfully, uploading embeddings");
         }
-        await createChapter(chapterFormData).unwrap();
+        const subtopics = Array.isArray(parsedResp?.subtopics_found)
+          ? parsedResp.subtopics_found
+          : [];
+        await createChapter({
+          ...chapterFormData,
+          subtopics,
+        }).unwrap();
       }
     } catch (error) {
       console.log("error");

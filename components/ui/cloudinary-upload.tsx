@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload"
 
 interface CloudinaryUploadProps {
   onUpload: (url: string) => void
@@ -64,24 +65,6 @@ export function CloudinaryUpload({
     }
 
     return null
-  }
-
-  const uploadToCloudinary = async (file: File): Promise<string> => {
-    const formData = new FormData()
-    formData.append("file", file)
-
-    const response = await fetch("/api/cloudinary/upload", {
-      method: "POST",
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || "Upload failed")
-    }
-
-    const data = await response.json()
-    return data.url
   }
 
   const handleFileUpload = useCallback(
