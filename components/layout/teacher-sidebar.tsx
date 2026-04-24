@@ -9,6 +9,9 @@ import {
   LogOut,
   BookOpen,
   Plus,
+  ChevronLeft,
+  ChevronRight,
+  Bell,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import Link from "next/link";
@@ -66,21 +69,31 @@ export default function TeacherSidebar({
       icon: BookOpen,
       href: "/teacher/important-notes",
     },
-    // {
-    //   id: "settings",
-    //   label: "Settings",
-    //   icon: Settings,
-    //   href: "/teacher/settings",
-    // },
+    {
+      id: "notifications",
+      label: "Notifications",
+      icon: Bell,
+      href: "/teacher/notifications",
+    },
+    {
+      id: "profile",
+      label: "Profile",
+      icon: Settings,
+      href: "/teacher/profile",
+    },
   ];
 
   const getActiveItem = () => {
-    // Check for exact match first (for dashboard and root /teacher routes)
+    // Check for profile specifically first since it's a subroute that might conflict with others
+    if (pathname.startsWith("/teacher/profile")) return "profile";
+    
+    // Check for exact match for dashboard
     if (pathname === "/teacher" || pathname === "/teacher/dashboard") {
       return "dashboard";
     }
-    // Then check for prefix matches for other routes
-    const item = menuItems.find((item) => pathname === item.href);
+    
+    // Check for other routes
+    const item = menuItems.find((item) => item.id !== "dashboard" && pathname.startsWith(item.href));
     return item?.id || null;
   };
 
@@ -106,50 +119,43 @@ export default function TeacherSidebar({
 
       {/* Sidebar */}
       <aside
-        className={`fixed h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-out z-40 ${
+        className={`fixed h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-out z-[60] ${
           collapsed ? "w-20" : "w-[300px]"
         } ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
         <div className="flex flex-col h-full">
           {/* Logo Section */}
-          {isLoading ? (
-            <SidebarLogoSkeleton />
-          ) : (
-            <div className="p-6 border-b border-sidebar-border animate-slide-in-left">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-16 h-16 rounded-md flex items-center justify-center">
-                  {profileData?.user?.institutionLogo ? (
-                    <Image
-                      src={
-                        profileData?.user?.institutionLogo || "/placeholder.svg"
-                      }
-                      alt="Institution Logo"
-                      width={64}
-                      height={64}
-                      className="w-full h-full"
-                    />
-                  ) : (
-                    <BookOpen
-                      size={24}
-                      className="text-sidebar-primary-foreground"
-                    />
-                  )}
-                </div>
-                <div>
+          <div className="p-6 border-b border-sidebar-border animate-slide-in-left">
+            {isLoading ? (
+              <SidebarLogoSkeleton />
+            ) : (
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center p-2">
+                    {profileData?.user?.institutionLogo ? (
+                      <Image
+                        src={profileData?.user?.institutionLogo}
+                        alt="Institution Logo"
+                        width={48}
+                        height={48}
+                        className="object-contain w-full h-full"
+                      />
+                    ) : (
+                      <BookOpen size={24} className="text-primary" />
+                    )}
+                  </div>
                   {!collapsed && (
-                    <>
-                      <h1 className="font-bold text-lg">
+                    <div className="min-w-0">
+                      <h1 className="font-bold text-base truncate">
                         {profileData?.user?.institutionName ?? "EduPaper"}
                       </h1>
-                      <p className="text-xs text-sidebar-foreground/60">
+                      <p className="text-[10px] text-muted-foreground uppercase font-semibold">
                         Institution
                       </p>
-                    </>
+                    </div>
                   )}
                 </div>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -176,38 +182,34 @@ export default function TeacherSidebar({
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-sidebar-border space-y-2 animate-slide-in-up">
+          <div className="p-4 border-t border-sidebar-border mt-auto space-y-2 animate-slide-in-up">
             {onToggleCollapse && (
               <button
-                className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
                 onClick={onToggleCollapse}
+                className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-white transition-all duration-300 group"
+                title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
               >
-                <Menu size={20} />
-                {!collapsed && <span className="font-medium">Toggle Sidebar</span>}
-              </button>
-            )}
-            <Link href="/teacher/profile">
-              <button
-                className={`group w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  pathname.startsWith("/teacher/profile")
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent"
-                }`}
-              >
-                <Settings size={20} className=" group-hover:text-white" />
+                <div className="flex items-center justify-center min-w-[24px]">
+                  {collapsed ? (
+                    <ChevronRight size={22} className="text-primary animate-pulse group-hover:text-white" />
+                  ) : (
+                    <ChevronLeft size={22} className="group-hover:text-white" />
+                  )}
+                </div>
                 {!collapsed && (
-                  <span className="font-medium group-hover:text-white">
-                    Profile
-                  </span>
+                  <span className="font-semibold text-sm tracking-tight group-hover:text-white">Collapse Sidebar</span>
                 )}
               </button>
-            </Link>
+            )}
+            
             <button
-              className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              className="w-full cursor-pointer flex items-center gap-4 px-4 py-3 rounded-xl text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-all duration-300 group"
               onClick={handleLogout}
             >
-              <LogOut size={20} />
-              {!collapsed && <span className="font-medium">Logout</span>}
+              <div className="flex items-center justify-center min-w-[24px]">
+                <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+              </div>
+              {!collapsed && <span className="font-semibold text-sm tracking-tight">Logout</span>}
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { notificationsApi } from "@/lib/api/notificationsApi";
 
 export interface MCQs {
   id: string;
@@ -159,6 +160,14 @@ export const paperGenerationApi = createApi({
         body,
       }),
       invalidatesTags: ["GeneratedPaper"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(notificationsApi.util.invalidateTags(["Notifications"]));
+        } catch {
+          // ignore
+        }
+      },
     }),
 
     getPaperById: builder.query<{ success: boolean; data: GeneratedPaper }, string>({
@@ -182,6 +191,14 @@ export const paperGenerationApi = createApi({
         body: data,
       }),
       invalidatesTags: ["GeneratedPaper"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(notificationsApi.util.invalidateTags(["Notifications"]));
+        } catch {
+          // ignore
+        }
+      },
     }),
   }),
 });

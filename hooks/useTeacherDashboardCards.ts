@@ -1,86 +1,50 @@
 "use client";
 
 import { useMemo } from "react";
-import { BarChart3, BookOpen, CalendarDays, FileText, Library, Zap } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { BarChart3, CalendarDays, FileText, Library, Zap } from "lucide-react";
+import type { TeacherDashboardCard } from "@/types/teacher-dashboard";
 import type { TeacherDashboardData } from "@/types/teacher-dashboard";
-
-export type TeacherDashboardCard = {
-  key: string;
-  title: string;
-  value: number | string;
-  trend: string;
-  icon: LucideIcon;
-  color: string;
-};
-
-function pluralize(n: number, word: string) {
-  return `${n} ${word}${n === 1 ? "" : "s"}`;
-}
+import { format } from "date-fns";
 
 export function useTeacherDashboardCards(data?: TeacherDashboardData) {
   return useMemo<TeacherDashboardCard[]>(() => {
-    const quota = data?.stats;
+    const stats = data?.stats;
     const overview = data?.overview;
     const bank = data?.bank;
 
-    const daysToRenewal = quota?.daysToRenewal ?? null;
-    const renewalText =
-      daysToRenewal === null
-        ? "No renewal date"
-        : daysToRenewal === 0
-          ? "Renews today"
-          : `Renews in ${pluralize(daysToRenewal, "day")}`;
-
-    const totalQuestions =
-      (bank?.totalMCQs ?? 0) + (bank?.totalShortQs ?? 0) + (bank?.totalLongQs ?? 0);
+    const subDate = stats?.subscriptionDate ? format(new Date(stats.subscriptionDate), "MMM d, yyyy") : "N/A";
+    const renDate = stats?.expiryDate ? format(new Date(stats.expiryDate), "MMM d, yyyy") : "N/A";
 
     return [
       {
-        key: "quota",
-        title: "Monthly Quota",
-        value: `${quota?.usedPaper ?? 0}/${quota?.totalPaper ?? 0}`,
-        trend: `${quota?.usedPercentage ?? 0}% used`,
+        key: "plan-info",
+        title: "Plan Details",
+        value: stats?.currentPlan ?? "FREE",
+        trend: `Sub: ${subDate} | Ren: ${renDate} | Used: ${stats?.usedPaper ?? 0}`,
         icon: Zap,
         color: "from-blue-500 to-blue-600",
       },
       {
-        key: "remaining",
-        title: "Remaining",
-        value: quota?.remainingPaper ?? 0,
-        trend: renewalText,
-        icon: CalendarDays,
-        color: "from-green-500 to-green-600",
-      },
-      {
-        key: "thisWeek",
-        title: "This Week",
-        value: overview?.papersThisWeek ?? 0,
-        trend: `${overview?.papersToday ?? 0} today`,
-        icon: BarChart3,
-        color: "from-purple-500 to-purple-600",
-      },
-      {
-        key: "allTime",
-        title: "All-Time Papers",
+        key: "total-papers",
+        title: "Overall Total Papers",
         value: overview?.totalPapersAllTime ?? 0,
-        trend: `${overview?.papersThisMonth ?? 0} this month`,
+        trend: "Total papers generated overall",
         icon: FileText,
         color: "from-orange-500 to-orange-600",
       },
       {
-        key: "avgQuestions",
-        title: "Avg Questions/Paper",
-        value: overview?.avgQuestionsPerPaper ?? 0,
-        trend: "Last 30 days",
-        icon: BookOpen,
-        color: "from-sky-500 to-sky-600",
+        key: "remaining-quota",
+        title: "Current Cycle Remaining",
+        value: `${stats?.remainingPaper ?? 0}/${stats?.totalPaper ?? 0}`,
+        trend: "Available for current subscription",
+        icon: CalendarDays,
+        color: "from-green-500 to-green-600",
       },
       {
-        key: "questionBank",
-        title: "Question Bank",
-        value: totalQuestions,
-        trend: `${bank?.totalChapters ?? 0} chapters available`,
+        key: "question-bank",
+        title: "Question Bank Size",
+        value: (bank?.totalMCQs ?? 0) + (bank?.totalShortQs ?? 0) + (bank?.totalLongQs ?? 0),
+        trend: "Total questions available in bank",
         icon: Library,
         color: "from-emerald-500 to-emerald-600",
       },
