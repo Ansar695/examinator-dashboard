@@ -1,6 +1,5 @@
 "use client";
-import { useState } from "react";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, GraduationCap } from "lucide-react";
 
 // Import shadcn Dialog components
 import {
@@ -11,39 +10,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Image from "next/image";
+import { paperTemplates } from "@/components/questions/PaperTemplates";
 
-const templates = [
-  {
-    id: 1,
-    image: '/images/template1.png',
-    name: "Classic Professional",
-    type: "default",
-    description: "Clean and timeless design"
-  },
-  {
-    id: 2,
-    image: '/images/template1.png',
-    name: "Academic",
-    type: "academic",
-    description: "Simple and elegant layout"
-  },
-  {
-    id: 3,
-    image: '/images/template1.png',
-    name: "Board",
-    type: "board",
-    description: "Express your creativity"
-  },
-  {
-    id: 4,
-    image: '/images/template1.png',
-    name: "Pre-Board",
-    type: "pre-board",
-    description: "Professional and polished"
-  }
-];
-
-export function TemplatesModal({ isOpen, onOpenChange, currentTemplate, onTemplateChange }: any) {
+export function TemplatesModal({
+  isOpen,
+  onOpenChange,
+  currentTemplate,
+  onTemplateChange,
+  institutionLogo,
+  institutionName,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentTemplate: string;
+  onTemplateChange: (templateId: string) => void;
+  institutionLogo?: string | null;
+  institutionName?: string | null;
+}) {
+  const logoSrc = institutionLogo || "";
+  const orgName = institutionName || "Your Institution";
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -62,13 +47,15 @@ export function TemplatesModal({ isOpen, onOpenChange, currentTemplate, onTempla
         {/* Templates Grid */}
         <div className="px-8 py-6 overflow-y-auto max-h-[calc(90vh-180px)]">
           <div className="grid grid-cols-2 gap-6">
-            {templates.map((template) => {
-              const isSelected = currentTemplate === template.type;
+            {paperTemplates.map((template) => {
+              const isSelected = currentTemplate === template.id;
+              const previewAccent = template.preview?.accent || "#2563eb";
+              const previewSurface = template.preview?.surface || "#f8fafc";
               
               return (
                 <div
                   key={template.id}
-                  onClick={() => onTemplateChange(template?.type)}
+                  onClick={() => onTemplateChange(template.id)}
                   className={`group relative cursor-pointer rounded-xl border-2 transition-all duration-300 overflow-hidden bg-white ${
                     isSelected 
                       ? 'border-blue-500 shadow-lg shadow-blue-100' 
@@ -76,14 +63,49 @@ export function TemplatesModal({ isOpen, onOpenChange, currentTemplate, onTempla
                   }`}
                 >
                   {/* Image Container */}
-                  <div className="relative h-56 overflow-hidden bg-gray-50">
-                    <Image
-                      src={template?.image}
-                      alt={template.name}
-                      width={500}
-                      height={300}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                  <div
+                    className="relative h-56 overflow-hidden"
+                    style={{ backgroundColor: previewSurface }}
+                  >
+                    <div className="absolute inset-0 p-5">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow"
+                          style={{ border: `2px solid ${previewAccent}` }}
+                        >
+                          {logoSrc ? (
+                            <Image
+                              src={logoSrc}
+                              alt={orgName}
+                              width={32}
+                              height={32}
+                              className="h-8 w-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <GraduationCap className="h-6 w-6" color={previewAccent} />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {orgName}
+                          </p>
+                          <p className="text-xs text-slate-500">Paper Header</p>
+                        </div>
+                      </div>
+                      <div className="mt-6 space-y-2">
+                        <div
+                          className="h-2 w-2/3 rounded-full"
+                          style={{ backgroundColor: previewAccent }}
+                        />
+                        <div className="h-2 w-1/2 rounded-full bg-slate-200" />
+                        <div className="h-2 w-4/5 rounded-full bg-slate-200" />
+                      </div>
+                      <div className="mt-8 space-y-2">
+                        <div className="h-2 w-full rounded-full bg-slate-200" />
+                        <div className="h-2 w-11/12 rounded-full bg-slate-200" />
+                        <div className="h-2 w-10/12 rounded-full bg-slate-200" />
+                      </div>
+                    </div>
                     
                     {/* Selected Badge */}
                     {isSelected && (
@@ -99,7 +121,7 @@ export function TemplatesModal({ isOpen, onOpenChange, currentTemplate, onTempla
                       {template.name}
                     </h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      {template.description}
+                      Header + spacing + typography for {template.name}
                     </p>
 
                     {/* Button */}

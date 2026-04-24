@@ -16,7 +16,7 @@ export async function GET(request: Request) {
           error: "Authorization error",
           message: "You are not authorized to access this page",
         },
-        { status: 404 }
+        { status: 403 }
       );
     }
     // 🔹 Parse userIds & subjectIds arrays like: ?userIds=[1,2,3]
@@ -44,6 +44,8 @@ export async function GET(request: Request) {
     // 🔹 Sorting
     const sortBy = searchParams.get("sortBy") || "createdAt";
     const sortOrder = searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
+    const allowedSortBy = new Set(["createdAt", "title", "totalMarks"]);
+    const safeSortBy = allowedSortBy.has(sortBy) ? sortBy : "createdAt";
 
     // 🔹 Filters
     const filters: any = {userId: auth?.userId};
@@ -62,7 +64,7 @@ export async function GET(request: Request) {
     // 🔹 Fetch paginated papers
     const papers = await prisma.generatedPaper.findMany({
       where: filters,
-      orderBy: { [sortBy]: sortOrder },
+      orderBy: { [safeSortBy]: sortOrder },
       include: {
         class: true,
         board: true,

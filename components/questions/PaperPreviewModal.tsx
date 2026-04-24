@@ -377,8 +377,8 @@ export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
   subject,
   currentTemplate = 'default',
   profileData,
-  questions,
-  marks,
+  questions = { mcq: [], short: [], long: [] },
+  marks = {},
   mcqMarks,
   paperName,
   examTime,
@@ -474,15 +474,15 @@ export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
 
   // Prepare questions with answers if showAnswers is true
   const processedQuestions = showAnswers ? {
-    mcq: questions.mcq.map(q => ({
+    mcq: (questions?.mcq ?? []).map(q => ({
       ...q,
       showAnswer: true
     })),
-    short: questions.short.map(q => ({
+    short: (questions?.short ?? []).map(q => ({
       ...q,
       showAnswer: true
     })),
-    long: questions.long.map(q => ({
+    long: (questions?.long ?? []).map(q => ({
       ...q,
       showAnswer: true
     }))

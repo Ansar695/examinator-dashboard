@@ -10,6 +10,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
 
     const boardName = searchParams.get("boardName") || "";
+    const boardYear = searchParams.get("boardYear") || "";
     const search = searchParams.get("search") || "";
     const page = Number(searchParams.get("page")) || 1;
     const limit = Number(searchParams.get("limit")) || 10;
@@ -19,6 +20,10 @@ export async function GET(request: Request) {
 
     if (boardName && boardName !== "all" && boardName !== undefined) {
       whereClause.boardName = boardName;
+    }
+
+    if (boardYear && boardYear !== "all" && boardYear !== undefined) {
+      whereClause.boardYear = boardYear;
     }
 
     if (search) {

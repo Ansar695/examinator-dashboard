@@ -22,6 +22,7 @@ interface PaperQuestionsSectionProps {
   questions: Question[];
   marks: Record<string, number | undefined>;
   mcqMarks?: number;
+  totalMarksOverride?: number;
   startIndex: number;
   onQuestionEdit: (
     type: "mcq" | "short" | "long",
@@ -43,8 +44,9 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
   title,
   sectionType,
   questions,
-  marks,
+  marks = {},
   mcqMarks,
+  totalMarksOverride,
   startIndex,
   onQuestionEdit,
   onMCQOptionEdit,
@@ -70,6 +72,9 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
   };
 
   const calculateSectionMarks = () => {
+    if (typeof totalMarksOverride === "number") {
+      return totalMarksOverride;
+    }
     if (sectionType === "mcq") {
       return mcqMarks || 0;
     }
@@ -122,11 +127,11 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
           >
             <div className={sectionType !== "mcq" ? "flex-grow" : ""}>
               <EditableQuestion
-                initialText={`${startIndex + index}. ${question?.question}`}
+                initialText={`${startIndex + index}. ${question?.question ?? question?.text ?? ""}`}
                 onSave={(newText) =>
                   onQuestionEdit(
                     sectionType,
-                    question?.questionId,
+                    question?.questionId || question?.id,
                     newText?.replace(/^\d+\.\s*/, "")
                   )
                 }
@@ -148,7 +153,7 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                             initialText={option}
                             onSave={(newText) =>
                               onMCQOptionEdit(
-                                question.questionId,
+                                question.questionId || question.id,
                                 optionIndex,
                                 newText
                               )
@@ -195,7 +200,7 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                           value={marks[`${question.id}-${partIndex}`] || ""}
                           onChange={(e) =>
                             onMarksChange(
-                              `${question.questionId}-${partIndex}`,
+                              `${question.questionId || question.id}-${partIndex}`,
                               e.target.value
                             )
                           }
@@ -223,14 +228,25 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
             </div>
 
             {/* Marks Input for Short and Long Questions */}
-            {sectionType !== "mcq" && (
+            {sectionType === "short" && (
               <Input
                 type="number"
                 placeholder="Marks"
                 className="w-20 ml-4"
-                value={marks[question?.questionId] || ""}
+                value={marks[question?.questionId || question?.id] || ""}
                 onChange={(e) =>
-                  onMarksChange(question.questionId, e.target.value)
+                  onMarksChange(question.questionId || question.id, e.target.value)
+                }
+              />
+            )}
+            {sectionType === "long" && (
+              <Input
+                type="number"
+                placeholder="Marks"
+                className="w-20 ml-4"
+                value={marks[question?.questionId || question?.id] || ""}
+                onChange={(e) =>
+                  onMarksChange(question.questionId || question.id, e.target.value)
                 }
               />
             )}
