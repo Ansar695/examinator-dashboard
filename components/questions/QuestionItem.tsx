@@ -8,9 +8,15 @@ interface QuestionItemProps {
   question: any;
   onSelect: (id: string, selected: boolean) => void;
   initialSelected?: boolean;
+  disabled?: boolean;
 }
 
-export function QuestionItem({ question, onSelect, initialSelected = false }: QuestionItemProps) {
+export function QuestionItem({
+  question,
+  onSelect,
+  initialSelected = false,
+  disabled = false,
+}: QuestionItemProps) {
   const [isSelected, setIsSelected] = useState(initialSelected)
 
   // Update selected state when initialSelected prop changes
@@ -19,6 +25,7 @@ export function QuestionItem({ question, onSelect, initialSelected = false }: Qu
   }, [initialSelected])
 
   const handleToggle = () => {
+    if (disabled && !isSelected) return
     setIsSelected(!isSelected)
     onSelect(question?.id, !isSelected)
   }
@@ -27,8 +34,9 @@ export function QuestionItem({ question, onSelect, initialSelected = false }: Qu
     <motion.div
       whileHover={{ scale: 1 }}
       whileTap={{ scale: 1 }}
-      className={`p-2 md:p-6 rounded-lg shadow-md mb-6 cursor-pointer transition-all duration-300 ${
+      className={`p-2 md:p-6 rounded-lg shadow-md mb-6 transition-all duration-300 ${
         isSelected ? 'bg-blue-50 border-2 border-blue-500' : 'bg-white hover:shadow-lg'
+      } ${disabled && !isSelected ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
       }`}
       // onClick={handleToggle}
     >
@@ -37,6 +45,7 @@ export function QuestionItem({ question, onSelect, initialSelected = false }: Qu
           id={question?.id}
           checked={isSelected}
           onCheckedChange={handleToggle}
+          disabled={disabled && !isSelected}
           className="mt-1 w-4 md:w-5 h-4 md:h-5 border-gray-600"
         />
         <div className="flex-grow">

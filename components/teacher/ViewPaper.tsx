@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { PageTransition } from '@/components/shared/Transition'
-import { PaperTemplateSelector } from '@/components/questions/PaperTemplates'
+import { PaperTemplateSelector, paperTemplates } from '@/components/questions/PaperTemplates'
 import { LanguageSelector } from '@/components/questions/LanguageSelector'
 import { PaperPreviewModal } from '@/components/questions/PaperPreviewModal'
 import { PaperHeader } from '@/components/paper/PaperHeader'
@@ -12,6 +12,7 @@ import { PaperQuestionsSection } from '@/components/paper/PaperQuestionsSection'
 import { usePaperManagement } from '@/hooks/usePaperManagement'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
+import { useGetProfileQuery } from "@/lib/api/profileApi";
 
 export default function ViewPaper() {
   const params = useParams()
@@ -53,6 +54,9 @@ export default function ViewPaper() {
     classNumber,
     subject,
   })
+  const { data: profileData } = useGetProfileQuery();
+  const institutionLogo = profileData?.user?.institutionLogo || null;
+  const institutionName = profileData?.user?.institutionName || null;
 
   const handleTemplateSelect = (template: any) => {
     setSelectedTemplateId(template.id)
@@ -60,6 +64,12 @@ export default function ViewPaper() {
     document.body.style.setProperty('--paper-bg-color', template.styles.backgroundColor)
     document.body.style.setProperty('--paper-text-color', template.styles.textColor)
     document.body.style.setProperty('--paper-font-family', template.styles.fontFamily)
+  }
+  const handleTemplateChangeById = (templateId: string) => {
+    const match = paperTemplates.find((t) => t.id === templateId);
+    if (match) {
+      handleTemplateSelect(match);
+    }
   }
 
   return (
@@ -85,6 +95,10 @@ export default function ViewPaper() {
             onSaveChanges={handleSaveChanges}
             onEdit={handleEdit}
             onPreview={() => setShowPreviewModal(true)}
+            currentTemplate={selectedTemplateId}
+            onTemplateChange={handleTemplateChangeById}
+            institutionLogo={institutionLogo}
+            institutionName={institutionName}
           />
 
           <div className="p-6 bg-gray-100 border-b">
@@ -133,6 +147,8 @@ export default function ViewPaper() {
                 paperName={paperName}
                 examTime={examTime}
                 totalMarks={calculatedTotalMarks || paperData?.data?.totalMarks || 0}
+                institutionLogo={institutionLogo}
+                institutionName={institutionName}
                 onPaperNameChange={setPaperName}
                 onExamTimeChange={setExamTime}
               />

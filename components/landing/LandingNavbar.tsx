@@ -4,12 +4,14 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { FileText, Menu, X } from "lucide-react"
+import { FileText, Menu, X, LayoutDashboard, LogIn, UserPlus } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 export const LandingNavbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("")
   const pathname = usePathname()
+  const { data: session, status } = useSession()
 
   const navLinks = [
     { name: "Home", href: "#home", isSection: true },
@@ -107,11 +109,30 @@ export const LandingNavbar = () => {
                 )}
               </a>
             ))}
-            <Link href="/plans">
-              <Button className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 transition-all hover:scale-105">
-                Get Started
-              </Button>
-            </Link>
+            {status === "authenticated" ? (
+              <Link href="/teacher/important-notes">
+                <Button className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 transition-all hover:scale-105 gap-2">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-4">
+                <Link 
+                  href="/login" 
+                  className="text-foreground hover:text-primary transition-colors font-medium flex items-center gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Login
+                </Link>
+                <Link href="/register">
+                  <Button className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 transition-all hover:scale-105 gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    Register
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -139,9 +160,31 @@ export const LandingNavbar = () => {
                   {link.name}
                 </a>
               ))}
-              <Link href="/select-board" onClick={() => setIsOpen(false)}>
-                <Button className="w-full bg-gradient-to-r from-primary to-secondary">Get Started</Button>
-              </Link>
+              <div className="pt-4 border-t border-border flex flex-col gap-3">
+                {status === "authenticated" ? (
+                  <Link href="/teacher/important-notes" onClick={() => setIsOpen(false)}>
+                    <Button className="w-full bg-gradient-to-r from-primary to-secondary gap-2">
+                      <LayoutDashboard className="h-4 w-4" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" className="w-full justify-center gap-2">
+                        <LogIn className="h-4 w-4" />
+                        Login
+                      </Button>
+                    </Link>
+                    <Link href="/register" onClick={() => setIsOpen(false)}>
+                      <Button className="w-full bg-gradient-to-r from-primary to-secondary gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        Register
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}

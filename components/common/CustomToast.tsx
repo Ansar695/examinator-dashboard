@@ -58,7 +58,7 @@ const Toast: React.FC<ToastProps> = ({
   const tone = toneStyles[type];
 
   return (
-    <div className="fixed right-4 top-4 z-50">
+    <div className="fixed right-4 top-4 z-[9999]">
       <div
         className={`
           relative flex w-[360px] max-w-[90vw] items-start gap-3 rounded-xl border p-4 shadow-xl backdrop-blur

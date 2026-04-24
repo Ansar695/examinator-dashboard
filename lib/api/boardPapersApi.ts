@@ -50,13 +50,14 @@ export const paperBoardApi = createApi({
   endpoints: (builder) => ({
     getBoardPapers: builder.query<
       { success: boolean; data: BoardPaper[]; meta: MetaProps },
-      { boardName?: string; search?: string; page?: number; limit?: number } | void
+      { boardName?: string; boardYear?: string; search?: string; page?: number; limit?: number } | void
     >({
       query: (params) => {
-        if (!params) return "/baord-papers"
+        if (!params) return "/board-papers"
         const queryParams = new URLSearchParams()
         if (params.search) queryParams.append("search", params.search)
         if (params.boardName) queryParams.append("boardName", params.boardName)
+        if (params.boardYear) queryParams.append("boardYear", params.boardYear)
         if (params.page) queryParams.append("page", params.page.toString())
         if (params.limit) queryParams.append("limit", params.limit.toString())
         return `/board-papers?${queryParams.toString()}`

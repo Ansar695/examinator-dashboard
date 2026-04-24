@@ -21,8 +21,13 @@ interface PaperHeaderProps {
   onSaveChanges: () => void;
   onEdit: () => void;
   onPreview: () => void;
-  currentTemplate: string;
-  onTemplateChange: (templateId: string) => void;
+  currentTemplate?: string;
+  onTemplateChange?: (templateId: string) => void;
+  onBackToSelection?: () => void;
+  hideBackToSelection?: boolean;
+  hideEditPaper?: boolean;
+  institutionLogo?: string | null;
+  institutionName?: string | null;
 }
 
 export const PaperHeader: React.FC<PaperHeaderProps> = ({
@@ -37,25 +42,46 @@ export const PaperHeader: React.FC<PaperHeaderProps> = ({
   onPreview,
   currentTemplate,
   onTemplateChange,
+  onBackToSelection,
+  hideBackToSelection = false,
+  hideEditPaper = false,
+  institutionLogo,
+  institutionName,
 }) => {
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const canUseTemplates = !!currentTemplate && !!onTemplateChange;
 
   return (
     <div className="p-6 bg-gray-100 border-b space-y-4">
       <div className="flex justify-between items-center">
-        <Link
-          href={`/${board}/${classNumber}/${subject}/select-questions${
-            subjectId ? `?subjectId=${subjectId}` : ""
-          }`}
-        >
-          <Button
-            variant="ghost"
-            className="flex items-center text-blue-600 hover:text-blue-800"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Question Selection
-          </Button>
-        </Link>
+        {!hideBackToSelection ? (
+          onBackToSelection ? (
+            <Button
+              variant="ghost"
+              onClick={onBackToSelection}
+              className="flex items-center text-blue-600 hover:text-blue-800"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Question Selection
+            </Button>
+          ) : (
+            <Link
+              href={`/${board}/${classNumber}/${subject}/select-questions${
+                subjectId ? `?subjectId=${subjectId}` : ""
+              }`}
+            >
+              <Button
+                variant="ghost"
+                className="flex items-center text-blue-600 hover:text-blue-800"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Question Selection
+              </Button>
+            </Link>
+          )
+        ) : (
+          <div />
+        )}
         <div className="space-x-2">
           {hasChanges ? (
             <Button
@@ -77,22 +103,26 @@ export const PaperHeader: React.FC<PaperHeaderProps> = ({
             </Button>
           ) : (
             <>
-              <Button
-                variant="outline"
-                onClick={() => setShowTemplatesModal(true)}
-                className="h-10 px-8 cursor-pointer"
-              >
-                <BookTemplate className="mr-2 h-4 w-4" />
-                Templates
-              </Button>
-              <Button
-                variant="outline"
-                onClick={onEdit}
-                className="h-10 px-8 cursor-pointer"
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Paper
-              </Button>
+              {canUseTemplates ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTemplatesModal(true)}
+                  className="h-10 px-8 cursor-pointer"
+                >
+                  <BookTemplate className="mr-2 h-4 w-4" />
+                  Templates
+                </Button>
+              ) : null}
+              {!hideEditPaper ? (
+                <Button
+                  variant="outline"
+                  onClick={onEdit}
+                  className="h-10 px-8 cursor-pointer"
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Paper
+                </Button>
+              ) : null}
             </>
           )}
           <Button
@@ -105,15 +135,19 @@ export const PaperHeader: React.FC<PaperHeaderProps> = ({
           </Button>
         </div>
       </div>
-      <TemplatesModal
-        isOpen={showTemplatesModal}
-        onOpenChange={setShowTemplatesModal}
-        currentTemplate={currentTemplate}
-        onTemplateChange={(type: string) => {
-          onTemplateChange(type);
-          setShowTemplatesModal(false);
-        }}
-      />
+      {canUseTemplates ? (
+        <TemplatesModal
+          isOpen={showTemplatesModal}
+          onOpenChange={setShowTemplatesModal}
+          currentTemplate={currentTemplate}
+          onTemplateChange={(type: string) => {
+            onTemplateChange(type);
+            setShowTemplatesModal(false);
+          }}
+          institutionLogo={institutionLogo}
+          institutionName={institutionName}
+        />
+      ) : null}
     </div>
   );
 };
