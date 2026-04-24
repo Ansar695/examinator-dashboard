@@ -30,6 +30,10 @@ export interface Question {
   subTopic?: string;
 }
 
+type GenerationResult =
+  | { ok: true; topic: string; questions: Question[] }
+  | { ok: false; topic: string; error: string }
+
 interface QuestionGenerationModalProps {
   open: boolean
   onClose: () => void
@@ -62,9 +66,10 @@ export function QuestionGenerationModal({
   const { showSuccess, showError, showWarning, ToastComponent } = useToast();
   const isSavingQuestions = isSaving || isSavingLocal;
 
-  const runWithConcurrency = async <T,>(
+  const runWithConcurrencyProgress = async <T,>(
     tasks: Array<() => Promise<T>>,
-    limit: number
+    limit: number,
+    onResult: (result: T) => void
   ): Promise<T[]> => {
     const results: T[] = new Array(tasks.length)
     let nextIndex = 0
@@ -73,7 +78,9 @@ export function QuestionGenerationModal({
       while (nextIndex < tasks.length) {
         const current = nextIndex
         nextIndex += 1
-        results[current] = await tasks[current]()
+        const result = await tasks[current]()
+        results[current] = result
+        onResult(result)
       }
     }
 
@@ -94,6 +101,8 @@ export function QuestionGenerationModal({
     }
 
     setIsGenerating(true)
+    setGeneratedQuestions([])
+    setShowGenerated(false)
     
     try {
         if(!classNumber) showSuccess("Please enter class number (e.g. 11, 12).")
@@ -110,47 +119,66 @@ export function QuestionGenerationModal({
 
         const topicsToGenerate = subTopics.length ? selectedSubtopics : [""]
 
-        const tasks = topicsToGenerate.map((topic) => async () => {
-            const formData = new FormData()
-            formData.append("subject", chapterName)
-            formData.append("book", classNumber as string)
-            formData.append("chapter", chapterName)
-            formData.append("n", totalQuestions)
-            if (topic) {
-              formData.append("subtopics", topic)
-            }
+        const tasks: Array<() => Promise<GenerationResult>> = topicsToGenerate.map((topic) => async () => {
+          try {
+              const formData = new FormData()
+              formData.append("subject", chapterName)
+              formData.append("book", classNumber as string)
+              formData.append("chapter", chapterName)
+              formData.append("n", totalQuestions)
+              if (topic) {
+                formData.append("subtopics", topic)
+              }
 
-            const genResponse = await fetch(urlType, {
-              method: "POST",
-              body: formData,
-            })
-            const parsedResp = await genResponse.json()
-            if (!genResponse?.ok || !parsedResp?.success) {
+              const genResponse = await fetch(urlType, {
+                method: "POST",
+                body: formData,
+              })
+              const parsedResp = await genResponse.json()
+              if (!genResponse?.ok || !parsedResp?.success) {
+                return {
+                  ok: false,
+                  topic,
+                  error: parsedResp?.details ?? "Something went wrong, please try again later",
+                }
+              }
+
+              const questionsWithTopic = (parsedResp?.questions ?? []).map((q: Question) => ({
+                ...q,
+                subTopic: topic || undefined,
+              }))
+
+              return {
+                ok: true,
+                topic,
+                questions: questionsWithTopic,
+              }
+            } catch {
               return {
                 ok: false,
                 topic,
-                error: parsedResp?.details ?? "Something went wrong, please try again later",
+                error: "Something went wrong, please try again later",
               }
-            }
-
-            const questionsWithTopic = (parsedResp?.questions ?? []).map((q: Question) => ({
-              ...q,
-              subTopic: topic || undefined,
-            }))
-
-            return {
-              ok: true,
-              topic,
-              questions: questionsWithTopic,
             }
           }
         )
 
-        const results = await runWithConcurrency(tasks, 3)
+        const failed: Array<{ ok: false; topic: string; error: string }> = []
+
+        const results = await runWithConcurrencyProgress(tasks, 3, (result) => {
+          if (result.ok) {
+            const questions = result.questions ?? []
+            if (questions.length > 0) {
+              setGeneratedQuestions((prev) => [...prev, ...questions])
+              setShowGenerated(true)
+              setQType(questionType)
+            }
+          } else {
+            failed.push(result)
+          }
+        })
 
         const successful = results.filter((r) => r.ok) as Array<{ ok: true; topic: string; questions: Question[] }>
-        const failed = results.filter((r) => !r.ok) as Array<{ ok: false; topic: string; error: string }>
-
         const combinedQuestions = successful.flatMap((r) => r.questions)
 
         if (combinedQuestions.length === 0) {
@@ -159,8 +187,6 @@ export function QuestionGenerationModal({
           return
         }
 
-        setGeneratedQuestions(combinedQuestions)
-        setQType(questionType)
         showSuccess(`Generated ${combinedQuestions.length} questions`)
         if (failed.length > 0) {
           const failedTopics = failed.map((f) => (f.topic ? `"${f.topic}"` : "General")).join(", ")
@@ -175,7 +201,6 @@ export function QuestionGenerationModal({
 
     // setGeneratedQuestions(newQuestions)
     setIsGenerating(false)
-    setShowGenerated(true)
   }
 
   const handleUpdateQuestion = (id: string, updatedQuestion: Question) => {
@@ -399,7 +424,7 @@ export function QuestionGenerationModal({
           ) : (
             <Button
               onClick={handleSaveAllQuestions}
-              disabled={generatedQuestions.length === 0 || isSavingQuestions}
+              disabled={generatedQuestions.length === 0 || isSavingQuestions || isGenerating}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
               {isSavingQuestions ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Loader2, X } from "lucide-react";
+import { ArrowRight, Loader2, Save, X } from "lucide-react";
 
 const SelectedQuestions = ({
   getTotalSelectedQuestions,
@@ -9,6 +9,8 @@ const SelectedQuestions = ({
   allSelectedQuestions,
   handleQuestionSelect,
   handleContinue,
+  handleSaveDraft,
+  isSavingDraft,
   isCreatingPaper,
   isEditMode,
 }: any) => {
@@ -91,6 +93,29 @@ const SelectedQuestions = ({
             </>
           )}
         </motion.button>
+
+        {handleSaveDraft ? (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.25 }}
+            onClick={handleSaveDraft}
+            disabled={getTotalSelectedQuestions() === 0 || isSavingDraft}
+            className="cursor-pointer w-full mt-3 bg-white border border-slate-200 hover:border-slate-300 disabled:bg-gray-100 disabled:cursor-not-allowed text-slate-700 font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            {isSavingDraft ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving Draft...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save Draft
+              </>
+            )}
+          </motion.button>
+        ) : null}
       </div>
     </motion.div>
   );

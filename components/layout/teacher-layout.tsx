@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import TeacherSidebar from "./teacher-sidebar";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,15 @@ interface DashboardLayoutProps {
 
 export function TeacherDashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const pathname = usePathname();
+  const isPaperBuilder = pathname?.startsWith("/teacher/paper-builder");
+
+  useEffect(() => {
+    if (isPaperBuilder) {
+      setSidebarCollapsed(true);
+    }
+  }, [isPaperBuilder]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -26,14 +36,29 @@ export function TeacherDashboardLayout({ children }: DashboardLayoutProps) {
       )}
 
       {/* Sidebar */}
-      <TeacherSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      <TeacherSidebar
+        isOpen={sidebarOpen}
+        setIsOpen={setSidebarOpen}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+      />
 
       {/* Main content */}
-      <div className="lg:pl-74 bg-gray-100 min-h-screen">
+      <div
+        className={`bg-gray-100 min-h-screen transition-all duration-300 ${
+          sidebarCollapsed ? "lg:pl-20" : "lg:pl-74"
+        }`}
+      >
         <Header onMenuClick={() => setSidebarOpen(true)} />
         {/* <Header onMenuClick={() => setSidebarOpen(true)} /> */}
-        <main className="p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-7xl animate-slide-up">{children}</div>
+        <main className={`${isPaperBuilder ? "p-0" : "p-4 sm:p-6 lg:p-8"}`}>
+          <div
+            className={`animate-slide-up ${
+              isPaperBuilder ? "max-w-full" : "mx-auto max-w-7xl"
+            }`}
+          >
+            {children}
+          </div>
         </main>
       </div>
     </div>

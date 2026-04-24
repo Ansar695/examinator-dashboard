@@ -18,6 +18,9 @@ interface UseQuestionSelectionProps {
   subject: string;
   subjectId: string | null;
   paperId?: string | null;
+  disableRedirect?: boolean;
+  onComplete?: (paperId: string) => void;
+  onSaveDraft?: (paperId: string) => void;
 }
 
 export const useQuestionSelection = ({
@@ -26,6 +29,9 @@ export const useQuestionSelection = ({
   subject,
   subjectId,
   paperId,
+  disableRedirect = false,
+  onComplete,
+  onSaveDraft,
 }: UseQuestionSelectionProps) => {
   const router = useRouter();
   const { toast } = useToast();
@@ -38,6 +44,27 @@ export const useQuestionSelection = ({
     short: [],
     long: [],
   });
+  const [questionLimits, setQuestionLimits] = useState<
+    Record<QuestionType, number | null>
+  >({
+    mcq: null,
+    short: null,
+    long: null,
+  });
+  const [questionMarks, setQuestionMarks] = useState<
+    Record<QuestionType, number>
+  >({
+    mcq: 1,
+    short: 5,
+    long: 10,
+  });
+  const [questionCounts, setQuestionCounts] = useState<{
+    mcqCount?: number;
+    shortCount?: number;
+    shortOptional?: number;
+    longCount?: number;
+    longOptional?: number;
+  } | null>(null);
 
   // Separate pagination for each question type
   const [pages, setPages] = useState<Record<QuestionType, number>>({
@@ -57,6 +84,20 @@ export const useQuestionSelection = ({
   const chapterIds = JSON.parse(
     localStorage.getItem("selectedChapters") || "[]"
   );
+  const subTopicsByChapter = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("selectedSubTopicsByChapter");
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }, []);
+  const hasSubtopicFilter =
+    Object.values(subTopicsByChapter).some(
+      (value) => Array.isArray(value) && value.length > 0
+    );
 
   // Fetch questions with pagination and search
   const {
@@ -66,6 +107,9 @@ export const useQuestionSelection = ({
   } = useGetPaperMCQsQuery(
     {
       chapterIds: JSON.stringify(chapterIds),
+      ...(hasSubtopicFilter
+        ? { subTopicsByChapter: JSON.stringify(subTopicsByChapter) }
+        : {}),
       page: pages.mcq,
       limit: 20,
       search: searchTerms.mcq,
@@ -82,6 +126,9 @@ export const useQuestionSelection = ({
   } = useGetPaperShortQsQuery(
     {
       chapterIds: JSON.stringify(chapterIds),
+      ...(hasSubtopicFilter
+        ? { subTopicsByChapter: JSON.stringify(subTopicsByChapter) }
+        : {}),
       page: pages.short,
       limit: 20,
       search: searchTerms.short,
@@ -98,6 +145,9 @@ export const useQuestionSelection = ({
   } = useGetPaperLongQsQuery(
     {
       chapterIds: JSON.stringify(chapterIds),
+      ...(hasSubtopicFilter
+        ? { subTopicsByChapter: JSON.stringify(subTopicsByChapter) }
+        : {}),
       page: pages.long,
       limit: 20,
       search: searchTerms.long,
@@ -112,6 +162,7 @@ export const useQuestionSelection = ({
     useCreatePaperMutation();
   const [updatePaper, { isLoading: isUpdatingPaper }] =
     useUpdatePaperMutation();
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   // Fetch existing paper data if editing
   const { data: existingPaperData } = useGetPaperByIdQuery(paperId || "", {
@@ -142,6 +193,48 @@ export const useQuestionSelection = ({
     }
   }, [existingPaperData, paperId]);
 
+  useEffect(() => {
+    const storedLimits = localStorage.getItem("questionLimits");
+    if (!storedLimits) return;
+    try {
+      const parsed = JSON.parse(storedLimits);
+      setQuestionLimits({
+        mcq: Number.isFinite(parsed?.mcq) ? Number(parsed.mcq) : null,
+        short: Number.isFinite(parsed?.short) ? Number(parsed.short) : null,
+        long: Number.isFinite(parsed?.long) ? Number(parsed.long) : null,
+      });
+    } catch {
+      setQuestionLimits({ mcq: null, short: null, long: null });
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedSettings = localStorage.getItem("questionSettings");
+    if (!storedSettings) return;
+    try {
+      const parsed = JSON.parse(storedSettings);
+      setQuestionMarks({
+        mcq: Number.isFinite(parsed?.mcqMarks) ? Number(parsed.mcqMarks) : 1,
+        short: Number.isFinite(parsed?.shortMarks) ? Number(parsed.shortMarks) : 5,
+        long: Number.isFinite(parsed?.longMarks) ? Number(parsed.longMarks) : 10,
+      });
+      setQuestionCounts({
+        mcqCount: Number.isFinite(parsed?.mcqCount) ? Number(parsed.mcqCount) : undefined,
+        shortCount: Number.isFinite(parsed?.shortCount) ? Number(parsed.shortCount) : undefined,
+        shortOptional: Number.isFinite(parsed?.shortOptional) ? Number(parsed.shortOptional) : undefined,
+        longCount: Number.isFinite(parsed?.longCount) ? Number(parsed.longCount) : undefined,
+        longOptional: Number.isFinite(parsed?.longOptional) ? Number(parsed.longOptional) : undefined,
+      });
+      setQuestionLimits({
+        mcq: Number.isFinite(parsed?.mcqCount) ? Number(parsed.mcqCount) : null,
+        short: Number.isFinite(parsed?.shortCount) ? Number(parsed.shortCount) : null,
+        long: Number.isFinite(parsed?.longCount) ? Number(parsed.longCount) : null,
+      });
+    } catch {
+      setQuestionMarks({ mcq: 1, short: 5, long: 10 });
+    }
+  }, []);
+
   // Memoized questions data
   const questions = useMemo(() => {
     return {
@@ -150,6 +243,31 @@ export const useQuestionSelection = ({
       long: longResponse?.data || [],
     };
   }, [mcqsResponse, shortResponse, longResponse]);
+
+  const selectedQuestionDetails = useMemo(() => {
+    const paper = existingPaperData?.data;
+    if (!paper) {
+      return { mcq: [], short: [], long: [] };
+    }
+
+    return {
+      mcq: (paper.mcqs || []).map((q: any) => ({
+        ...q,
+        id: q.questionId,
+        question: q.question ?? q.text ?? "",
+      })),
+      short: (paper.shortQs || []).map((q: any) => ({
+        ...q,
+        id: q.questionId,
+        question: q.question ?? q.text ?? "",
+      })),
+      long: (paper.longQs || []).map((q: any) => ({
+        ...q,
+        id: q.questionId,
+        question: q.question ?? q.text ?? "",
+      })),
+    };
+  }, [existingPaperData]);
 
   // Check loading state
   const isLoading = useMemo(() => {
@@ -185,12 +303,27 @@ export const useQuestionSelection = ({
     id: string,
     selected: boolean
   ) => {
-    setSelectedQuestions((prev) => ({
-      ...prev,
-      [type]: selected
-        ? [...prev[type], id]
-        : prev[type].filter((qId) => qId !== id),
-    }));
+    setSelectedQuestions((prev) => {
+      if (selected) {
+        const limit = questionLimits[type];
+        if (typeof limit === "number" && limit >= 0) {
+          if (prev[type].length >= limit) {
+            toast({
+              title: "Selection limit reached",
+              description: `You have already selected ${limit} ${type.toUpperCase()} questions.`,
+              variant: "destructive",
+            });
+            return prev;
+          }
+        }
+      }
+      return {
+        ...prev,
+        [type]: selected
+          ? [...prev[type], id]
+          : prev[type].filter((qId) => qId !== id),
+      };
+    });
   };
 
   // Handle random selection
@@ -198,7 +331,11 @@ export const useQuestionSelection = ({
     const allQuestions = questions[type];
     if (allQuestions.length === 0) return;
 
-    const selectedCount = Math.min(3, allQuestions.length);
+    const limit = questionLimits[type];
+    const selectedCount =
+      typeof limit === "number" && limit >= 0
+        ? Math.min(limit, allQuestions.length)
+        : Math.min(3, allQuestions.length);
     const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, selectedCount).map((q: any) => q.id);
 
@@ -246,6 +383,76 @@ export const useQuestionSelection = ({
     }
   };
 
+  const getQuestionLimit = (type: QuestionType) => {
+    return questionLimits[type];
+  };
+
+  const buildPayload = () => {
+    const selectedMcqDetails = questions.mcq.filter((q) =>
+      selectedQuestions.mcq.includes(q.id)
+    );
+    const selectedShortDetails = questions.short.filter((q) =>
+      selectedQuestions.short.includes(q.id)
+    );
+    const selectedLongDetails = questions.long.filter((q) =>
+      selectedQuestions.long.includes(q.id)
+    );
+
+    const mcqsPayload = selectedMcqDetails.map((q) => ({
+      questionId: q.id,
+      question: q.question,
+      options: q.options || [],
+      correctAnswer: q.correctAnswer,
+      marks: questionMarks.mcq,
+    }));
+
+    const shortQsPayload = selectedShortDetails.map((q) => ({
+      questionId: q.id,
+      question: q.question,
+      answer: q.answer,
+      marks: questionMarks.short,
+    }));
+
+    const longQsPayload = selectedLongDetails.map((q) => ({
+      questionId: q.id,
+      question: q.question,
+      answer: q.answer,
+      totalMarks: questionMarks.long,
+      parts: [],
+    }));
+
+    const mcqMarks = mcqsPayload.reduce((sum, q) => sum + q.marks, 0);
+    const shortMarks = shortQsPayload.reduce((sum, q) => sum + q.marks, 0);
+    const longMarks = longQsPayload.reduce(
+      (sum, q) => sum + (q.totalMarks || 0),
+      0
+    );
+    let totalMarks = mcqMarks + shortMarks + longMarks;
+
+    if (questionCounts) {
+      const requiredShort = Math.max(
+        0,
+        (questionCounts.shortCount ?? 0) - (questionCounts.shortOptional ?? 0)
+      );
+      const requiredLong = Math.max(
+        0,
+        (questionCounts.longCount ?? 0) - (questionCounts.longOptional ?? 0)
+      );
+      const mcqTotal =
+        (questionCounts.mcqCount ?? mcqsPayload.length) * questionMarks.mcq;
+      const shortTotal = requiredShort * questionMarks.short;
+      const longTotal = requiredLong * questionMarks.long;
+      totalMarks = mcqTotal + shortTotal + longTotal;
+    }
+
+    return {
+      mcqsPayload,
+      shortQsPayload,
+      longQsPayload,
+      totalMarks,
+    };
+  };
+
   // Handle continue to preview
   const handleContinue = async () => {
     if (getTotalSelectedQuestions() === 0) {
@@ -267,51 +474,8 @@ export const useQuestionSelection = ({
     }
 
     try {
-      // Get selected questions with their details
-      const selectedMcqDetails = questions.mcq.filter((q) =>
-        selectedQuestions.mcq.includes(q.id)
-      );
-      const selectedShortDetails = questions.short.filter((q) =>
-        selectedQuestions.short.includes(q.id)
-      );
-      const selectedLongDetails = questions.long.filter((q) =>
-        selectedQuestions.long.includes(q.id)
-      );
-
-      // Prepare MCQs payload
-      const mcqsPayload = selectedMcqDetails.map((q) => ({
-        questionId: q.id,
-        question: q.question,
-        options: q.options || [],
-        correctAnswer: q.correctAnswer,
-        marks: 1, // 1 mark per MCQ
-      }));
-
-      // Prepare short questions payload
-      const shortQsPayload = selectedShortDetails.map((q) => ({
-        questionId: q.id,
-        question: q.question,
-        answer: q.answer,
-        marks: 5, // 5 marks per short question
-      }));
-
-      // Prepare long questions payload
-      const longQsPayload = selectedLongDetails.map((q) => ({
-        questionId: q.id,
-        question: q.question,
-        answer: q.answer,
-        totalMarks: 10, // 10 marks per long question
-        parts: [], // You can add logic to split questions into parts if needed
-      }));
-
-      // Calculate total marks
-      const mcqMarks = mcqsPayload.reduce((sum, q) => sum + q.marks, 0);
-      const shortMarks = shortQsPayload.reduce((sum, q) => sum + q.marks, 0);
-      const longMarks = longQsPayload.reduce(
-        (sum, q) => sum + (q.totalMarks || 0),
-        0
-      );
-      const totalMarks = mcqMarks + shortMarks + longMarks;
+      const { mcqsPayload, shortQsPayload, longQsPayload, totalMarks } =
+        buildPayload();
 
       // Create paper title
       const paperTitle =
@@ -337,10 +501,16 @@ export const useQuestionSelection = ({
         if (response.success && response.data) {
           toast({
             title: "Paper updated successfully",
-            description: "Redirecting to paper preview...",
+            description: disableRedirect
+              ? "Opening paper preview..."
+              : "Redirecting to paper preview...",
           });
 
-          // Navigate to the view paper page
+          if (disableRedirect) {
+            onComplete?.(paperId);
+            return;
+          }
+
           router.push(
             `/${board}/${classNumber}/${subject}/view-paper?paperId=${paperId}&subjectId=${subjectId}`
           );
@@ -368,10 +538,16 @@ export const useQuestionSelection = ({
 
           toast({
             title: "Paper created successfully",
-            description: "Redirecting to paper preview...",
+            description: disableRedirect
+              ? "Opening paper preview..."
+              : "Redirecting to paper preview...",
           });
 
-          // Navigate to the view paper page
+          if (disableRedirect) {
+            onComplete?.(response.data.id);
+            return;
+          }
+
           router.push(
             `/${board}/${classNumber}/${subject}/view-paper?paperId=${response.data.id}&subjectId=${subjectId}`
           );
@@ -400,9 +576,82 @@ export const useQuestionSelection = ({
     }
   };
 
+  const saveDraft = async () => {
+    if (getTotalSelectedQuestions() === 0) {
+      toast({
+        title: "No questions selected",
+        description: "Select at least one question to save a draft.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!subjectId) {
+      toast({
+        title: "Subject not found",
+        description: "Please go back and select a subject again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingDraft(true);
+    try {
+      const { mcqsPayload, shortQsPayload, longQsPayload, totalMarks } =
+        buildPayload();
+      const paperTitle = `Draft - ${subject} ${new Date().getFullYear()}`;
+
+      if (paperId) {
+        const response = await updatePaper({
+          id: paperId,
+          data: {
+            title: paperTitle,
+            subjectId,
+            totalMarks,
+            mcqs: mcqsPayload,
+            shortQs: shortQsPayload,
+            longQs: longQsPayload,
+          },
+        }).unwrap();
+        if (response.success && response.data) {
+          toast({
+            title: "Draft saved",
+            description: "Your draft is saved and can be continued later.",
+          });
+          onSaveDraft?.(paperId);
+        }
+      } else {
+        const response = await createPaper({
+          title: paperTitle,
+          subjectId,
+          totalMarks,
+          mcqs: mcqsPayload,
+          shortQs: shortQsPayload,
+          longQs: longQsPayload,
+        }).unwrap();
+        if (response.success && response.data) {
+          toast({
+            title: "Draft saved",
+            description: "Your draft is saved and can be continued later.",
+          });
+          onSaveDraft?.(response.data.id);
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Unable to save draft",
+        description:
+          error?.data?.message ?? "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
   // Redirect if no chapters selected
   useEffect(() => {
-    if (chapterIds.length === 0) {
+    if (chapterIds.length === 0 && !disableRedirect) {
       router.push(
         `/${board}/${classNumber}/${subject}/select-topics${
           subjectId ? `?subjectId=${subjectId}` : ""
@@ -413,6 +662,7 @@ export const useQuestionSelection = ({
 
   return {
     selectedQuestions,
+    selectedQuestionDetails,
     questions,
     isLoading,
     error,
@@ -429,5 +679,8 @@ export const useQuestionSelection = ({
     handleSearchChange,
     getTotalSelectedQuestions,
     getPaginationInfo,
+    getQuestionLimit,
+    saveDraft,
+    isSavingDraft,
   };
 };

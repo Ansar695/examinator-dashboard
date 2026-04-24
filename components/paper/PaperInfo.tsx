@@ -1,4 +1,6 @@
 import React from 'react';
+import Image from "next/image";
+import { GraduationCap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface PaperInfoProps {
@@ -8,6 +10,8 @@ interface PaperInfoProps {
   paperName: string;
   examTime: string;
   totalMarks: number;
+  institutionLogo?: string | null;
+  institutionName?: string | null;
   onPaperNameChange: (value: string) => void;
   onExamTimeChange: (value: string) => void;
 }
@@ -19,6 +23,8 @@ export const PaperInfo: React.FC<PaperInfoProps> = ({
   paperName,
   examTime,
   totalMarks,
+  institutionLogo,
+  institutionName,
   onPaperNameChange,
   onExamTimeChange,
 }) => {
@@ -29,10 +35,35 @@ export const PaperInfo: React.FC<PaperInfoProps> = ({
   };
 
   return (
-    <div className="text-center border-b pb-4 mb-6">
-      <h1 className="text-xl font-bold uppercase mb-2">
-        {formatBoardName(board)} BOARD OF INTERMEDIATE AND SECONDARY EDUCATION
-      </h1>
+    <div className="border-b pb-4 mb-6">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+            {institutionLogo ? (
+              <Image
+                src={institutionLogo}
+                alt={institutionName || "Institution"}
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-full object-cover"
+              />
+            ) : (
+              <GraduationCap className="h-6 w-6 text-slate-500" />
+            )}
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-slate-700">
+              {institutionName || "Your Institution"}
+            </p>
+            <p className="text-xs text-slate-500">
+              {formatBoardName(board)} Board
+            </p>
+          </div>
+        </div>
+        <h1 className="text-xl font-bold uppercase">
+          {formatBoardName(board)} BOARD OF INTERMEDIATE AND SECONDARY EDUCATION
+        </h1>
+      </div>
       <Input
         type="text"
         value={paperName}

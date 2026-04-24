@@ -2,8 +2,9 @@
 
 import type { LucideIcon } from "lucide-react"
 import { Card } from "@/components/ui/card"
+import { memo } from "react"
 
-interface StatCardProps {
+export interface StatCardProps {
   title: string
   value: number | string
   icon: LucideIcon
@@ -12,7 +13,7 @@ interface StatCardProps {
   delay: number
 }
 
-export default function StatCard({ title, value, icon: Icon, trend, color, delay }: StatCardProps) {
+function StatCard({ title, value, icon: Icon, trend, color, delay }: StatCardProps) {
   return (
     <Card
       className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group animate-slide-in-up border-0"
@@ -33,3 +34,5 @@ export default function StatCard({ title, value, icon: Icon, trend, color, delay
     </Card>
   )
 }
+
+export default memo(StatCard)

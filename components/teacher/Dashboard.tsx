@@ -1,122 +1,73 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, TrendingUp, FileText, Zap } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useMemo } from "react"
 import StatCard from "./StatCard"
 import RecentPapers from "./RecentPapers"
-import CreatePaperModal from "./CreatePaperModal"
 import { DashboardCardsSkeleton } from "../skeletons/DashboardSkeleton"
-import Link from "next/link"
+import type { TeacherDashboardData } from "@/types/teacher-dashboard"
+import DashboardHeader from "./dashboard/DashboardHeader"
+import TrendChart from "./dashboard/TrendChart"
+import RecentActivity from "./dashboard/RecentActivity"
+import { useTeacherDashboardCards } from "@/hooks/useTeacherDashboardCards"
 
 interface DashboardProps {
   isLoading: boolean;
-  statsData: any;
+  statsData?: TeacherDashboardData;
 }
 
 export default function Dashboard(props: DashboardProps) {
   const { isLoading, statsData } = props;
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  const cards = useTeacherDashboardCards(statsData);
+  const cardDelays = useMemo(() => cards.map((_, i) => i * 80), [cards]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-slide-in-up">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Dashboard</h1>
-        </div>
-        <Link href="/select-board">
-        <Button
-          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 w-full md:w-auto"
-        >
-          <Plus size={20} />
-          Create New Paper
-        </Button>
-        </Link>
-      </div>
+      <DashboardHeader
+        title="Dashboard"
+        subtitle="Manage your paper generation cycles, monitor usage quotas, and track recent activities."
+        primaryActionHref="/teacher/paper-builder"
+        primaryActionLabel="Create New Paper"
+      />
 
-      {/* Stats Grid */}
+      {/* 1. Stats Grid (Exactly 4 cards now) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {isLoading ? 
-        <>
-        <DashboardCardsSkeleton />
-        <DashboardCardsSkeleton />
-        <DashboardCardsSkeleton />
-        <DashboardCardsSkeleton />
-        </>
-        : 
-        <>
-        <StatCard
-          title="Total Papers"
-          value={statsData?.stats?.totalPaper ?? 0}
-          icon={FileText}
-          trend="+3 this month"
-          color="from-blue-500 to-blue-600"
-          delay={0}
-        />
-        <StatCard
-          title="Papers Generated"
-          value={statsData?.stats?.usedPaper ?? 0}
-          icon={TrendingUp}
-          trend={`${statsData?.stats?.usedPercentage ?? 0}% of monthly quota`}
-          color="from-purple-500 to-purple-600"
-          delay={100}
-        />
-        <StatCard
-          title="Remaining"
-          value={statsData?.stats?.remainingPaper ?? 0}
-          icon={Zap}
-          trend="Resets on Nov 1"
-          color="from-green-500 to-green-600"
-          delay={200}
-        />
-        <StatCard
-          title="Plan Type"
-          value={statsData?.stats?.currentPlan?.toLowerCase() ?? 'free'}
-          icon={FileText}
-          trend="Expires Dec 15"
-          color="from-orange-500 to-orange-600"
-          delay={300}
-        />
-        </>
+          Array.from({ length: 4 }).map((_, i) => <DashboardCardsSkeleton key={i} />)
+          : 
+          cards.map((card, index) => (
+            <StatCard
+              key={card.key}
+              title={card.title}
+              value={card.value}
+              icon={card.icon}
+              trend={card.trend}
+              color={card.color}
+              delay={cardDelays[index] ?? 0}
+            />
+          ))
         }
       </div>
 
+      {/* 2. Charts & Activity Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <TrendChart 
+            dailyData={statsData?.charts?.dailyTrend ?? []} 
+            monthlyData={statsData?.charts?.monthlyTrend ?? []} 
+            isLoading={isLoading} 
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <RecentActivity 
+            activities={statsData?.recentActivities} 
+            isLoading={isLoading} 
+          />
+        </div>
+      </div>
+
+      {/* 3. Last Generated Papers (Exactly as before) */}
       <RecentPapers isLoading={isLoading} papers={statsData?.papers} />
-
-      {/* Main Content */}
-      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4 animate-slide-in-up" style={{ animationDelay: "200ms" }}>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h2 className="text-2xl font-bold text-foreground">Generated Papers</h2>
-            <div className="flex gap-2">
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="px-4 py-2 rounded-lg bg-card border border-border text-foreground text-sm hover:border-primary transition-colors"
-              >
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="quarter">This Quarter</option>
-                <option value="year">This Year</option>
-              </select>
-              <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                <Filter size={16} />
-                <span className="hidden sm:inline">Filter</span>
-              </Button>
-            </div>
-          </div>
-          <PapersTable />
-        </div>
-
-        <div className="animate-slide-in-up" style={{ animationDelay: "300ms" }}>
-          <h2 className="text-2xl font-bold text-foreground mb-4">Recent Activity</h2>
-          <ActivityFeed />
-        </div>
-      </div> */}
-
-      {/* Create Paper Modal */}
-      {showCreateModal && <CreatePaperModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }

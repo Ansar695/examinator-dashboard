@@ -44,7 +44,6 @@ export const usePaperManagement = ({
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
   const [originalPaperData, setOriginalPaperData] = useState<any>(null);
-  const [calculatedTotalMarks, setCalculatedTotalMarks] = useState(0);
 
   // Fetch paper data
   const { data: paperData, isLoading: isPaperLoading, error: paperError } = useGetPaperByIdQuery(paperId || '', {
@@ -105,11 +104,6 @@ export const usePaperManagement = ({
           setMarks(prev => ({ ...prev, [`${q.questionId}-${idx}`]: part.marks }));
         });
       });
-
-      // Calculate total marks
-      const shortTotalMarks = paperShorts.reduce((sum, q) => sum + q.marks, 0);
-      const longTotalMarks = paperLongs.reduce((sum, q) => sum + (q.totalMarks || 0), 0);
-      setCalculatedTotalMarks(mcqTotalMarks + shortTotalMarks + longTotalMarks);
 
       // Store original data for comparison
       setOriginalPaperData(paperData.data);
@@ -176,6 +170,23 @@ export const usePaperManagement = ({
     setHasChanges(nameChanged || timeChanged || questionsChanged || marksChanged);
   }, [paperName, examTime, questions, marks, mcqMarks, originalPaperData, paperMcqs, paperShorts, paperLongs]);
 
+  const calculatedTotalMarks = useMemo(() => {
+    const fallbackMcq = paperMcqs.reduce((sum, q) => sum + q.marks, 0);
+    const mcqTotal = typeof mcqMarks === "number" ? mcqMarks : fallbackMcq;
+
+    const shortTotal = paperShorts.reduce((sum, q) => {
+      const value = marks[q.questionId];
+      return sum + (typeof value === "number" ? value : q.marks || 0);
+    }, 0);
+
+    const longTotal = paperLongs.reduce((sum, q) => {
+      const value = marks[q.questionId];
+      return sum + (typeof value === "number" ? value : q.totalMarks || 0);
+    }, 0);
+
+    return mcqTotal + shortTotal + longTotal;
+  }, [mcqMarks, marks, paperMcqs, paperShorts, paperLongs]);
+
   // Handle question edit
   const handleQuestionEdit = (type: 'mcq' | 'short' | 'long', id: string, newText: string) => {
     console.log("Editing question:", type, id, newText);
@@ -213,12 +224,15 @@ export const usePaperManagement = ({
       // Prepare updated data
       const updatedMcqs = questions.mcq.map(q => {
         const originalMcq = paperMcqs.find(m => m.questionId === q.id);
+        const mcqPerQuestion = questions.mcq.length
+          ? Math.floor((mcqMarks || 0) / questions.mcq.length)
+          : 0;
         return {
           questionId: q.id,
           question: q.text,
           options: q.options || [],
           correctAnswer: originalMcq?.correctAnswer,
-          marks: mcqMarks ? Math.floor(mcqMarks / questions.mcq.length) : 1,
+          marks: mcqPerQuestion || 1,
         };
       });
 
@@ -228,7 +242,7 @@ export const usePaperManagement = ({
           questionId: q.id,
           question: q.text,
           answer: originalShort?.answer,
-          marks: marks[q.id] || 5,
+          marks: marks[q.id] ?? originalShort?.marks ?? 5,
         };
       });
 
@@ -243,16 +257,13 @@ export const usePaperManagement = ({
           questionId: q.id,
           question: q.text,
           answer: originalLong?.answer,
-          totalMarks: marks[q.id] || 10,
+          totalMarks: marks[q.id] ?? originalLong?.totalMarks ?? 10,
           parts: updatedParts,
         };
       });
 
       // Calculate new total marks
-      const newTotalMarks = 
-        (mcqMarks || 0) + 
-        updatedShorts.reduce((sum, q) => sum + (q.marks || 0), 0) +
-        updatedLongs.reduce((sum, q) => sum + (q.totalMarks || 0), 0);
+      const newTotalMarks = calculatedTotalMarks;
 
       const response = await updatePaper({
         id: paperId,

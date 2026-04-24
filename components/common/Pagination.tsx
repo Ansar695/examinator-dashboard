@@ -11,6 +11,7 @@ interface PaginationProps {
   limit: number;
   onPageChange: (page: number) => void;
   isLoading?: boolean;
+  itemName?: string;
 }
 
 export default function CustomPagination({
@@ -21,12 +22,13 @@ export default function CustomPagination({
   limit,
   onPageChange,
   isLoading = false,
+  itemName = "items",
 }: PaginationProps) {
 
   return (
     <div className="flex items-center justify-between p-4 border-t">
       <div className="text-sm text-gray-600">
-        Showing {currentUsers} of {total} users
+        Showing {currentUsers} of {total ?? 0} {itemName}
       </div>
       <div className="flex gap-2">
         <Button
