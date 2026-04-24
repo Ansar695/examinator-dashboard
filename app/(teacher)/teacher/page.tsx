@@ -6,7 +6,8 @@ import { useGetTeacherDashboardQuery } from "@/lib/api/dashboardApi";
 export default function Home() {
 //   const { data: session, status } = useSession()
 //   const router = useRouter()
-  const { data, isLoading } = useGetTeacherDashboardQuery();
+  const { data, isLoading, isFetching } = useGetTeacherDashboardQuery();
+  const isPending = isLoading || (isFetching && !data);
 
 //   useEffect(() => {
 //     if (status === "loading") return
@@ -30,7 +31,7 @@ export default function Home() {
   return (
     <div>
         <Dashboard 
-          isLoading={isLoading}
+          isLoading={isPending}
           statsData={data?.data}
         />
     </div>

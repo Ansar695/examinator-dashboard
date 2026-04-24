@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/authMiddleware";
 import { currentPlanStatus } from "@/lib/auth/plansMiddleware";
+import { createUserNotification } from "@/lib/notifications/notificationService";
 
 export async function GET(request: Request) {
   try {
@@ -165,6 +166,19 @@ export async function POST(request: Request) {
         papersGenerated: { increment: 1 },
       },
     });
+
+    try {
+      await createUserNotification({
+        userId,
+        type: "SUCCESS",
+        title: "Paper created",
+        message: `"${paper.title}" has been created successfully.`,
+        href: "/teacher/generated-papers",
+        metadata: { paperId: paper.id },
+      });
+    } catch (notificationError) {
+      console.error("Failed to create notification (paper created):", notificationError);
+    }
 
     return NextResponse.json({ success: true, data: paper, status: 201 }, { status: 201 });
   } catch (error: any) {

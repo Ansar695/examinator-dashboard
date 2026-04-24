@@ -46,6 +46,37 @@ export async function GET() {
       where: { userId: auth.userId, createdAt: { gte: startThisMonth } },
     });
 
+    // Fetch Recent Activities
+    const recentPapersForActivity = await prisma.generatedPaper.findMany({
+      where: { userId: auth.userId },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      include: {
+        subject: { select: { name: true } }
+      }
+    });
+
+    const recentActivities = recentPapersForActivity.map(paper => ({
+      id: `paper-${paper.id}`,
+      type: "PAPER_GENERATED",
+      title: "Paper Generated",
+      description: `${paper.title} (${paper.subject.name})`,
+      time: paper.createdAt,
+    }));
+
+    // Add subscription activity if exists
+    if (currentPlan) {
+      recentActivities.push({
+        id: `sub-${currentPlan.id}`,
+        type: "PLAN_SUBSCRIBED",
+        title: "Plan Active",
+        description: `Currently on ${currentPlan.planType} Plan`,
+        time: currentPlan.updatedAt,
+      });
+    }
+
+    recentActivities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
     // Fetch last 5 generated papers (sorted by newest first)
     const lastFivePapers = await prisma.generatedPaper.findMany({
       where: { userId: auth.userId },
@@ -84,27 +115,63 @@ export async function GET() {
       },
     });
 
-    // Pull a limited "analysis set" to compute charts/insights without shipping large payloads.
-    // We only select the nested fields we need (counts/marks), not full question text/options.
+    // Pull trend data (last 12 months for broad compatibility)
+    const start12Months = startOfMonth(subDays(now, 365));
+    const trendPapers = await prisma.generatedPaper.findMany({
+      where: { userId: auth.userId, createdAt: { gte: start12Months } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" }
+    });
+
+    // Generate series for different views
+    const dailySeries: Array<{ date: string; count: number }> = [];
+    const dailyMap = new Map<string, number>();
+    
+    trendPapers.filter(p => p.createdAt >= start30Days).forEach(p => {
+      const key = format(p.createdAt, "yyyy-MM-dd");
+      dailyMap.set(key, (dailyMap.get(key) ?? 0) + 1);
+    });
+
+    for (let i = 0; i < 30; i++) {
+      const day = startOfDay(subDays(now, 29 - i));
+      const key = format(day, "yyyy-MM-dd");
+      dailySeries.push({
+        date: format(day, "MMM d"),
+        count: dailyMap.get(key) ?? 0,
+      });
+    }
+
+    const monthlySeries: Array<{ date: string; count: number }> = [];
+    const monthlyMap = new Map<string, number>();
+    trendPapers.forEach(p => {
+      const key = format(p.createdAt, "yyyy-MM");
+      monthlyMap.set(key, (monthlyMap.get(key) ?? 0) + 1);
+    });
+
+    for (let i = 0; i < 12; i++) {
+      const month = startOfMonth(subDays(now, (11 - i) * 30));
+      const key = format(month, "yyyy-MM");
+      monthlySeries.push({
+        date: format(month, "MMM yyyy"),
+        count: monthlyMap.get(key) ?? 0,
+      });
+    }
+
+    // Existing Subject/Class/Board analysis on last 30 days
     const analysisPapers = await prisma.generatedPaper.findMany({
       where: { userId: auth.userId, createdAt: { gte: start30Days } },
-      orderBy: { createdAt: "asc" },
       select: {
         id: true,
-        createdAt: true,
         subjectId: true,
         classId: true,
         boardId: true,
         totalMarks: true,
-        examTime: true,
         mcqs: { select: { marks: true } },
         shortQs: { select: { marks: true } },
         longQs: { select: { totalMarks: true } },
       },
-      take: 250,
     });
 
-    const papersByDayMap = new Map<string, number>();
     const subjectCountMap = new Map<string, number>();
     const classCountMap = new Map<string, number>();
     const boardCountMap = new Map<string, number>();
@@ -116,49 +183,23 @@ export async function GET() {
     let totalMarks = 0;
 
     for (const paper of analysisPapers) {
-      const dayKey = format(paper.createdAt, "yyyy-MM-dd");
-      papersByDayMap.set(dayKey, (papersByDayMap.get(dayKey) ?? 0) + 1);
-
       subjectCountMap.set(paper.subjectId, (subjectCountMap.get(paper.subjectId) ?? 0) + 1);
       classCountMap.set(paper.classId, (classCountMap.get(paper.classId) ?? 0) + 1);
       boardCountMap.set(paper.boardId, (boardCountMap.get(paper.boardId) ?? 0) + 1);
 
-      const mcqCount = paper.mcqs?.length ?? 0;
-      const shortCount = paper.shortQs?.length ?? 0;
-      const longCount = paper.longQs?.length ?? 0;
-
-      totalMcqs += mcqCount;
-      totalShorts += shortCount;
-      totalLongs += longCount;
-      totalQuestions += mcqCount + shortCount + longCount;
+      totalMcqs += paper.mcqs?.length ?? 0;
+      totalShorts += paper.shortQs?.length ?? 0;
+      totalLongs += paper.longQs?.length ?? 0;
+      totalQuestions += (paper.mcqs?.length ?? 0) + (paper.shortQs?.length ?? 0) + (paper.longQs?.length ?? 0);
       totalMarks += paper.totalMarks ?? 0;
-    }
-
-    const last30DaysSeries: Array<{ date: string; count: number }> = [];
-    for (let i = 0; i < 30; i += 1) {
-      const day = startOfDay(subDays(now, 29 - i));
-      const key = format(day, "yyyy-MM-dd");
-      last30DaysSeries.push({
-        date: format(day, "MMM d"),
-        count: papersByDayMap.get(key) ?? 0,
-      });
     }
 
     const topN = <T extends { id: string; count: number }>(items: T[], n = 5) =>
       items.sort((a, b) => b.count - a.count).slice(0, n);
 
-    const subjectTop = topN(
-      Array.from(subjectCountMap.entries()).map(([id, count]) => ({ id, count })),
-      5
-    );
-    const classTop = topN(
-      Array.from(classCountMap.entries()).map(([id, count]) => ({ id, count })),
-      5
-    );
-    const boardTop = topN(
-      Array.from(boardCountMap.entries()).map(([id, count]) => ({ id, count })),
-      5
-    );
+    const subjectTop = topN(Array.from(subjectCountMap.entries()).map(([id, count]) => ({ id, count })));
+    const classTop = topN(Array.from(classCountMap.entries()).map(([id, count]) => ({ id, count })));
+    const boardTop = topN(Array.from(boardCountMap.entries()).map(([id, count]) => ({ id, count })));
 
     const [subjects, classes, boards] = await Promise.all([
       prisma.subject.findMany({ where: { id: { in: subjectTop.map((s) => s.id) } }, select: { id: true, name: true, slug: true } }),
@@ -172,25 +213,12 @@ export async function GET() {
     const boardById = byId(boards);
 
     const charts = {
-      papersLast30Days: last30DaysSeries,
+      dailyTrend: dailySeries,
+      monthlyTrend: monthlySeries,
       topSubjectsLast30Days: subjectTop.map((s) => ({
         id: s.id,
         name: subjectById.get(s.id)?.name ?? "Unknown",
-        slug: subjectById.get(s.id)?.slug ?? "",
         count: s.count,
-      })),
-      topClassesLast30Days: classTop.map((c) => ({
-        id: c.id,
-        name: classById.get(c.id)?.name ?? "Unknown",
-        slug: classById.get(c.id)?.slug ?? "",
-        type: classById.get(c.id)?.type ?? null,
-        count: c.count,
-      })),
-      topBoardsLast30Days: boardTop.map((b) => ({
-        id: b.id,
-        name: boardById.get(b.id)?.name ?? "Unknown",
-        slug: boardById.get(b.id)?.slug ?? "",
-        count: b.count,
       })),
       questionMixLast30Days: [
         { name: "MCQs", value: totalMcqs },
@@ -212,19 +240,12 @@ export async function GET() {
       remainingPaper: quotaRemaining,
       currentPlan: currentPlan?.planType || "FREE",
       expiryDate: currentPlan?.renewalDate || null,
+      subscriptionDate: currentPlan?.createdAt || null,
       usedPercentage,
       daysToRenewal,
     };
 
-    const [
-      totalBoards,
-      totalClasses,
-      totalSubjects,
-      totalChapters,
-      totalMCQs,
-      totalShortQs,
-      totalLongQs,
-    ] = await Promise.all([
+    const [totalBoards, totalClasses, totalSubjects, totalChapters, totalMCQs, totalShortQs, totalLongQs] = await Promise.all([
       prisma.board.count(),
       prisma.class.count(),
       prisma.subject.count(),
@@ -234,55 +255,11 @@ export async function GET() {
       prisma.longQuestion.count(),
     ]);
 
-    const bank = {
-      totalBoards,
-      totalClasses,
-      totalSubjects,
-      totalChapters,
-      totalMCQs,
-      totalShortQs,
-      totalLongQs,
-    };
+    const bank = { totalBoards, totalClasses, totalSubjects, totalChapters, totalMCQs, totalShortQs, totalLongQs };
 
     const avgQuestionsPerPaper = analysisPapers.length > 0 ? totalQuestions / analysisPapers.length : 0;
-    const avgMarksPerPaper = analysisPapers.length > 0 ? totalMarks / analysisPapers.length : 0;
 
-    const alerts: Array<{ id: string; type: "info" | "warning" | "danger"; title: string; message: string }> = [];
-    if (!currentPlan) {
-      alerts.push({
-        id: "no-plan",
-        type: "warning",
-        title: "No active plan found",
-        message: "Subscribe to a plan to start generating papers.",
-      });
-    } else if (quotaLimit > 0) {
-      if (quotaRemaining === 0) {
-        alerts.push({
-          id: "quota-zero",
-          type: "danger",
-          title: "Monthly quota reached",
-          message: "Upgrade your plan or wait for renewal to generate more papers.",
-        });
-      } else if (quotaRemaining <= Math.max(3, Math.round(quotaLimit * 0.1))) {
-        alerts.push({
-          id: "quota-low",
-          type: "warning",
-          title: "Quota running low",
-          message: `Only ${quotaRemaining} papers remaining before renewal.`,
-        });
-      }
-
-      if (daysToRenewal !== null && daysToRenewal <= 3) {
-        alerts.push({
-          id: "renewal-soon",
-          type: "info",
-          title: "Renewal coming soon",
-          message: `Your plan renews in ${daysToRenewal} day(s).`,
-        });
-      }
-    }
-
-    // Return both results
+    // Return extended results
     return NextResponse.json({
       status: 200,
       data: {
@@ -292,14 +269,11 @@ export async function GET() {
           papersToday,
           papersThisWeek,
           papersThisMonth,
-          papersLast7Days: analysisPapers.filter((p) => p.createdAt >= start7Days).length,
           avgQuestionsPerPaper: Number(avgQuestionsPerPaper.toFixed(1)),
-          avgMarksPerPaper: Number(avgMarksPerPaper.toFixed(1)),
-          questionsGeneratedLast30Days: totalQuestions,
         },
         charts,
         bank,
-        alerts,
+        recentActivities,
         papers: lastFivePapers,
       },
     });

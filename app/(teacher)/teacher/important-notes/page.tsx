@@ -72,7 +72,7 @@ export default function ImportantNotes() {
     <div className="min-h-screen bg-[radial-gradient(1200px_circle_at_20%_0%,hsl(var(--primary))/0.12,transparent_55%),radial-gradient(900px_circle_at_100%_40%,hsl(38_92%_50%)/0.10,transparent_45%)] p-4 sm:p-6">
       <Toaster />
       <div className="max-w-7xl mx-auto space-y-6">
-        
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/60 backdrop-blur-md rounded-2xl p-6 md:px-8 md:py-6 border border-border shadow-sm">
           <div>
@@ -108,9 +108,9 @@ export default function ImportantNotes() {
         {/* Notes Display area */}
         {isLoading ? (
           viewMode === "list" ? (
-             <BoardPapersListSkeleton />
+            <BoardPapersListSkeleton />
           ) : (
-             <BoardPaperGridSkeleton />
+            <BoardPaperGridSkeleton />
           )
         ) : error && !isLoading ? (
           <div className="flex items-center justify-center py-20 bg-card rounded-2xl border border-dashed border-border">

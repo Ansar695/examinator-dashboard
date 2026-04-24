@@ -1,25 +1,25 @@
 'use client'
 import React from 'react'
-import { Check, Trash2, Clock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Clock } from "lucide-react";
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { getNotificationColors } from '@/utils/notificationUtils'
+import { getNotificationColors, getNotificationPresentation } from '@/utils/notificationUtils'
 import { formatTimestamp } from '@/utils/dateUtils'
+import type { TeacherNotificationDto } from "@/types/notification"
 
 interface NotificationItemProps {
-  notification: any;
+  notification: TeacherNotificationDto;
   onMarkAsRead: (id: string) => void;
-  onDelete: (id: string) => void;
+  onOpen: (id: string) => void;
 }
 
 export const NotificationItem: React.FC<NotificationItemProps> = ({
   notification,
   onMarkAsRead,
-  onDelete
+  onOpen,
 }) => {
-  const Icon = notification.icon;
-  const colors = getNotificationColors(notification?.color, notification.read);
+  const { icon: Icon, color } = getNotificationPresentation(notification.type);
+  const colors = getNotificationColors(color, notification.read);
 
   return (
     <div
@@ -27,7 +27,10 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
         "group relative p-4 hover:bg-muted/30 transition-all duration-300 cursor-pointer",
         !notification.read && "bg-primary/5"
       )}
-      onClick={() => !notification.read && onMarkAsRead(notification.id)}
+      onClick={() => {
+        if (!notification.read) onMarkAsRead(notification.id);
+        onOpen(notification.id);
+      }}
     >
       {/* Unread indicator */}
       {!notification.read && (
@@ -68,35 +71,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
-              {formatTimestamp(notification.timestamp)}
-            </div>
-
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              {!notification.read && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs hover:bg-primary/10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMarkAsRead(notification.id);
-                  }}
-                >
-                  <Check className="h-3 w-3 mr-1" />
-                  Mark read
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(notification.id);
-                }}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {formatTimestamp(notification.createdAt)}
             </div>
           </div>
 
