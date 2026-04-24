@@ -14,6 +14,7 @@ import { generatedPapersApi } from "./api/generatedPapers"
 import { contactUsApi } from "./api/contactUsApi"
 import { adminDashboardStatsApi } from "./api/adminDashboardAPI"
 import { activitiesApi } from "./api/activitiesApi"
+import { notificationsApi } from "./api/notificationsApi"
 
 export const store = configureStore({
   reducer: {
@@ -31,6 +32,7 @@ export const store = configureStore({
     [contactUsApi.reducerPath]: contactUsApi.reducer,
     [adminDashboardStatsApi.reducerPath]: adminDashboardStatsApi.reducer,
     [activitiesApi.reducerPath]: activitiesApi.reducer,
+    [notificationsApi.reducerPath]: notificationsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -48,6 +50,7 @@ export const store = configureStore({
       contactUsApi.middleware,
       adminDashboardStatsApi.middleware,
       activitiesApi.middleware,
+      notificationsApi.middleware,
     ),
 })
 

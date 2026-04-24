@@ -74,12 +74,25 @@ export type TeacherRecentPaper = {
   board: { id: string; name: string; slug: string };
 };
 
+export type DashboardActivity = {
+  id: string;
+  type: "PAPER_GENERATED" | "PLAN_SUBSCRIBED" | "NOTE_ADDED";
+  title: string;
+  description: string;
+  time: string;
+};
+
 export type TeacherDashboardData = {
-  stats: TeacherQuotaStats;
+  stats: TeacherQuotaStats & { subscriptionDate: string | null };
   overview: TeacherDashboardOverview;
-  charts: TeacherDashboardCharts;
+  charts: {
+    dailyTrend: Array<{ date: string; count: number }>;
+    monthlyTrend: Array<{ date: string; count: number }>;
+    topSubjectsLast30Days: Array<{ id: string; name: string; count: number }>;
+    questionMixLast30Days: Array<{ name: string; value: number }>;
+  };
   bank: TeacherDashboardBank;
-  alerts: DashboardAlert[];
+  recentActivities: DashboardActivity[];
   papers: TeacherRecentPaper[];
 };
 

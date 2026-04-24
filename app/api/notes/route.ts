@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/auth/authMiddleware";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { broadcastToTeachers } from "@/lib/notifications/notificationService";
 
 export async function GET(request: Request) {
   try {
@@ -143,6 +144,20 @@ export async function POST(request: Request) {
         },
       },
     });
+
+    if ((userType || "STUDENT")?.toUpperCase?.() === "TEACHER") {
+      try {
+        await broadcastToTeachers({
+          type: "INFO",
+          title: "New important note",
+          message: `${notesTitle} has been shared for teachers.`,
+          href: "/teacher/important-notes",
+          metadata: { noteId: note.id, classId, boardId },
+        });
+      } catch (notificationError) {
+        console.error("Failed to broadcast notification (important notes):", notificationError);
+      }
+    }
 
     return NextResponse.json({ success: true, data: note }, { status: 201 });
   } catch (error: any) {

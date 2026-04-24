@@ -1,6 +1,7 @@
-export const formatTimestamp = (date: Date) => {
+export const formatTimestamp = (date: Date | string) => {
+  const inputDate = typeof date === "string" ? new Date(date) : date;
   const now = new Date();
-  const diff = now.getTime() - date.getTime();
+  const diff = now.getTime() - inputDate.getTime();
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
@@ -10,5 +11,5 @@ export const formatTimestamp = (date: Date) => {
   if (hours < 24) return `${hours}h ago`;
   if (days === 1) return 'Yesterday';
   if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return inputDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
