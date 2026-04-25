@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   try {
     const auth = await requireAuth();
     if (!auth.ok) return auth.response;
-
+    console.log("test")
     const session = auth.session;
     if (!session) {
       return NextResponse.json(
