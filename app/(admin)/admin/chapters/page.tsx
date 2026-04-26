@@ -17,6 +17,7 @@ import {
 import Link from "next/link"
 import { useGetChaptersQuery, useDeleteChapterMutation } from "@/lib/api/educationApi"
 import { ChapterForm } from "@/components/chapters/chapter-form"
+import { useToast } from "@/hooks/use-toast"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +35,7 @@ export default function ChaptersPage() {
   const [editingChapter, setEditingChapter] = useState<any>(null)
   const [deletingChapter, setDeletingChapter] = useState<any>(null)
   const [showEditForm, setShowEditForm] = useState(false)
+  const { toast } = useToast()
 
   const { data: chapters = [], isLoading, error } = useGetChaptersQuery()
   const [deleteChapter] = useDeleteChapterMutation()
@@ -51,6 +53,11 @@ export default function ChaptersPage() {
       setDeletingChapter(null)
     } catch (error) {
       console.error("Failed to delete chapter:", error)
+      toast({
+        title: "Failed to delete chapter",
+        description: "This chapter may have questions linked to it. Try again.",
+        variant: "destructive",
+      })
     }
   }
 

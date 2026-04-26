@@ -9,6 +9,11 @@ interface DefaultTemplateProps {
   paperName: string;
   examTime: string;
   calculatedTotalMarks: number;
+  questions: {
+    mcq: any[];
+    short: any[];
+    long: any[];
+  };
   marks: any;
   mcqMarks: any;
   selectedLanguage: string;
@@ -39,6 +44,7 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
   paperName,
   examTime,
   calculatedTotalMarks,
+  questions,
   marks,
   mcqMarks,
   selectedLanguage,
@@ -53,8 +59,11 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
   isPreview = false,
   showAnswers,
 }) => {
-  console.log("showAnswers:", showAnswers);
-  console.log("Rendering with paperData:", paperData);
+  const institutionLogo =
+    profileData?.user?.institutionLogo ?? profileData?.institutionLogo ?? null;
+  const institutionName =
+    profileData?.user?.institutionName ?? profileData?.institutionName ?? null;
+
   return (
     <div
       className="p-6"
@@ -71,7 +80,10 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
           subject={subject}
           paperName={paperName}
           examTime={examTime}
-          totalMarks={calculatedTotalMarks || paperData?.data?.totalMarks || 0}
+          totalMarks={calculatedTotalMarks || paperData?.totalMarks || 0}
+          institutionLogo={institutionLogo}
+          institutionName={institutionName}
+          isPreview={isPreview}
           onPaperNameChange={setPaperName}
           onExamTimeChange={setExamTime}
         />
@@ -87,7 +99,7 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
       <PaperQuestionsSection
         title="Multiple Choice Questions"
         sectionType="mcq"
-        questions={paperData?.mcqs}
+        questions={questions?.mcq ?? []}
         marks={marks}
         mcqMarks={mcqMarks}
         startIndex={1}
@@ -104,11 +116,12 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
       <PaperQuestionsSection
         title="Short Questions"
         sectionType="short"
-        questions={paperData?.shortQs}
+        questions={questions?.short ?? []}
         marks={marks}
-        startIndex={paperData?.mcqs?.length + 1}
+        startIndex={(questions?.mcq?.length ?? 0) + 1}
         onQuestionEdit={handleQuestionEdit}
         onMarksChange={handleMarksChange}
+        isPreview={isPreview}
         showAnswers={showAnswers}
       />
         <div className="w-full border border-gray-300 mb-6"></div>
@@ -117,11 +130,12 @@ const DefaultTemplate: React.FC<DefaultTemplateProps> = ({
       <PaperQuestionsSection
         title="Long Questions"
         sectionType="long"
-        questions={paperData?.longQs}
+        questions={questions?.long ?? []}
         marks={marks}
-        startIndex={paperData?.mcqs?.length + paperData?.shortQs?.length + 1}
+        startIndex={(questions?.mcq?.length ?? 0) + (questions?.short?.length ?? 0) + 1}
         onQuestionEdit={handleQuestionEdit}
         onMarksChange={handleMarksChange}
+        isPreview={isPreview}
         showAnswers={showAnswers}
       />
     </div>
