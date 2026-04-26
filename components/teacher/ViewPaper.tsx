@@ -203,10 +203,17 @@ export default function ViewPaper() {
       <PaperPreviewModal
         isOpen={showPreviewModal}
         onClose={() => setShowPreviewModal(false)}
-        paperData={paperData?.data ? { ...paperData.data, examTime } : null}
+        paperData={paperData?.data ?? null}
         board={board}
         classNumber={classNumber}
         subject={subject}
+        profileData={profileData?.user ?? profileData}
+        questions={questions}
+        marks={marks}
+        mcqMarks={mcqMarks}
+        paperName={paperName}
+        examTime={examTime}
+        calculatedTotalMarks={calculatedTotalMarks}
       />
     </PageTransition>
   )

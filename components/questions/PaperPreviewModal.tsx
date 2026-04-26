@@ -356,16 +356,16 @@ interface PaperPreviewModalProps {
   subject: string;
   currentTemplate?: string;
   profileData?: any;
-  questions: {
+  questions?: {
     mcq: any[];
     short: any[];
     long: any[];
   };
-  marks: any;
-  mcqMarks: any;
-  paperName: string;
-  examTime: string;
-  calculatedTotalMarks: number;
+  marks?: any;
+  mcqMarks?: any;
+  paperName?: string;
+  examTime?: string;
+  calculatedTotalMarks?: number;
 }
 
 export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
@@ -387,12 +387,115 @@ export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
   const printRef = useRef<HTMLDivElement>(null);
   const [showAnswers, setShowAnswers] = useState(false);
 
+  const normalizedPaperData = paperData?.data ?? paperData;
+
+  const toSlug = (value: string) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+  const pdfBaseName = (() => {
+    const subjectSlug = toSlug(subject || "subject");
+    const classSlug = toSlug(String(classNumber || "class"));
+    const boardSlug = toSlug(board || "board");
+    return `${subjectSlug}=${classSlug}-${boardSlug}${showAnswers ? "-answers" : ""}`;
+  })();
+
+  const mergedQuestions = (() => {
+    const editedMcqById = new Map((questions?.mcq ?? []).map((q: any) => [q.id, q]));
+    const editedShortById = new Map((questions?.short ?? []).map((q: any) => [q.id, q]));
+    const editedLongById = new Map((questions?.long ?? []).map((q: any) => [q.id, q]));
+
+    const mcq = (normalizedPaperData?.mcqs ?? []).map((q: any) => {
+      const edited = editedMcqById.get(q.questionId);
+      return {
+        id: q.questionId,
+        questionId: q.questionId,
+        question: edited?.text ?? q.question,
+        options: edited?.options ?? q.options ?? [],
+        correctAnswer: q.correctAnswer,
+      };
+    });
+
+    const short = (normalizedPaperData?.shortQs ?? []).map((q: any) => {
+      const edited = editedShortById.get(q.questionId);
+      return {
+        id: q.questionId,
+        questionId: q.questionId,
+        question: edited?.text ?? q.question,
+        answer: q.answer,
+      };
+    });
+
+    const long = (normalizedPaperData?.longQs ?? []).map((q: any) => {
+      const edited = editedLongById.get(q.questionId);
+      const partsFromApi = (q.parts ?? []).map((p: any) => `${p.partLabel}) ${p.question}`);
+      return {
+        id: q.questionId,
+        questionId: q.questionId,
+        question: edited?.text ?? q.question,
+        parts: edited?.parts ?? partsFromApi,
+        answer: q.answer,
+      };
+    });
+
+    // If API shape isn't present (e.g. unsaved/new papers), fall back to state questions
+    const fallbackMcq = (questions?.mcq ?? []).map((q: any) => ({
+      id: q.id,
+      questionId: q.id,
+      question: q.text ?? q.question ?? "",
+      options: q.options ?? [],
+      correctAnswer: q.correctAnswer,
+    }));
+    const fallbackShort = (questions?.short ?? []).map((q: any) => ({
+      id: q.id,
+      questionId: q.id,
+      question: q.text ?? q.question ?? "",
+      answer: q.answer,
+    }));
+    const fallbackLong = (questions?.long ?? []).map((q: any) => ({
+      id: q.id,
+      questionId: q.id,
+      question: q.text ?? q.question ?? "",
+      parts: q.parts ?? [],
+      answer: q.answer,
+    }));
+
+    return {
+      mcq: mcq.length ? mcq : fallbackMcq,
+      short: short.length ? short : fallbackShort,
+      long: long.length ? long : fallbackLong,
+    };
+  })();
+
+  const resolvedPaperName =
+    paperName ?? normalizedPaperData?.title ?? "Annual Examination";
+  const resolvedExamTime =
+    examTime ?? normalizedPaperData?.examTime ?? "";
+  const resolvedTotalMarks =
+    typeof calculatedTotalMarks === "number"
+      ? calculatedTotalMarks
+      : normalizedPaperData?.totalMarks ?? 0;
+  const resolvedMcqMarks =
+    typeof mcqMarks === "number"
+      ? mcqMarks
+      : (normalizedPaperData?.mcqs ?? []).reduce(
+          (sum: number, q: any) => sum + (q?.marks ?? 0),
+          0
+        );
+
   const handlePrint = () => {
     const printContent = printRef.current;
     if (!printContent) return;
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+
+    // Many browsers use the document title as the default "Save as" filename for Print → Save as PDF.
+    printWindow.document.title = pdfBaseName;
 
     const styles = `
       <style>
@@ -440,7 +543,7 @@ export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${subject} Paper - Class ${classNumber}${showAnswers ? ' (With Answers)' : ''}</title>
+          <title>${pdfBaseName}</title>
           ${styles}
         </head>
         <body>
@@ -470,38 +573,20 @@ export const PaperPreviewModal: React.FC<PaperPreviewModalProps> = ({
     setExamTime: () => {},
   };
 
-  console.log("PaperPreviewModal questions:", questions);
-
-  // Prepare questions with answers if showAnswers is true
-  const processedQuestions = showAnswers ? {
-    mcq: (questions?.mcq ?? []).map(q => ({
-      ...q,
-      showAnswer: true
-    })),
-    short: (questions?.short ?? []).map(q => ({
-      ...q,
-      showAnswer: true
-    })),
-    long: (questions?.long ?? []).map(q => ({
-      ...q,
-      showAnswer: true
-    }))
-  } : questions;
-
   const renderTemplate = () => {
     const commonProps = {
       board,
       classNumber,
       subject,
-      paperName,
-      examTime,
-      calculatedTotalMarks,
-      questions: processedQuestions,
+      paperName: resolvedPaperName,
+      examTime: resolvedExamTime,
+      calculatedTotalMarks: resolvedTotalMarks,
+      questions: mergedQuestions,
       marks,
-      mcqMarks,
+      mcqMarks: resolvedMcqMarks,
       selectedLanguage: "english",
       ...dummyHandlers,
-      paperData,
+      paperData: normalizedPaperData,
       profileData,
       isPreview: true,
       showAnswers

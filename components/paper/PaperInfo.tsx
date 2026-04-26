@@ -12,6 +12,7 @@ interface PaperInfoProps {
   totalMarks: number;
   institutionLogo?: string | null;
   institutionName?: string | null;
+  isPreview?: boolean;
   onPaperNameChange: (value: string) => void;
   onExamTimeChange: (value: string) => void;
 }
@@ -25,6 +26,7 @@ export const PaperInfo: React.FC<PaperInfoProps> = ({
   totalMarks,
   institutionLogo,
   institutionName,
+  isPreview = false,
   onPaperNameChange,
   onExamTimeChange,
 }) => {
@@ -64,22 +66,32 @@ export const PaperInfo: React.FC<PaperInfoProps> = ({
           {formatBoardName(board)} BOARD OF INTERMEDIATE AND SECONDARY EDUCATION
         </h1>
       </div>
-      <Input
-        type="text"
-        value={paperName}
-        onChange={(e) => onPaperNameChange(e.target.value)}
-        className="text-center font-bold mb-2"
-      />
+      {isPreview ? (
+        <h2 className="text-center font-bold mb-2">{paperName}</h2>
+      ) : (
+        <Input
+          type="text"
+          value={paperName}
+          onChange={(e) => onPaperNameChange(e.target.value)}
+          className="text-center font-bold mb-2"
+        />
+      )}
       <div className="grid grid-cols-2 gap-4 text-sm mb-4">
         <div className="text-left">
           <div className="flex items-center space-x-2">
             <p>Time:</p>
-            <Input
-              type="text"
-              className="w-20 h-6 text-sm"
-              value={examTime}
-              onChange={(e) => onExamTimeChange(e.target.value)}
-            />
+            {isPreview ? (
+              <span className="min-w-20 border-b border-dotted border-gray-400 px-1 text-sm">
+                {examTime}
+              </span>
+            ) : (
+              <Input
+                type="text"
+                className="w-20 h-6 text-sm"
+                value={examTime}
+                onChange={(e) => onExamTimeChange(e.target.value)}
+              />
+            )}
             <p>Hours</p>
           </div>
           <p>Class: {classNumber}</p>

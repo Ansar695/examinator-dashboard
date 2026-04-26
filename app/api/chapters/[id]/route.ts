@@ -33,12 +33,30 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    await prisma.chapter.delete({
-      where: { id: params.id },
-    })
+    const id = params.id
+
+    // Prisma MongoDB expects a 24-char hex ObjectId string.
+    if (!/^[a-fA-F0-9]{24}$/.test(id)) {
+      return NextResponse.json({ error: "Invalid chapter id" }, { status: 400 })
+    }
+
+    const existing = await prisma.chapter.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ error: "Chapter not found" }, { status: 404 })
+    }
+
+    // In Prisma's Mongo relation mode, deleting a Chapter that has related Questions
+    // can fail because those relations are required. Delete dependents first.
+    await prisma.$transaction([
+      prisma.mCQQuestion.deleteMany({ where: { chapterId: id } }),
+      prisma.shortQuestion.deleteMany({ where: { chapterId: id } }),
+      prisma.longQuestion.deleteMany({ where: { chapterId: id } }),
+      prisma.chapter.delete({ where: { id } }),
+    ])
 
     return NextResponse.json({ message: "Chapter deleted successfully" })
   } catch (error) {
+    console.error("Delete chapter error:", error)
     return NextResponse.json({ error: "Failed to delete chapter" }, { status: 500 })
   }
 }

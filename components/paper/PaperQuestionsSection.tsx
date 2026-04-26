@@ -86,11 +86,19 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
     }, 0);
   };
   console.log("Calculating section marks:", showAnswers);
+
+  const getQuestionKey = (question: Question) => question.questionId || question.id;
+
+  const renderQuestionText = (question: Question, index: number) => {
+    const rawText = question?.question ?? question?.text ?? "";
+    return `${startIndex + index}. ${rawText}`;
+  };
+
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">{getSectionTitle()}</h2>
-        {sectionType === "mcq" && onMcqMarksChange && (
+        {sectionType === "mcq" && !isPreview && onMcqMarksChange && (
           <div className="flex items-center space-x-2">
             <label htmlFor="mcq-marks" className="text-sm font-medium">
               Total Marks:
@@ -107,6 +115,11 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
               }
             />
           </div>
+        )}
+        {sectionType === "mcq" && isPreview && (
+          <span className="text-sm font-medium">
+            Total Marks: {mcqMarks || 0}
+          </span>
         )}
         {sectionType !== "mcq" && (
           <span className="text-sm font-medium">
@@ -126,21 +139,27 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
             }
           >
             <div className={sectionType !== "mcq" ? "flex-grow" : ""}>
-              <EditableQuestion
-                initialText={`${startIndex + index}. ${question?.question ?? question?.text ?? ""}`}
-                onSave={(newText) =>
-                  onQuestionEdit(
-                    sectionType,
-                    question?.questionId || question?.id,
-                    newText?.replace(/^\d+\.\s*/, "")
-                  )
-                }
-              />
+              {isPreview ? (
+                <p className="whitespace-pre-wrap">
+                  {renderQuestionText(question, index)}
+                </p>
+              ) : (
+                <EditableQuestion
+                  initialText={renderQuestionText(question, index)}
+                  onSave={(newText) =>
+                    onQuestionEdit(
+                      sectionType,
+                      getQuestionKey(question),
+                      newText?.replace(/^\d+\.\s*/, "")
+                    )
+                  }
+                />
+              )}
 
               {/* MCQ Options */}
               {sectionType === "mcq" &&
                 question?.options &&
-                onMCQOptionEdit && (
+                (isPreview || onMCQOptionEdit) && (
                   <>
                     <div className="pl-8 mt-2">
                       {question?.options.map((option, optionIndex) => (
@@ -149,16 +168,20 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                           className="flex items-center space-x-2"
                         >
                           <span>{String.fromCharCode(97 + optionIndex)}</span>
-                          <EditableMcq
-                            initialText={option}
-                            onSave={(newText) =>
-                              onMCQOptionEdit(
-                                question.questionId || question.id,
-                                optionIndex,
-                                newText
-                              )
-                            }
-                          />
+                          {isPreview ? (
+                            <span className="whitespace-pre-wrap">{option}</span>
+                          ) : (
+                            <EditableMcq
+                              initialText={option}
+                              onSave={(newText) =>
+                                onMCQOptionEdit?.(
+                                  getQuestionKey(question),
+                                  optionIndex,
+                                  newText
+                                )
+                              }
+                            />
+                          )}
                         </div>
                       ))}
                     </div>
@@ -187,24 +210,45 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                         key={partIndex}
                         className="flex justify-between items-start"
                       >
-                        <EditableQuestion
-                          initialText={part}
-                          onSave={(newText) => {
-                            // Handle part editing if needed
-                          }}
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Marks"
-                          className="w-20 ml-4"
-                          value={marks[`${question.id}-${partIndex}`] || ""}
-                          onChange={(e) =>
-                            onMarksChange(
-                              `${question.questionId || question.id}-${partIndex}`,
-                              e.target.value
-                            )
-                          }
-                        />
+                        {isPreview ? (
+                          <>
+                            <span className="whitespace-pre-wrap">{part}</span>
+                            <span className="ml-4 text-sm tabular-nums">
+                              {(() => {
+                                const byQuestionId = marks[`${getQuestionKey(question)}-${partIndex}`];
+                                const byId = marks[`${question.id}-${partIndex}`];
+                                const value =
+                                  typeof byQuestionId === "number"
+                                    ? byQuestionId
+                                    : typeof byId === "number"
+                                      ? byId
+                                      : undefined;
+                                return typeof value === "number" ? `${value}` : "";
+                              })()}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <EditableQuestion
+                              initialText={part}
+                              onSave={(newText) => {
+                                // Handle part editing if needed
+                              }}
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Marks"
+                              className="w-20 ml-4"
+                              value={marks[`${question.id}-${partIndex}`] || ""}
+                              onChange={(e) =>
+                                onMarksChange(
+                                  `${question.questionId || question.id}-${partIndex}`,
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -228,7 +272,7 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
             </div>
 
             {/* Marks Input for Short and Long Questions */}
-            {sectionType === "short" && (
+            {sectionType === "short" && !isPreview && (
               <Input
                 type="number"
                 placeholder="Marks"
@@ -239,7 +283,7 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                 }
               />
             )}
-            {sectionType === "long" && (
+            {sectionType === "long" && !isPreview && (
               <Input
                 type="number"
                 placeholder="Marks"
@@ -249,6 +293,15 @@ export const PaperQuestionsSection: React.FC<PaperQuestionsSectionProps> = ({
                   onMarksChange(question.questionId || question.id, e.target.value)
                 }
               />
+            )}
+
+            {(sectionType === "short" || sectionType === "long") && isPreview && (
+              <span className="ml-4 text-sm tabular-nums">
+                {(() => {
+                  const value = marks[getQuestionKey(question)];
+                  return typeof value === "number" ? `${value}` : "";
+                })()}
+              </span>
             )}
           </div>
         ))}
