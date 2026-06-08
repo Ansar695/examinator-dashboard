@@ -26,7 +26,6 @@ import {
 import { generateSlug } from "@/lib/utils/slugify";
 import SelectClass from "../common/SelectClass";
 import SelectSubject from "../common/SelectSubject";
-import { CloudinaryUpload } from "../ui/cloudinary-upload";
 import { EMBEDDINGS_BASE_URL } from "@/config";
 import { toast } from "../ui/use-toast";
 import { useToast } from "../common/CustomToast";
@@ -43,7 +42,7 @@ const chapterSchema = z.object({
     .max(100, "Slug must be less than 100 characters"),
   classId: z.string().min(1, "Please select a class"),
   subjectId: z.string().min(1, "Please select a subject"),
-  pdfUrl: z.string().min(1, "PDF file is required"),
+  pdfUrl: z.string(),
 });
 
 type ChapterFormData = z.infer<typeof chapterSchema>;
@@ -56,7 +55,6 @@ interface ChapterFormProps {
 
 export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
   const { showSuccess, showError, ToastComponent } = useToast();
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [embeddingsLoader, setEmbeddingLoader] = useState(false);
@@ -136,20 +134,35 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
       });
       setSelectedClassId("");
     }
-    setPdfFile(null);
   }, [chapterData, reset]);
 
-  const handlePdfChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePdfChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === "application/pdf") {
-      setPdfFile(file);
+      try {
+        const url = await uploadPdf(file);
+        setValue("pdfUrl", url);
+        toast({
+          title: "Uploaded",
+          description: "Chapter PDF uploaded successfully.",
+        });
+      } catch (error) {
+        console.error("Failed to upload PDF:", error);
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload PDF. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        // Allow re-selecting the same file to re-upload if needed.
+        event.target.value = "";
+      }
     } else {
       alert("Please select a valid PDF file");
     }
   };
 
   const removePdf = () => {
-    setPdfFile(null);
     setValue("pdfUrl", "");
   };
 
@@ -159,28 +172,22 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append(
-        "upload_preset",
-        process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "your_upload_preset"
-      );
-      formData.append("resource_type", "raw"); // Important: use 'raw' for PDF files
+      formData.append("slug", watch("slug") || "");
 
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/raw/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch("/api/uploads/chapters", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to upload PDF to Cloudinary");
+        const errorBody = await response.json().catch(() => null);
+        throw new Error(errorBody?.error || "Failed to upload PDF");
       }
 
       const data = await response.json();
       setIsUploading(false);
 
-      return data.secure_url;
+      return data.url;
     } catch (error) {
       setIsUploading(false);
       console.error("PDF upload error:", error);
@@ -232,11 +239,14 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
 
   const onSubmit = async (data: ChapterFormData) => {
     try {
-      let pdfUrl = data.pdfUrl;
-
-      // Upload PDF if a new file is selected
-      if (pdfFile) {
-        pdfUrl = await uploadPdf(pdfFile);
+      const pdfUrl = data.pdfUrl || "";
+      if (!pdfUrl.trim()) {
+        toast({
+          title: "PDF required",
+          description: "Please upload a PDF file for this chapter.",
+          variant: "destructive",
+        });
+        return;
       }
 
       const chapterFormData = {
@@ -259,14 +269,6 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
     }
   };
 
-  const handleLogoUpload = (url: string) => {
-    setValue("pdfUrl", url);
-  };
-
-  const handleLogoRemove = () => {
-    setValue("pdfUrl", "");
-  };
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -283,18 +285,23 @@ export function ChapterForm({ chapterData, open, onClose }: ChapterFormProps) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-4">
-              <CloudinaryUpload
-                variant="avatar"
-                accept="all"
-                label="Subject Image"
-                currentUrl={watch("pdfUrl")}
-                onUpload={handleLogoUpload}
-                onRemove={handleLogoRemove}
-                error={errors.pdfUrl?.message}
-                maxSize={20}
-              />
-            </div>
+            <Label className="text-sm font-semibold">Chapter PDF *</Label>
+            <Input type="file" accept=".pdf,application/pdf" onChange={handlePdfChange} />
+            {watch("pdfUrl") ? (
+              <div className="flex items-center gap-3">
+                <a
+                  href={watch("pdfUrl")}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-blue-600 underline"
+                >
+                  View current PDF
+                </a>
+                <Button type="button" variant="ghost" size="sm" onClick={removePdf}>
+                  Remove
+                </Button>
+              </div>
+            ) : null}
           </div>
 
           {/* Class Selection */}
